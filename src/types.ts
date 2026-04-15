@@ -1,0 +1,47 @@
+export interface Obra {
+  id: string;
+  nombre: string;
+  numBloques: number;
+}
+
+export interface Produccion {
+  itemId: string;
+  m2: number;
+  bloque: string;
+}
+
+export interface Resumen {
+  ingresos: number;
+  costeManoObra: number;
+  beneficio: number;
+  beneficioPorOperario: number;
+}
+
+export interface Avance {
+  id: string;
+  fecha: string; // ISO string
+  obraId: string;
+  bloque: string;
+  operariosPresentes: string[];
+  produccion: Produccion[];
+  resumen: Resumen;
+}
+
+export interface Anticipo {
+  id: string;
+  fecha: string; // ISO string (usually a Friday)
+  obraId: string;
+  operario: string;
+  cantidad: number;
+}
+
+export interface Certificacion {
+  id: string;
+  obraId: string;
+  mes: string; // YYYY-MM
+  ejecutado: number;
+  anticipos: number;
+  certificado: number;
+  estado: "pendiente" | "cobrado";
+  fechaCobro?: string;
+}
