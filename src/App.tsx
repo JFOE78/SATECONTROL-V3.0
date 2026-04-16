@@ -24,9 +24,13 @@ import {
   Upload,
   Moon,
   Sun,
-  Database
+  Database,
+  Share2,
+  FileDown,
+  MessageCircle
 } from "lucide-react";
 import { storage } from "./lib/storage";
+import { shareService } from "./services/shareService";
 import { Obra, Avance, Certificacion, Produccion, Resumen, Anticipo } from "./types";
 import { TARIFAS, OPERARIOS, ITEMS_SATE } from "./constants";
 
@@ -252,6 +256,7 @@ export default function App() {
         return (
           <Calendario 
             avances={avances.filter(a => a.obraId === selectedObraId)}
+            obra={selectedObra!}
             onEdit={(avance) => {
               setEditingAvance(avance);
               setCurrentScreen("registrar");
@@ -315,9 +320,11 @@ export default function App() {
           <CertificacionScreen 
             avances={avances.filter(a => a.obraId === selectedObraId)}
             obraId={selectedObraId}
+            obra={selectedObra!}
             certificaciones={certificaciones}
             anticipos={anticipos.filter(an => an.obraId === selectedObraId)}
             operariosList={operariosList}
+            itemsSate={itemsSate}
             notify={notify}
             onSaveCertificacion={(cert) => {
               try {
@@ -391,7 +398,7 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl shadow-slate-200">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl shadow-slate-200 dark:shadow-black">
         <NavButton 
           active={currentScreen === "inicio"} 
           onClick={() => { setEditingAvance(null); setCurrentScreen("inicio"); }}
@@ -1296,6 +1303,7 @@ function Calendario({
   avances, 
   anticipos,
   itemsSate,
+  obra,
   onEdit, 
   onNew,
   onDelete,
@@ -1304,6 +1312,7 @@ function Calendario({
   avances: Avance[], 
   anticipos: Anticipo[],
   itemsSate: Record<string, any>,
+  obra: Obra,
   onEdit: (a: Avance) => void, 
   onNew: (date: string) => void,
   onDelete: (id: string) => void,
@@ -1439,6 +1448,27 @@ function Calendario({
                   Editar
                 </button>
               </div>
+            </div>
+
+            {/* Botones de Compartir */}
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => {
+                  const text = shareService.formatAvanceForWhatsApp(selectedAvance, obra, itemsSate);
+                  shareService.shareViaWhatsApp(text);
+                }}
+                className="flex items-center justify-center gap-2 bg-emerald-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-emerald-100"
+              >
+                <MessageCircle size={18} />
+                WhatsApp
+              </button>
+              <button 
+                onClick={() => shareService.generateAvancePDF(selectedAvance, obra, itemsSate)}
+                className="flex items-center justify-center gap-2 bg-blue-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-100"
+              >
+                <FileDown size={18} />
+                PDF
+              </button>
             </div>
 
             <div className="space-y-3">
@@ -1767,6 +1797,8 @@ function CertificacionScreen({
   certificaciones, 
   anticipos,
   operariosList,
+  itemsSate,
+  obra,
   notify,
   onSaveCertificacion, 
   onSaveAnticipo,
@@ -1778,6 +1810,8 @@ function CertificacionScreen({
   certificaciones: Certificacion[], 
   anticipos: Anticipo[],
   operariosList: any[],
+  itemsSate: Record<string, any>,
+  obra: Obra,
   notify: (m: string, t?: "success" | "error" | "info") => void,
   onSaveCertificacion: (c: Certificacion) => void,
   onSaveAnticipo: (a: Anticipo) => void,
@@ -2076,7 +2110,7 @@ function CertificacionScreen({
 
               <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                 {anticipos.filter(an => an.fecha.startsWith(mes)).map(an => (
-                  <div key={an.id} className="flex justify-between items-center bg-white/50 p-3 rounded-xl border border-orange-100">
+                  <div key={an.id} className="flex justify-between items-center bg-white dark:bg-black p-3 rounded-xl border border-orange-100 dark:border-slate-800">
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-slate-700 uppercase">{an.operario}</span>
                       <span className="text-[10px] font-bold text-slate-400">{new Date(an.fecha).toLocaleDateString()}</span>
@@ -2096,6 +2130,50 @@ function CertificacionScreen({
           <div className="bg-blue-600 p-8 rounded-[2rem] text-white shadow-2xl shadow-blue-100">
             <label className="text-[10px] font-black opacity-70 uppercase tracking-widest block mb-1">A Certificar Neto</label>
             <span className="text-5xl font-black tracking-tight">{certificado.toLocaleString()}€</span>
+          </div>
+
+          {/* Botones de Compartir Certificación */}
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => {
+                const cert: Certificacion = {
+                  id: existingCert?.id || crypto.randomUUID(),
+                  obraId,
+                  mes,
+                  ejecutado,
+                  anticipos: totalAnticiposMes,
+                  certificado,
+                  estado,
+                  fechaCobro: estado === "cobrado" ? fechaCobro : undefined
+                };
+                const text = shareService.formatCertificacionForWhatsApp(cert, obra, totalesMensuales, itemsSate);
+                shareService.shareViaWhatsApp(text);
+              }}
+              className="flex items-center justify-center gap-2 bg-emerald-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-emerald-100"
+            >
+              <MessageCircle size={18} />
+              WhatsApp
+            </button>
+            <button 
+              onClick={() => {
+                const cert: Certificacion = {
+                  id: existingCert?.id || crypto.randomUUID(),
+                  obraId,
+                  mes,
+                  ejecutado,
+                  anticipos: totalAnticiposMes,
+                  certificado,
+                  estado,
+                  fechaCobro: estado === "cobrado" ? fechaCobro : undefined
+                };
+                const anticiposMes = anticipos.filter(an => an.fecha.startsWith(mes));
+                shareService.generateCertificacionPDF(cert, obra, anticiposMes, totalesMensuales, itemsSate);
+              }}
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-100"
+            >
+              <FileDown size={18} />
+              PDF
+            </button>
           </div>
         </div>
 

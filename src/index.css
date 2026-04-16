@@ -31,29 +31,31 @@
 
   /* Dark mode overrides */
   :root.dark body, .dark body {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-black text-white;
   }
 
   :root.dark .bg-white, .dark .bg-white {
-    @apply bg-slate-900 border-slate-800! shadow-none!;
+    @apply bg-black! border-slate-800! shadow-[0_0_20px_rgba(0,0,0,0.5)]!;
   }
 
   :root.dark .bg-slate-50, .dark .bg-slate-50 {
-    @apply bg-slate-800 border-slate-700!;
+    @apply bg-black! border-slate-800!;
   }
 
   :root.dark .bg-slate-100, .dark .bg-slate-100 {
-    @apply bg-slate-800 border-slate-700!;
+    @apply bg-black! border-slate-800!;
   }
 
   :root.dark .text-slate-800, .dark .text-slate-800,
+  :root.dark .text-slate-700, .dark .text-slate-700,
   :root.dark .text-slate-900, .dark .text-slate-900 {
-    @apply text-slate-100!;
+    @apply text-white!;
   }
 
   :root.dark .text-slate-400, .dark .text-slate-400,
+  :root.dark .text-slate-500, .dark .text-slate-500,
   :root.dark .text-slate-300, .dark .text-slate-300 {
-    @apply text-slate-500!;
+    @apply text-slate-100! opacity-80!;
   }
 
   :root.dark .border-slate-100, .dark .border-slate-100,
@@ -61,26 +63,118 @@
     @apply border-slate-800!;
   }
 
+  /* Neon Accents */
   :root.dark .bg-blue-600, .dark .bg-blue-600 {
-    @apply bg-cyan-500! shadow-[0_0_15px_rgba(6,182,212,0.5)]!;
+    @apply bg-[#00f2ff]! text-black! font-black! shadow-[0_0_20px_rgba(0,242,255,0.6)]!;
   }
 
   :root.dark .text-blue-600, .dark .text-blue-600 {
-    @apply text-cyan-400! drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]!;
+    @apply text-[#00f2ff]! drop-shadow-[0_0_8px_rgba(0,242,255,0.8)]!;
   }
 
-  :root.dark .bg-orange-600, .dark .bg-orange-600 {
-    @apply bg-orange-500! shadow-[0_0_15px_rgba(249,115,22,0.5)]!;
+  :root.dark .bg-emerald-50, .dark .bg-emerald-50 {
+    @apply bg-black! border-[#39ff14]/30!;
+  }
+
+  :root.dark .text-emerald-600, .dark .text-emerald-600 {
+    @apply text-[#39ff14]! drop-shadow-[0_0_8px_rgba(57,255,20,0.8)]!;
+  }
+
+  :root.dark .bg-orange-50, .dark .bg-orange-50 {
+    @apply bg-black! border-[#ff00ff]/30!;
   }
 
   :root.dark .text-orange-600, .dark .text-orange-600 {
-    @apply text-orange-400! drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]!;
+    @apply text-[#ff00ff]! drop-shadow-[0_0_8px_rgba(255,0,255,0.8)]!;
+  }
+
+  :root.dark .bg-blue-50, .dark .bg-blue-50 {
+    @apply bg-black! border-[#00f2ff]/30!;
+  }
+
+  :root.dark .bg-red-50, .dark .bg-red-50 {
+    @apply bg-black! border-[#ff0055]/30!;
+  }
+
+  :root.dark .text-red-500, .dark .text-red-500 {
+    @apply text-[#ff0055]! drop-shadow-[0_0_8px_rgba(255,0,85,0.8)]!;
+  }
+
+  :root.dark .bg-purple-50, .dark .bg-purple-50 {
+    @apply bg-black! border-[#bc13fe]/30!;
+  }
+
+  :root.dark .text-purple-600, .dark .text-purple-600 {
+    @apply text-[#bc13fe]! drop-shadow-[0_0_8px_rgba(188,19,254,0.8)]!;
+  }
+
+  :root.dark .text-emerald-600, .dark .text-emerald-600 {
+    @apply text-[#39ff14]! drop-shadow-[0_0_8px_rgba(57,255,20,0.8)]!;
+  }
+
+  :root.dark .bg-slate-900, .dark .bg-slate-900 {
+    @apply bg-white! text-black!;
+  }
+
+  :root.dark .text-blue-400, .dark .text-blue-400 {
+    @apply text-[#00f2ff]! opacity-70!;
+  }
+
+  :root.dark .bg-orange-600, .dark .bg-orange-600 {
+    @apply bg-[#ff00ff]! text-black! font-black! shadow-[0_0_20px_rgba(255,0,255,0.6)]!;
+  }
+
+  :root.dark .text-orange-700, .dark .text-orange-700 {
+    @apply text-[#ff00ff]! drop-shadow-[0_0_8px_rgba(255,0,255,0.8)]!;
+  }
+
+  :root.dark .text-emerald-700, .dark .text-emerald-700 {
+    @apply text-[#39ff14]! drop-shadow-[0_0_8px_rgba(57,255,20,0.8)]!;
+  }
+
+  :root.dark .text-purple-700, .dark .text-purple-700 {
+    @apply text-[#bc13fe]! drop-shadow-[0_0_8px_rgba(188,19,254,0.8)]!;
+  }
+
+  :root.dark .bg-orange-100, .dark .bg-orange-100 {
+    @apply bg-black! border-[#ff00ff]/30!;
+  }
+
+  :root.dark .text-orange-400, .dark .text-orange-400 {
+    @apply text-[#ff00ff]! opacity-70!;
+  }
+
+  :root.dark .bg-slate-200, .dark .bg-slate-200,
+  :root.dark .bg-slate-300, .dark .bg-slate-300,
+  :root.dark .bg-slate-400, .dark .bg-slate-400,
+  :root.dark .bg-slate-500, .dark .bg-slate-500,
+  :root.dark .bg-slate-600, .dark .bg-slate-600,
+  :root.dark .bg-slate-700, .dark .bg-slate-700,
+  :root.dark .bg-slate-800, .dark .bg-slate-800,
+  :root.dark nav, .dark nav {
+    @apply bg-black! opacity-100! backdrop-blur-none!;
+  }
+
+  :root.dark .text-slate-600, .dark .text-slate-600 {
+    @apply text-slate-300!;
   }
 
   :root.dark input, .dark input, 
   :root.dark select, .dark select, 
   :root.dark textarea, .dark textarea {
-    @apply bg-slate-800! text-slate-100! border-slate-700!;
+    @apply bg-black! text-white! border-slate-800! focus:border-[#00f2ff]! focus:ring-[#00f2ff]/20!;
+  }
+
+  :root.dark .shadow-blue-200, .dark .shadow-blue-200 {
+    @apply shadow-[#00f2ff]/40!;
+  }
+
+  :root.dark .shadow-blue-100, .dark .shadow-blue-100 {
+    @apply shadow-[#00f2ff]/20!;
+  }
+
+  :root.dark .shadow-slate-200, .dark .shadow-slate-200 {
+    @apply shadow-black!;
   }
 
   /* Allow selection in inputs */
