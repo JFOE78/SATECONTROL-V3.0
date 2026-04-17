@@ -128,7 +128,7 @@ export default function App() {
 
     if (loadedObras.length === 0) {
       const defaultObras: Obra[] = [
-        { id: "1", nombre: "Obra Principal", numBloques: 20 },
+        { id: "1", nombre: "Nueva Obra", numBloques: 1 },
       ];
       storage.saveObras(defaultObras);
       setObras(defaultObras);
@@ -170,9 +170,22 @@ export default function App() {
     });
   }, [avances, selectedObraId]);
 
+  const calculateAvanceEconomics = (a: Avance) => {
+    const ingresos = (a.produccion || []).reduce((acc, p) => {
+      const item = itemsSate[p.itemId];
+      return acc + (p.m2 * (item?.precio || 0));
+    }, 0);
+    const costeManoObra = (a.operariosPresentes || []).reduce((acc, nombre) => {
+      const op = operariosList.find(o => o.nombre === nombre);
+      return acc + (op?.coste || 0);
+    }, 0);
+    const beneficio = ingresos - costeManoObra;
+    return { ingresos, costeManoObra, beneficio };
+  };
+
   const monthlyProfit = useMemo(() => 
-    (currentMonthAvances || []).reduce((acc, curr) => acc + (curr.resumen?.beneficio || 0), 0),
-    [currentMonthAvances]
+    (currentMonthAvances || []).reduce((acc, curr) => acc + calculateAvanceEconomics(curr).beneficio, 0),
+    [currentMonthAvances, itemsSate, operariosList]
   );
 
   const lastAvance = useMemo(() => 
@@ -200,6 +213,9 @@ export default function App() {
             onSetLastBloque={setManualBloque}
             onInstall={handleInstallClick}
             showInstall={!!deferredPrompt}
+            itemsSate={itemsSate}
+            operariosList={operariosList}
+            calculateEconomics={calculateAvanceEconomics}
           />
         );
       case "obras":
@@ -363,6 +379,9 @@ export default function App() {
             onSetLastBloque={setManualBloque}
             onInstall={handleInstallClick}
             showInstall={!!deferredPrompt}
+            itemsSate={itemsSate}
+            operariosList={operariosList}
+            calculateEconomics={calculateAvanceEconomics}
           />
         );
     }
@@ -517,7 +536,10 @@ function Inicio({
   lastBloque,
   onSetLastBloque,
   onInstall,
-  showInstall
+  showInstall,
+  itemsSate,
+  operariosList,
+  calculateEconomics
 }: { 
   obras: Obra[], 
   selectedObraId: string, 
@@ -529,7 +551,10 @@ function Inicio({
   lastBloque: string,
   onSetLastBloque: (b: string) => void,
   onInstall: () => void,
-  showInstall: boolean
+  showInstall: boolean,
+  itemsSate: Record<string, any>,
+  operariosList: any[],
+  calculateEconomics: (a: Avance) => { ingresos: number, costeManoObra: number, beneficio: number }
 }) {
   const selectedObra = useMemo(() => obras.find(o => o.id === selectedObraId), [obras, selectedObraId]);
   
@@ -539,26 +564,29 @@ function Inicio({
   }, [selectedObra]);
   
   const produccionPorBloque = useMemo(() => {
-    const stats: Record<string, { m2: number, beneficio: number }> = {};
+    const stats: Record<string, { m2: number, beneficio: number, costeMO: number }> = {};
     (avances || []).filter(a => a.obraId === selectedObraId).forEach(a => {
+      const economics = calculateEconomics(a);
       (a.produccion || []).forEach(p => {
         if (!p.bloque) return;
-        if (!stats[p.bloque]) stats[p.bloque] = { m2: 0, beneficio: 0 };
+        if (!stats[p.bloque]) stats[p.bloque] = { m2: 0, beneficio: 0, costeMO: 0 };
         stats[p.bloque].m2 += (p.m2 || 0);
-        // Aproximación del beneficio por bloque (proporcional a m2 en el avance)
+        // Proporcional al m2 del avance para repartir coste y beneficio
         const totalM2Avance = (a.produccion || []).reduce((sum, pr) => sum + (pr.m2 || 0), 0);
         const ratio = totalM2Avance > 0 ? (p.m2 || 0) / totalM2Avance : 0;
-        stats[p.bloque].beneficio += (a.resumen?.beneficio || 0) * ratio;
+        stats[p.bloque].beneficio += economics.beneficio * ratio;
+        stats[p.bloque].costeMO += economics.costeManoObra * ratio;
       });
     });
-    return stats as Record<string, { m2: number, beneficio: number }>;
-  }, [avances, selectedObraId]);
+    return stats;
+  }, [avances, selectedObraId, itemsSate, operariosList, calculateEconomics]);
 
   const totalAcumulado = useMemo(() => {
-    return (Object.values(produccionPorBloque) as { m2: number, beneficio: number }[]).reduce((acc, curr) => ({
-      m2: acc.m2 + curr.m2,
+    const statsArray = Object.values(produccionPorBloque) as { m2: number, beneficio: number, costeMO: number }[];
+    return statsArray.reduce((acc, curr) => ({
+      costeMO: acc.costeMO + curr.costeMO,
       beneficio: acc.beneficio + curr.beneficio
-    }), { m2: 0, beneficio: 0 });
+    }), { costeMO: 0, beneficio: 0 });
   }, [produccionPorBloque]);
 
   return (
@@ -674,8 +702,8 @@ function Inicio({
         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Resumen Acumulado</label>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <span className="text-[10px] font-black text-slate-300 uppercase block">Total m²</span>
-            <span className="text-2xl font-black text-slate-800">{Math.round(totalAcumulado.m2).toLocaleString()}</span>
+            <span className="text-[10px] font-black text-slate-300 uppercase block">Coste M.O. Total</span>
+            <span className="text-2xl font-black text-slate-800">{Math.round(totalAcumulado.costeMO).toLocaleString()}€</span>
           </div>
           <div className="space-y-1 text-right">
             <span className="text-[10px] font-black text-slate-300 uppercase block">Beneficio Total</span>
@@ -688,23 +716,26 @@ function Inicio({
       <section className="space-y-3">
         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Producción por Bloque</label>
         <div className="grid grid-cols-1 gap-2">
-          {(Object.entries(produccionPorBloque) as [string, { m2: number, beneficio: number }][]).sort().map(([b, s]) => (
-            <div key={b} className="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 font-black text-xs">
-                  {b.replace("Bloque ", "")}
+          {Object.entries(produccionPorBloque).sort().map(([b, s]) => {
+            const stats = s as { m2: number, beneficio: number, costeMO: number };
+            return (
+              <div key={b} className="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 font-black text-xs">
+                    {b.replace("Bloque ", "")}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-800 text-sm uppercase">{b}</h4>
+                    <p className="text-[10px] font-bold text-slate-400">{Math.round(stats.beneficio).toLocaleString()}€ beneficio</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-black text-slate-800 text-sm uppercase">{b}</h4>
-                  <p className="text-[10px] font-bold text-slate-400">{Math.round(s.beneficio)}€ beneficio</p>
+                <div className="text-right">
+                  <span className="text-lg font-black text-slate-800">{Math.round(stats.costeMO).toLocaleString()}</span>
+                  <span className="text-[10px] font-black text-slate-300 ml-1 uppercase">€ M.O.</span>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-lg font-black text-blue-600">{Math.round(s.m2)}</span>
-                <span className="text-[10px] font-black text-slate-300 ml-1 uppercase">m²</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {Object.keys(produccionPorBloque).length === 0 && (
             <div className="text-center p-8 bg-slate-50 rounded-[2rem] border border-slate-100 border-dashed">
               <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Sin datos acumulados</p>
@@ -947,8 +978,13 @@ function RegistrarAvance({
   // Draft recovery
   const getDraft = () => {
     if (initialAvance || !obra) return null;
-    const draft = localStorage.getItem(`sate_avance_draft_${obra.id}`);
-    return draft ? JSON.parse(draft) : null;
+    const draftStr = localStorage.getItem(`sate_avance_draft_${obra.id}`);
+    if (!draftStr) return null;
+    try {
+      return JSON.parse(draftStr);
+    } catch (e) {
+      return null;
+    }
   };
 
   const draft = getDraft();
@@ -959,16 +995,36 @@ function RegistrarAvance({
   const [producciones, setProducciones] = useState<Produccion[]>(initialAvance?.produccion || draft?.produccion || []);
   
   // Formulario producción actual
-  const [selectedItemId, setSelectedItemId] = useState<string>("fase1");
+  const [selectedItemId, setSelectedItemId] = useState<string>(() => {
+    if (initialAvance?.produccion?.[0]?.itemId) return initialAvance.produccion[0].itemId;
+    if (draft?.produccion?.[0]?.itemId) return draft.produccion[0].itemId;
+    const firstItem = Object.keys(itemsSate)[0];
+    return firstItem || "fase1";
+  });
+  const [m2String, setM2String] = useState<string>(initialAvance ? "" : (draft?.m2String || ""));
   const [m2, setM2] = useState<number>(0);
   const [prodBloque, setProdBloque] = useState(initialAvance?.bloque || draft?.bloque || lastBloque || "");
+
+  // Auto-select all operators if attendance is empty but list is not
+  useEffect(() => {
+    // If it's a new advance and we don't have operators selected yet, auto-select them all
+    if (!initialAvance && operarios.length === 0 && operariosList.length > 0) {
+      setOperarios(operariosList.map(o => o.nombre));
+    }
+  }, [operariosList, initialAvance, draft]);
 
   // Save draft
   useEffect(() => {
     if (!initialAvance && obra) {
-      localStorage.setItem(`sate_avance_draft_${obra.id}`, JSON.stringify({ fecha, bloque, operariosPresentes: operarios, produccion: producciones }));
+      localStorage.setItem(`sate_avance_draft_${obra.id}`, JSON.stringify({ 
+        fecha, 
+        bloque, 
+        operariosPresentes: operarios, 
+        produccion: producciones,
+        m2String // Save m2 typing state
+      }));
     }
-  }, [fecha, bloque, operarios, producciones, initialAvance, obra]);
+  }, [fecha, bloque, operarios, producciones, m2String, initialAvance, obra]);
 
   const toggleOperario = (nombre: string) => {
     setOperarios(prev => 
@@ -977,23 +1033,24 @@ function RegistrarAvance({
   };
 
   const addProduccion = () => {
-    if (isNaN(m2) || m2 <= 0) {
+    const numericM2 = parseFloat(m2String.replace(',', '.'));
+    if (isNaN(numericM2) || numericM2 <= 0) {
       notify("Introduce un número válido de metros cuadrados.", "error");
       return;
     }
-    if (!selectedItemId) {
-      notify("Selecciona un ítem para esta producción.", "error");
+    if (!selectedItemId || !itemsSate[selectedItemId]) {
+      notify("Selecciona un ítem válido para esta producción.", "error");
       return;
     }
 
     const p: Produccion = {
       itemId: selectedItemId,
-      m2,
+      m2: numericM2,
       bloque: prodBloque || bloque
     };
     setProducciones([...producciones, p]);
     // Reset form
-    setM2(0);
+    setM2String("");
   };
 
   const removeProduccion = (index: number) => {
@@ -1104,23 +1161,35 @@ function RegistrarAvance({
 
       {/* Operarios */}
       <section className="space-y-3">
-        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4">Asistencia Operarios</label>
-        <div className="grid grid-cols-2 gap-2">
-          {OPERARIOS.map(op => (
-            <button
-              key={op.nombre}
-              onClick={() => toggleOperario(op.nombre)}
-              className={`flex justify-between items-center px-4 py-4 rounded-2xl text-sm font-black border-2 transition-all active:scale-95 ${
-                operarios.includes(op.nombre) 
-                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100" 
-                : "bg-white border-slate-100 text-slate-400"
-              }`}
-            >
-              <span>{op.nombre}</span>
-              {operarios.includes(op.nombre) ? <Check size={18} /> : <span className="text-[10px] opacity-60">{op.coste}€</span>}
-            </button>
-          ))}
+        <div className="flex justify-between items-center px-4">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Asistencia Operarios</label>
+          {operariosList.length === 0 && (
+            <span className="text-[9px] font-black text-red-500 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 uppercase">Configura operarios primero</span>
+          )}
         </div>
+        
+        {operariosList.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2">
+            {operariosList.map(op => (
+              <button
+                key={op.nombre}
+                onClick={() => toggleOperario(op.nombre)}
+                className={`flex justify-between items-center px-4 py-4 rounded-2xl text-sm font-black border-2 transition-all active:scale-95 ${
+                  operarios.includes(op.nombre) 
+                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100" 
+                  : "bg-white border-slate-100 text-slate-400"
+                }`}
+              >
+                <span>{op.nombre}</span>
+                {operarios.includes(op.nombre) ? <Check size={18} /> : <span className="text-[10px] opacity-60">{op.coste}€</span>}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-slate-50 p-6 rounded-[2rem] border border-dashed border-slate-200 text-center">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed"> No hay operarios en el sistema.<br/>Añádelos en Configuración. </p>
+          </div>
+        )}
       </section>
 
       {/* Formulario Producción */}
@@ -1135,32 +1204,40 @@ function RegistrarAvance({
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Ítem del SATE</label>
-            <div className="space-y-2">
-              {Object.entries(ITEMS_SATE).map(([id, item]) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedItemId(id)}
-                  className={`w-full text-left p-4 rounded-2xl font-black text-sm transition-all border-2 active:scale-[0.98] ${
-                    selectedItemId === id 
-                    ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" 
-                    : "bg-slate-50 border-transparent text-slate-400"
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                      <span>{item.nombre}</span>
-                      <span className="text-[10px] opacity-60 font-bold">{item.precio}€/m²</span>
+            {Object.keys(itemsSate).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(itemsSate).map(([id, item]) => (
+                  <button
+                    key={id}
+                    onClick={() => setSelectedItemId(id)}
+                    className={`w-full text-left p-4 rounded-2xl font-black text-sm transition-all border-2 active:scale-[0.98] ${
+                      selectedItemId === id 
+                      ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" 
+                      : "bg-slate-50 border-transparent text-slate-400"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <span>{item.nombre}</span>
+                        <span className="text-[10px] opacity-60 font-bold">{item.precio}€/m²</span>
+                      </div>
+                      {selectedItemId === id && <Check size={20} />}
                     </div>
-                    {selectedItemId === id && <Check size={20} />}
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                {itemsSate[selectedItemId]?.descripcion}
-              </p>
-            </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-slate-50 p-6 rounded-[2rem] border border-dashed border-slate-200 text-center">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed"> No hay partidas configuradas.<br/>Añádelas en Configuración. </p>
+              </div>
+            )}
+            {Object.keys(itemsSate).length > 0 && (
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                  {itemsSate[selectedItemId]?.descripcion || "Selecciona una partida"}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -1181,9 +1258,16 @@ function RegistrarAvance({
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 text-center block">Metros Cuadrados (m²)</label>
             <div className="relative">
               <input 
-                type="number" 
-                value={m2 || ""} 
-                onChange={(e) => setM2(Number(e.target.value))}
+                type="text" 
+                inputMode="decimal"
+                value={m2String} 
+                onChange={(e) => {
+                  // Allow only numbers, dots and commas
+                  const val = e.target.value;
+                  if (val === "" || /^[0-9]*[.,]?[0-9]*$/.test(val)) {
+                    setM2String(val);
+                  }
+                }}
                 placeholder="0.0"
                 className="w-full bg-slate-50 border-none rounded-3xl p-6 font-black text-center text-4xl text-blue-600 focus:ring-4 focus:ring-blue-100 transition-all outline-none"
               />
@@ -1194,7 +1278,7 @@ function RegistrarAvance({
 
         <button 
           onClick={addProduccion}
-          disabled={m2 <= 0}
+          disabled={!m2String}
           className="w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] active:scale-95 transition-all text-lg uppercase tracking-widest disabled:opacity-30"
         >
           Añadir a la lista
@@ -1210,7 +1294,7 @@ function RegistrarAvance({
               <div key={i} className="bg-white p-5 rounded-[2rem] border border-slate-100 flex justify-between items-center shadow-sm">
                 <div className="flex-1 pr-4">
                   <div className="font-black text-slate-800 leading-tight mb-1 uppercase text-sm">
-                    {ITEMS_SATE[p.itemId]?.nombre}
+                    {itemsSate[p.itemId]?.nombre}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-lg font-black text-blue-600">{p.m2} m²</div>
@@ -1254,8 +1338,8 @@ function RegistrarAvance({
       <div className="fixed bottom-24 left-4 right-4 max-w-md mx-auto z-50">
         <button 
           onClick={handleSave}
-          disabled={producciones.length === 0 || operarios.length === 0}
-          className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 disabled:opacity-50 disabled:shadow-none active:scale-95 transition-all text-xl uppercase tracking-widest"
+          disabled={producciones.length === 0 || operarios.length === 0 || !bloque}
+          className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 disabled:opacity-50 disabled:grayscale disabled:shadow-none active:scale-95 transition-all text-xl uppercase tracking-widest"
         >
           {initialAvance ? "Actualizar Día" : "Guardar Día"}
         </button>
@@ -1397,13 +1481,14 @@ function Calendario({
             const day = i + 1;
             const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const hasAvance = !!avancesMap[dateStr];
+            const hasAnticipo = anticiposMap[dateStr]?.length > 0;
             const isSelected = selectedDate === dateStr;
 
             return (
               <button
                 key={day}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`h-12 rounded-2xl flex items-center justify-center font-black text-sm transition-all active:scale-90 ${
+                className={`h-12 rounded-2xl flex flex-col items-center justify-center font-black text-sm transition-all active:scale-90 relative ${
                   isSelected 
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-100" 
                   : hasAvance 
@@ -1412,6 +1497,9 @@ function Calendario({
                 }`}
               >
                 {day}
+                {hasAnticipo && (
+                  <div className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full shadow-[0_0_8px_#39FF14] bg-[#39FF14] group-active:bg-white`} />
+                )}
               </button>
             );
           })}
@@ -1677,6 +1765,21 @@ function ConfigScreen({
                   </label>
                 </div>
               </div>
+
+              <div className="pt-6 border-t border-slate-50">
+                <button
+                  onClick={() => {
+                    if (confirm("¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.")) {
+                      localStorage.clear();
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-3 p-6 bg-red-50 rounded-[2rem] border border-red-100 text-red-600 active:scale-95 transition-all"
+                >
+                  <Trash2 size={24} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Borrar todo el contenido</span>
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -1717,17 +1820,29 @@ function ConfigScreen({
                       <p className="text-xs font-black text-slate-800 uppercase">{item.nombre}</p>
                       <p className="text-[10px] font-bold text-blue-600">{item.precio}€/m²</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        const newItems = { ...items };
-                        delete newItems[id];
-                        setItems(newItems);
-                        notify("Partida eliminada.", "info");
-                      }}
-                      className="text-red-400 p-2 active:scale-90 transition-transform"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          const newPrice = parseFloat(prompt(`Nuevo precio para ${item.nombre}:`, item.precio.toString()) || item.precio.toString());
+                          setItems({ ...items, [id]: { ...item, precio: newPrice } });
+                          notify("Precio actualizado.", "success");
+                        }}
+                        className="p-2 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-transform"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const newItems = { ...items };
+                          delete newItems[id];
+                          setItems(newItems);
+                          notify("Partida eliminada.", "info");
+                        }}
+                        className="text-red-400 p-2 active:scale-90 transition-transform"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1768,16 +1883,30 @@ function ConfigScreen({
                       <p className="text-xs font-black text-slate-800 uppercase">{op.nombre}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase">Coste: {op.coste}€</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        const newOps = operarios.filter((_, idx) => idx !== i);
-                        setOperarios(newOps);
-                        notify("Operario eliminado.", "info");
-                      }}
-                      className="text-red-400 p-2 active:scale-90 transition-transform"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          const newCoste = parseFloat(prompt(`Nuevo coste para ${op.nombre}:`, op.coste.toString()) || op.coste.toString());
+                          const newOps = [...operarios];
+                          newOps[i] = { ...op, coste: newCoste };
+                          setOperarios(newOps);
+                          notify("Coste actualizado.", "success");
+                        }}
+                        className="p-2 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-transform"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const newOps = operarios.filter((_, idx) => idx !== i);
+                          setOperarios(newOps);
+                          notify("Operario eliminado.", "info");
+                        }}
+                        className="text-red-400 p-2 active:scale-90 transition-transform"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1827,6 +1956,13 @@ function CertificacionScreen({
   const [manualCant, setManualCant] = useState(400);
   const [manualFecha, setManualFecha] = useState(new Date().toISOString().split('T')[0]);
 
+  // Sync manualOp when operariosList loads
+  useEffect(() => {
+    if (!manualOp && operariosList.length > 0) {
+      setManualOp(operariosList[0].nombre);
+    }
+  }, [operariosList, manualOp]);
+
   const ejecutado = useMemo(() => {
     return (avances || [])
       .filter(a => a.fecha && a.fecha.startsWith(mes))
@@ -1842,39 +1978,27 @@ function CertificacionScreen({
   const certificado = ejecutado - totalAnticiposMes;
 
   const totalesMensuales = useMemo(() => {
-    const fases: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
-    const extras = {
-      dobleMalla: 0,
-      antifisuras: 0,
-      cajeado: { "40": 0, "80": 0, "100": 0 }
-    };
+    const items: Record<string, number> = {};
     let beneficioTotal = 0;
 
     (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes)).forEach(a => {
       beneficioTotal += (a.resumen?.beneficio || 0);
       (a.produccion || []).forEach(p => {
-        if (p.itemId === "fase1") fases[1] += (p.m2 || 0);
-        if (p.itemId === "fase2") fases[2] += (p.m2 || 0);
-        if (p.itemId === "fase3") fases[3] += (p.m2 || 0);
-        if (p.itemId === "malla") extras.dobleMalla += (p.m2 || 0);
-        if (p.itemId === "anti") extras.antifisuras += (p.m2 || 0);
-        if (p.itemId === "cajeado40") extras.cajeado["40"] += (p.m2 || 0);
-        if (p.itemId === "cajeado80") extras.cajeado["80"] += (p.m2 || 0);
-        if (p.itemId === "cajeado100") extras.cajeado["100"] += (p.m2 || 0);
+        items[p.itemId] = (items[p.itemId] || 0) + (p.m2 || 0);
       });
     });
 
-    return { fases, extras, beneficioTotal };
+    return { items, beneficioTotal };
   }, [avances, mes]);
 
   const operariosStats = useMemo(() => {
     const stats: Record<string, { jornales: number, beneficios: number, anticipos: number }> = {};
-    OPERARIOS.forEach(o => stats[o.nombre] = { jornales: 0, beneficios: 0, anticipos: 0 });
+    operariosList.forEach(o => stats[o.nombre] = { jornales: 0, beneficios: 0, anticipos: 0 });
 
     (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes)).forEach(a => {
       (a.operariosPresentes || []).forEach(op => {
         if (stats[op]) {
-          stats[op].jornales += OPERARIOS.find(o => o.nombre === op)?.coste || 0;
+          stats[op].jornales += operariosList.find(o => o.nombre === op)?.coste || 0;
           stats[op].beneficios += (a.resumen?.beneficioPorOperario || 0);
         }
       });
@@ -1887,7 +2011,7 @@ function CertificacionScreen({
     });
 
     return stats;
-  }, [avances, anticipos, mes]);
+  }, [avances, anticipos, mes, operariosList]);
 
   const existingCert = certificaciones.find(c => c.obraId === obraId && c.mes === mes);
 
@@ -2006,47 +2130,20 @@ function CertificacionScreen({
           </div>
 
           {/* Totales Mensuales Detallados */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 space-y-6">
+          <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 space-y-4">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Producción del Mes</label>
             
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-3">
-                <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Por Fase</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3].map(f => (
-                    <div key={f} className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                      <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Fase {f}</span>
-                      <span className="text-lg font-black text-slate-800">{Math.round(totalesMensuales.fases[f])}</span>
-                      <span className="text-[10px] font-black text-slate-300 ml-0.5 uppercase">m²</span>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(totalesMensuales.items).map(([id, m2]) => (
+                <div key={id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase block mb-1 truncate">{itemsSate[id]?.nombre || "Partida"}</span>
+                  <span className="text-xl font-black text-slate-800">{Math.round(m2 as number)}</span>
+                  <span className="text-[10px] font-black text-slate-300 ml-1 uppercase">m²</span>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Por Extras</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Doble Malla</span>
-                    <span className="text-lg font-black text-orange-600">{Math.round(totalesMensuales.extras.dobleMalla)}</span>
-                    <span className="text-[10px] font-black text-slate-300 ml-0.5 uppercase">m²</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Antifisuras</span>
-                    <span className="text-lg font-black text-purple-600">{Math.round(totalesMensuales.extras.antifisuras)}</span>
-                    <span className="text-[10px] font-black text-slate-300 ml-0.5 uppercase">m²</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {["40", "80", "100"].map(c => (
-                    <div key={c} className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                      <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Caj {c}%</span>
-                      <span className="text-lg font-black text-emerald-600">{Math.round(totalesMensuales.extras.cajeado[c as "40"|"80"|"100"])}</span>
-                      <span className="text-[10px] font-black text-slate-300 ml-0.5 uppercase">m²</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
+              {Object.keys(totalesMensuales.items).length === 0 && (
+                <div className="col-span-2 text-center py-4 text-slate-400 text-[10px] font-black uppercase tracking-widest">Sin producción este mes</div>
+              )}
             </div>
 
             <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4">

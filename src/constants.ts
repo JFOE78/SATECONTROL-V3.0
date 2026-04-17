@@ -1,43 +1,43 @@
 export const ITEMS_SATE: Record<string, { nombre: string, precio: number, descripcion: string }> = {
   fase1: {
     nombre: "Corcho + Tacos",
-    descripcion: "Colocación del panel de corcho y fijación con tacos mecánicos. Es la base del sistema SATE.",
-    precio: 8
+    descripcion: "Colocación del panel de corcho y fijación con tacos mecánicos.",
+    precio: 0
   },
   fase2: {
     nombre: "Esquineros + Malla + Mortero",
-    descripcion: "Refuerzo de aristas con esquineros, aplicación de malla y capa de mortero para consolidar el sistema.",
-    precio: 8
+    descripcion: "Refuerzo de aristas, malla y capa de mortero.",
+    precio: 0
   },
   fase3: {
     nombre: "Pintura + Acrílico",
-    descripcion: "Acabado final del sistema SATE mediante pintura y revestimiento acrílico.",
-    precio: 4
+    descripcion: "Acabado final mediante pintura y revestimiento acrílico.",
+    precio: 0
   },
   malla: {
-    nombre: "Doble malla antibandálica",
-    descripcion: "Refuerzo adicional mediante doble malla para aumentar la resistencia del sistema.",
-    precio: 2.66
+    nombre: "Doble malla",
+    descripcion: "Refuerzo adicional mediante doble malla.",
+    precio: 0
   },
   anti: {
     nombre: "Antifisuras",
-    descripcion: "Aplicación de capa antifisuras para evitar grietas y mejorar la durabilidad del acabado.",
-    precio: 8
+    descripcion: "Capa antifisuras para mayor durabilidad.",
+    precio: 0
   },
   cajeado40: {
     nombre: "Cajeado 40%",
-    descripcion: "Ejecución parcial del cajeado equivalente al 40% de la superficie.",
-    precio: 8
+    descripcion: "Ejecución parcial del cajeado (40%).",
+    precio: 0
   },
   cajeado80: {
     nombre: "Cajeado 80%",
-    descripcion: "Ejecución parcial del cajeado equivalente al 80% de la superficie.",
-    precio: 16
+    descripcion: "Ejecución parcial del cajeado (80%).",
+    precio: 0
   },
   cajeado100: {
     nombre: "Cajeado 100%",
-    descripcion: "Ejecución completa del cajeado en toda la superficie.",
-    precio: 20
+    descripcion: "Ejecución completa del cajeado (100%).",
+    precio: 0
   }
 };
 
@@ -55,10 +55,4 @@ export const TARIFAS = {
   },
 };
 
-export const OPERARIOS = [
-  { nombre: "Juan", coste: 120 },
-  { nombre: "Mosquito", coste: 120 },
-  { nombre: "Antonio", coste: 120 },
-  { nombre: "Jesules", coste: 80 },
-  { nombre: "David", coste: 70 },
-];
+export const OPERARIOS: { nombre: string, coste: number }[] = [];

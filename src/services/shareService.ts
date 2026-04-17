@@ -89,29 +89,15 @@ export const shareService = {
 
     const partidasData: any[] = [];
     
-    // Fases
-    [1, 2, 3].forEach(f => {
-      if (totalesMensuales.fases[f] > 0) {
-        const item = itemsSate[`fase${f}`];
-        partidasData.push([item ? item.nombre : `Fase ${f}`, `${Math.round(totalesMensuales.fases[f])} m2`]);
-      }
-    });
-
-    // Extras
-    if (totalesMensuales.extras.dobleMalla > 0) {
-      const item = itemsSate["malla"];
-      partidasData.push([item ? item.nombre : "Doble Malla", `${Math.round(totalesMensuales.extras.dobleMalla)} m2`]);
+    // Items Dinámicos
+    if (totalesMensuales.items) {
+      Object.entries(totalesMensuales.items).forEach(([id, m2]) => {
+        if ((m2 as number) > 0) {
+          const item = itemsSate[id];
+          partidasData.push([item ? item.nombre : id, `${Math.round(m2 as number)} m2`]);
+        }
+      });
     }
-    if (totalesMensuales.extras.antifisuras > 0) {
-      const item = itemsSate["anti"];
-      partidasData.push([item ? item.nombre : "Antifisuras", `${Math.round(totalesMensuales.extras.antifisuras)} m2`]);
-    }
-    ["40", "80", "100"].forEach(c => {
-      if (totalesMensuales.extras.cajeado[c as "40"|"80"|"100"] > 0) {
-        const item = itemsSate[`cajeado${c}`];
-        partidasData.push([item ? item.nombre : `Cajeado ${c}%`, `${Math.round(totalesMensuales.extras.cajeado[c as "40"|"80"|"100"])} m2`]);
-      }
-    });
 
     autoTable(doc, {
       startY: finalYResumen + 5,
@@ -184,29 +170,14 @@ export const shareService = {
     text += `*Estado:* ${cert.estado.toUpperCase()}\n\n`;
     
     text += `*PARTIDAS EJECUTADAS:*\n`;
-    // Fases
-    [1, 2, 3].forEach(f => {
-      if (totalesMensuales.fases[f] > 0) {
-        const item = itemsSate[`fase${f}`];
-        text += `- ${item ? item.nombre : `Fase ${f}`}: ${Math.round(totalesMensuales.fases[f])} m2\n`;
-      }
-    });
-
-    // Extras
-    if (totalesMensuales.extras.dobleMalla > 0) {
-      const item = itemsSate["malla"];
-      text += `- ${item ? item.nombre : "Doble Malla"}: ${Math.round(totalesMensuales.extras.dobleMalla)} m2\n`;
+    if (totalesMensuales.items) {
+      Object.entries(totalesMensuales.items).forEach(([id, m2]) => {
+        if ((m2 as number) > 0) {
+          const item = itemsSate[id];
+          text += `- ${item ? item.nombre : id}: ${Math.round(m2 as number)} m2\n`;
+        }
+      });
     }
-    if (totalesMensuales.extras.antifisuras > 0) {
-      const item = itemsSate["anti"];
-      text += `- ${item ? item.nombre : "Antifisuras"}: ${Math.round(totalesMensuales.extras.antifisuras)} m2\n`;
-    }
-    ["40", "80", "100"].forEach(c => {
-      if (totalesMensuales.extras.cajeado[c as "40"|"80"|"100"] > 0) {
-        const item = itemsSate[`cajeado${c}`];
-        text += `- ${item ? item.nombre : `Cajeado ${c}%`}: ${Math.round(totalesMensuales.extras.cajeado[c as "40"|"80"|"100"])} m2\n`;
-      }
-    });
 
     text += `\n*RESUMEN:*\n`;
     text += `- Ejecutado: ${cert.ejecutado.toLocaleString()}€\n`;
