@@ -24,8 +24,6 @@
 
   body {
     -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    user-select: none;
     @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300;
   }
 

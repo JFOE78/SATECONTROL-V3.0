@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Home as HomeIcon, 
@@ -170,18 +170,35 @@ export default function App() {
     });
   }, [avances, selectedObraId]);
 
-  const calculateAvanceEconomics = (a: Avance) => {
+  const calculateAvanceEconomics = useCallback((a: Avance) => {
+    // Normalización robusta para evitar fallos por tildes, espacios o mayúsculas
+    const normalize = (s: string) => 
+      s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
+    const uniqueOpsNormalized = Array.from(new Set(uniqueOpsRaw.map(n => normalize(n as string))));
+    
     const ingresos = (a.produccion || []).reduce((acc, p) => {
       const item = itemsSate[p.itemId];
       return acc + (p.m2 * (item?.precio || 0));
     }, 0);
-    const costeManoObra = (a.operariosPresentes || []).reduce((acc, nombre) => {
-      const op = operariosList.find(o => o.nombre === nombre);
+
+    const costeManoObra = uniqueOpsNormalized.reduce((acc, nameToFind) => {
+      const op = operariosList.find(o => normalize(o.nombre) === nameToFind);
       return acc + (op?.coste || 0);
     }, 0);
+
     const beneficio = ingresos - costeManoObra;
-    return { ingresos, costeManoObra, beneficio };
-  };
+    const beneficioPorOperario = uniqueOpsNormalized.length > 0 ? beneficio / uniqueOpsNormalized.length : 0;
+    
+    return { 
+      ingresos, 
+      costeManoObra, 
+      beneficio, 
+      beneficioPorOperario, 
+      cantOps: uniqueOpsNormalized.length 
+    };
+  }, [itemsSate, operariosList]);
 
   const monthlyProfit = useMemo(() => 
     (currentMonthAvances || []).reduce((acc, curr) => acc + calculateAvanceEconomics(curr).beneficio, 0),
@@ -273,6 +290,7 @@ export default function App() {
           <Calendario 
             avances={avances.filter(a => a.obraId === selectedObraId)}
             obra={selectedObra!}
+            calculateEconomics={calculateAvanceEconomics}
             onEdit={(avance) => {
               setEditingAvance(avance);
               setCurrentScreen("registrar");
@@ -342,6 +360,7 @@ export default function App() {
             operariosList={operariosList}
             itemsSate={itemsSate}
             notify={notify}
+            calculateEconomics={calculateAvanceEconomics}
             onSaveCertificacion={(cert) => {
               try {
                 const newCerts = [...certificaciones.filter(c => c.id !== cert.id), cert];
@@ -353,9 +372,12 @@ export default function App() {
               }
             }}
             onSaveAnticipo={(ant) => {
-              const newAnts = [...anticipos, ant];
-              setAnticipos(newAnts);
-              storage.saveAnticipos(newAnts);
+              const ants = Array.isArray(ant) ? ant : [ant];
+              setAnticipos(prev => {
+                const next = [...prev, ...ants];
+                storage.saveAnticipos(next);
+                return next;
+              });
             }}
             onDeleteAnticipo={(id) => {
               const newAnts = anticipos.filter(an => an.id !== id);
@@ -582,12 +604,16 @@ function Inicio({
   }, [avances, selectedObraId, itemsSate, operariosList, calculateEconomics]);
 
   const totalAcumulado = useMemo(() => {
-    const statsArray = Object.values(produccionPorBloque) as { m2: number, beneficio: number, costeMO: number }[];
-    return statsArray.reduce((acc, curr) => ({
-      costeMO: acc.costeMO + curr.costeMO,
-      beneficio: acc.beneficio + curr.beneficio
-    }), { costeMO: 0, beneficio: 0 });
-  }, [produccionPorBloque]);
+    return (avances || [])
+      .filter(a => a.obraId === selectedObraId)
+      .reduce((acc, curr) => {
+        const econ = calculateEconomics(curr);
+        return {
+          costeMO: acc.costeMO + econ.costeManoObra,
+          beneficio: acc.beneficio + econ.beneficio
+        };
+      }, { costeMO: 0, beneficio: 0 });
+  }, [avances, selectedObraId, calculateEconomics]);
 
   return (
     <div className="space-y-4">
@@ -690,7 +716,7 @@ function Inicio({
               <p className="text-xs font-bold text-slate-400">{lastAvance.bloque}</p>
             </div>
             <div className="text-right">
-              <p className="text-xl font-black text-blue-600">+{(lastAvance.resumen?.beneficio || 0).toFixed(0)}€</p>
+              <p className="text-xl font-black text-blue-600">+{calculateEconomics(lastAvance).beneficio.toFixed(0)}€</p>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Beneficio Día</p>
             </div>
           </div>
@@ -989,7 +1015,15 @@ function RegistrarAvance({
 
   const draft = getDraft();
 
-  const [fecha, setFecha] = useState(initialAvance?.fecha || draft?.fecha || new Date().toISOString().split('T')[0]);
+  const [fecha, setFecha] = useState(() => {
+    if (initialAvance?.fecha) return initialAvance.fecha;
+    if (draft?.fecha) return draft.fecha;
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  });
   const [bloque, setBloque] = useState(initialAvance?.bloque || draft?.bloque || lastBloque || "");
   const [operarios, setOperarios] = useState<string[]>(initialAvance?.operariosPresentes || draft?.operariosPresentes || operariosList.map(o => o.nombre));
   const [producciones, setProducciones] = useState<Produccion[]>(initialAvance?.produccion || draft?.produccion || []);
@@ -1027,9 +1061,13 @@ function RegistrarAvance({
   }, [fecha, bloque, operarios, producciones, m2String, initialAvance, obra]);
 
   const toggleOperario = (nombre: string) => {
-    setOperarios(prev => 
-      prev.includes(nombre) ? prev.filter(n => n !== nombre) : [...prev, nombre]
-    );
+    setOperarios(prev => {
+      const isPresent = prev.some(n => n.trim().toLowerCase() === nombre.trim().toLowerCase());
+      if (isPresent) {
+        return prev.filter(n => n.trim().toLowerCase() !== nombre.trim().toLowerCase());
+      }
+      return [...prev, nombre.trim()];
+    });
   };
 
   const addProduccion = () => {
@@ -1060,7 +1098,12 @@ function RegistrarAvance({
   const handleSave = () => {
     if (!obra) return;
 
-    if ((operarios || []).length === 0) {
+    const normalizeList = (list: string[]) => 
+      Array.from(new Set(list.map(n => n.trim()))).filter(Boolean);
+
+    const uniqueOps = normalizeList(operarios || []);
+
+    if (uniqueOps.length === 0) {
       notify("Debes seleccionar al menos un operario presente.", "error");
       return;
     }
@@ -1081,7 +1124,7 @@ function RegistrarAvance({
       return;
     }
 
-    // Calcular resumen
+    // Calcular resumen dinámicamente
     let ingresos = 0;
     (producciones || []).forEach(p => {
       const item = itemsSate[p.itemId];
@@ -1090,20 +1133,20 @@ function RegistrarAvance({
       }
     });
 
-    const costeManoObra = (operarios || []).reduce((acc, nombre) => {
+    const costeManoObra = uniqueOps.reduce((acc, nombre) => {
       const op = (operariosList || []).find(o => o.nombre === nombre);
       return acc + (op?.coste || 0);
     }, 0);
 
     const beneficio = ingresos - costeManoObra;
-    const beneficioPorOperario = (operarios || []).length > 0 ? beneficio / operarios.length : 0;
+    const beneficioPorOperario = uniqueOps.length > 0 ? beneficio / uniqueOps.length : 0;
 
     const avance: Avance = {
       id: initialAvance?.id || crypto.randomUUID(),
       fecha,
       obraId: obra.id,
       bloque,
-      operariosPresentes: operarios,
+      operariosPresentes: uniqueOps,
       produccion: producciones,
       resumen: {
         ingresos,
@@ -1175,13 +1218,13 @@ function RegistrarAvance({
                 key={op.nombre}
                 onClick={() => toggleOperario(op.nombre)}
                 className={`flex justify-between items-center px-4 py-4 rounded-2xl text-sm font-black border-2 transition-all active:scale-95 ${
-                  operarios.includes(op.nombre) 
+                  operarios.some(n => n.trim().toLowerCase() === op.nombre.trim().toLowerCase()) 
                   ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100" 
                   : "bg-white border-slate-100 text-slate-400"
                 }`}
               >
                 <span>{op.nombre}</span>
-                {operarios.includes(op.nombre) ? <Check size={18} /> : <span className="text-[10px] opacity-60">{op.coste}€</span>}
+                {operarios.some(n => n.trim().toLowerCase() === op.nombre.trim().toLowerCase()) ? <Check size={18} /> : <span className="text-[10px] opacity-60">{op.coste}€</span>}
               </button>
             ))}
           </div>
@@ -1388,6 +1431,7 @@ function Calendario({
   anticipos,
   itemsSate,
   obra,
+  calculateEconomics,
   onEdit, 
   onNew,
   onDelete,
@@ -1397,6 +1441,7 @@ function Calendario({
   anticipos: Anticipo[],
   itemsSate: Record<string, any>,
   obra: Obra,
+  calculateEconomics: (a: Avance) => { ingresos: number, costeManoObra: number, beneficio: number, beneficioPorOperario: number, cantOps: number },
   onEdit: (a: Avance) => void, 
   onNew: (date: string) => void,
   onDelete: (id: string) => void,
@@ -1562,7 +1607,7 @@ function Calendario({
             <div className="space-y-3">
               <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Equipo Presente</h4>
               <div className="flex flex-wrap gap-2">
-                {(selectedAvance.operariosPresentes || []).map(op => (
+                {Array.from(new Set((selectedAvance.operariosPresentes || []).map(o => o.trim()))).map(op => (
                   <span key={op} className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-black text-slate-600 border border-slate-100 uppercase tracking-tight">{op}</span>
                 ))}
               </div>
@@ -1596,13 +1641,13 @@ function Calendario({
             </div>
 
             <div className="pt-6 border-t border-slate-50 grid grid-cols-2 gap-6">
-              <Stat label="Ingresos" value={`${(selectedAvance.resumen?.ingresos || 0).toFixed(0)}€`} />
-              <Stat label="Coste M.O." value={`${selectedAvance.resumen?.costeManoObra || 0}€`} />
+              <Stat label="Ingresos" value={`${calculateEconomics(selectedAvance).ingresos.toFixed(0)}€`} />
+              <Stat label="Coste M.O." value={`${calculateEconomics(selectedAvance).costeManoObra.toFixed(0)}€`} />
               <div className="col-span-2 bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex justify-between items-center">
-                <Stat label="Beneficio Neto" value={`${(selectedAvance.resumen?.beneficio || 0).toFixed(0)}€`} highlight />
+                <Stat label="Beneficio Neto" value={`${calculateEconomics(selectedAvance).beneficio.toFixed(0)}€`} highlight />
                 <div className="text-right">
                   <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">Por Operario</label>
-                  <span className="text-xl font-black text-blue-700">{(selectedAvance.resumen?.beneficioPorOperario || 0).toFixed(0)}€</span>
+                  <span className="text-xl font-black text-blue-700">{calculateEconomics(selectedAvance).beneficioPorOperario.toFixed(0)}€</span>
                 </div>
               </div>
             </div>
@@ -1866,7 +1911,12 @@ function ConfigScreen({
                     const nombre = prompt("Nombre del operario:");
                     const coste = parseFloat(prompt("Coste por jornal:") || "120");
                     if (nombre) {
-                      setOperarios([...operarios, { nombre, coste }]);
+                      const trimmed = nombre.trim();
+                      if (operarios.some(o => o.nombre.trim().toLowerCase() === trimmed.toLowerCase())) {
+                        notify("Este operario ya existe.", "error");
+                        return;
+                      }
+                      setOperarios([...operarios, { nombre: trimmed, coste }]);
                       notify("Operario añadido.", "success");
                     }
                   }}
@@ -1929,6 +1979,7 @@ function CertificacionScreen({
   itemsSate,
   obra,
   notify,
+  calculateEconomics,
   onSaveCertificacion, 
   onSaveAnticipo,
   onDeleteAnticipo,
@@ -1942,8 +1993,9 @@ function CertificacionScreen({
   itemsSate: Record<string, any>,
   obra: Obra,
   notify: (m: string, t?: "success" | "error" | "info") => void,
+  calculateEconomics: (a: Avance) => { ingresos: number, costeManoObra: number, beneficio: number },
   onSaveCertificacion: (c: Certificacion) => void,
-  onSaveAnticipo: (a: Anticipo) => void,
+  onSaveAnticipo: (a: Anticipo | Anticipo[]) => void,
   onDeleteAnticipo: (id: string) => void,
   onBack: () => void 
 }) {
@@ -1954,7 +2006,13 @@ function CertificacionScreen({
   // Manual Advance State
   const [manualOp, setManualOp] = useState(operariosList[0]?.nombre || "");
   const [manualCant, setManualCant] = useState(400);
-  const [manualFecha, setManualFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [manualFecha, setManualFecha] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  });
 
   // Sync manualOp when operariosList loads
   useEffect(() => {
@@ -1966,8 +2024,8 @@ function CertificacionScreen({
   const ejecutado = useMemo(() => {
     return (avances || [])
       .filter(a => a.fecha && a.fecha.startsWith(mes))
-      .reduce((acc, curr) => acc + (curr.resumen?.ingresos || 0), 0);
-  }, [avances, mes]);
+      .reduce((acc, curr) => acc + calculateEconomics(curr).ingresos, 0);
+  }, [avances, mes, calculateEconomics]);
 
   const totalAnticiposMes = useMemo(() => {
     return (anticipos || [])
@@ -1982,36 +2040,52 @@ function CertificacionScreen({
     let beneficioTotal = 0;
 
     (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes)).forEach(a => {
-      beneficioTotal += (a.resumen?.beneficio || 0);
+      const econ = calculateEconomics(a);
+      beneficioTotal += econ.beneficio;
       (a.produccion || []).forEach(p => {
         items[p.itemId] = (items[p.itemId] || 0) + (p.m2 || 0);
       });
     });
 
     return { items, beneficioTotal };
-  }, [avances, mes]);
+  }, [avances, mes, calculateEconomics]);
 
   const operariosStats = useMemo(() => {
     const stats: Record<string, { jornales: number, beneficios: number, anticipos: number }> = {};
     operariosList.forEach(o => stats[o.nombre] = { jornales: 0, beneficios: 0, anticipos: 0 });
 
-    (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes)).forEach(a => {
-      (a.operariosPresentes || []).forEach(op => {
-        if (stats[op]) {
-          stats[op].jornales += operariosList.find(o => o.nombre === op)?.coste || 0;
-          stats[op].beneficios += (a.resumen?.beneficioPorOperario || 0);
+    const filtrados = (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes));
+    
+    filtrados.forEach(a => {
+      const econ = calculateEconomics(a);
+      const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
+      const cantOps = uniqueOpsRaw.length;
+      const beneficioPorOp = cantOps > 0 ? econ.beneficio / cantOps : 0;
+      
+      uniqueOpsRaw.forEach(op => {
+        // Find exact key in stats using robust matching
+        const targetOp = Object.keys(stats).find(name => 
+          name.trim().toLowerCase() === op.trim().toLowerCase()
+        );
+        if (targetOp) {
+          stats[targetOp].jornales += operariosList.find(o => o.nombre === targetOp)?.coste || 0;
+          stats[targetOp].beneficios += beneficioPorOp;
         }
       });
     });
 
     (anticipos || []).filter(an => an.fecha && an.fecha.startsWith(mes)).forEach(an => {
-      if (stats[an.operario]) {
-        stats[an.operario].anticipos += (an.cantidad || 0);
+      // Robust matching ignoring spaces and case
+      const targetOp = Object.keys(stats).find(name => 
+        name.trim().toLowerCase() === an.operario.trim().toLowerCase()
+      );
+      if (targetOp) {
+        stats[targetOp].anticipos += (an.cantidad || 0);
       }
     });
 
     return stats;
-  }, [avances, anticipos, mes, operariosList]);
+  }, [avances, anticipos, mes, operariosList, calculateEconomics]);
 
   const existingCert = certificaciones.find(c => c.obraId === obraId && c.mes === mes);
 
@@ -2047,48 +2121,77 @@ function CertificacionScreen({
     const year = parseInt(mes.split('-')[0]);
     const month = parseInt(mes.split('-')[1]) - 1;
     
+    const getLocalISODate = (date: Date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
+    const normalize = (s: string) => 
+      s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     const viernes: string[] = [];
     let d = new Date(year, month, 1);
     while (d.getMonth() === month) {
       if (d.getDay() === 5) {
-        viernes.push(d.toISOString().split('T')[0]);
+        viernes.push(getLocalISODate(d));
       }
       d.setDate(d.getDate() + 1);
     }
 
-    let count = 0;
+    const nuevosAnticipos: Anticipo[] = [];
     viernes.forEach(v => {
-      const fridayDate = new Date(v);
+      // Usar Date.parse o similar para evitar desfases al crear fechas desde string
+      const [y, mm, dd] = v.split('-').map(Number);
+      const fridayDate = new Date(y, mm - 1, dd);
+      
       const mondayDate = new Date(fridayDate);
       mondayDate.setDate(fridayDate.getDate() - 4);
       
-      const monStr = mondayDate.toISOString().split('T')[0];
-      const friStr = fridayDate.toISOString().split('T')[0];
+      const monStr = getLocalISODate(mondayDate);
+      const friStr = v;
 
-      const operariosSemana = new Set<string>();
+      // Usar Set con nombres normalizados para evitar duplicados por espacios o tildes
+      const operariosSemanaMap = new Map<string, string>(); // normalized -> original
+      
       (avances || []).filter(a => a.fecha >= monStr && a.fecha <= friStr).forEach(a => {
-        (a.operariosPresentes || []).forEach(op => operariosSemana.add(op));
+        (a.operariosPresentes || []).forEach(op => {
+          const norm = normalize(op);
+          if (norm && !operariosSemanaMap.has(norm)) {
+            operariosSemanaMap.set(norm, op.trim());
+          }
+        });
       });
 
-      operariosSemana.forEach(op => {
-        const exists = anticipos.find(an => an.fecha === v && an.operario === op && an.obraId === obraId);
-        if (!exists) {
-          onSaveAnticipo({
+      operariosSemanaMap.forEach((originalName, normName) => {
+        const exists = anticipos.find(an => 
+          an.fecha === v && 
+          normalize(an.operario) === normName && 
+          an.obraId === obraId
+        );
+        const alreadyInBatch = nuevosAnticipos.find(an => 
+          an.fecha === v && 
+          normalize(an.operario) === normName
+        );
+        
+        if (!exists && !alreadyInBatch) {
+          nuevosAnticipos.push({
             id: crypto.randomUUID(),
             fecha: v,
             obraId,
-            operario: op,
+            operario: originalName,
             cantidad: 400
           });
-          count++;
         }
       });
     });
 
-    if (count > 0) {
-      notify(`Se han generado ${count} anticipos automáticos.`, "success");
+    if (nuevosAnticipos.length > 0) {
+      onSaveAnticipo(nuevosAnticipos);
+      notify(`Se han generado ${nuevosAnticipos.length} anticipos automáticos.`, "success");
     } else {
-      notify("No se han encontrado nuevos anticipos para generar.", "info");
+      notify("No hay anticipos nuevos para generar.", "info");
     }
   };
 
