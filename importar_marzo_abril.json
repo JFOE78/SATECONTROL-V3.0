@@ -1,0 +1,55 @@
+{
+  "obras": [
+    { "id": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "nombre": "Alcosa Bloque 13.", "numBloques": 20 },
+    { "id": "efbfe2f6-01a2-4700-ac1c-5c2a4c5e4913", "nombre": "Alcosa Bloque 5", "numBloques": 20 }
+  ],
+  "avances": [
+    {
+      "id": "12633398-1f79-43c3-bc13-b86cc3a00814",
+      "fecha": "2026-03-25",
+      "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64",
+      "bloque": "Migración",
+      "operariosPresentes": ["Juan", "Mosquito", "Antonio", "Jesules", "David"],
+      "produccion": [
+        { "itemId": "fase1", "m2": 39.74, "bloque": "Migración" },
+        { "itemId": "fase2", "m2": 39.74, "bloque": "Migración" },
+        { "itemId": "fase3", "m2": 39.74, "bloque": "Migración" },
+        { "itemId": "fase4", "m2": 39.74, "bloque": "Migración" }
+      ],
+      "resumen": { "ingresos": 635.84, "costeManoObra": 510, "beneficio": 125.84, "beneficioPorOperario": 25.16 }
+    },
+    {
+      "id": "170d37f5-be6f-4475-97e4-0ee17031e42e",
+      "fecha": "2026-04-01",
+      "obraId": "efbfe2f6-01a2-4700-ac1c-5c2a4c5e4913",
+      "bloque": "Migración",
+      "operariosPresentes": ["Juan", "Mosquito", "Antonio", "Jesules", "David"],
+      "produccion": [
+        { "itemId": "fase1", "m2": 121.85, "bloque": "Migración" },
+        { "itemId": "fase2", "m2": 121.85, "bloque": "Migración" },
+        { "itemId": "fase3", "m2": 121.85, "bloque": "Migración" }
+      ],
+      "resumen": { "ingresos": 1169.76, "costeManoObra": 510, "beneficio": 659.76, "beneficioPorOperario": 131.95 }
+    },
+    {
+      "id": "285908d5-0960-410c-83dd-f5668952bfc7",
+      "fecha": "2026-03-09",
+      "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64",
+      "bloque": "Migración",
+      "operariosPresentes": ["Juan", "Mosquito", "Antonio", "Jesules", "David"],
+      "produccion": [{ "itemId": "fase1", "m2": 39.74, "bloque": "Migración" }],
+      "resumen": { "ingresos": 635.84, "costeManoObra": 510, "beneficio": 125.84, "beneficioPorOperario": 25.16 }
+    }
+  ],
+  "anticipos": [
+    { "id": "ant_1", "fecha": "2026-03-13", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "operario": "Juan", "cantidad": 400 },
+    { "id": "ant_2", "fecha": "2026-03-13", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "operario": "Mosquito", "cantidad": 400 },
+    { "id": "ant_3", "fecha": "2026-03-13", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "operario": "Antonio", "cantidad": 400 },
+    { "id": "ant_4", "fecha": "2026-03-13", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "operario": "Jesules", "cantidad": 400 },
+    { "id": "ant_5", "fecha": "2026-03-13", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "operario": "David", "cantidad": 400 }
+  ],
+  "gastos": [
+    { "id": "g_1", "fecha": "2026-03-12", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "concepto": "Llana dientes Leroy Merlín", "monto": 14.79, "pagadoPor": "Antonio" },
+    { "id": "g_2", "fecha": "2026-03-20", "obraId": "a00c382a-13f9-4b82-a711-d4919b6b1c64", "concepto": "Plana y flota esponja", "monto": 27.0, "pagadoPor": "Mosquito" }
+  ]
+}

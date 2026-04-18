@@ -69,14 +69,21 @@ export const shareService = {
     doc.text(`Estado: ${cert.estado.toUpperCase()}`, 14, 35);
     
     // Resumen General
+    const summaryBody = [
+      ['Total Ejecutado', `${cert.ejecutado.toLocaleString()}€`],
+      ['Total Anticipos', `${cert.anticipos.toLocaleString()}€`]
+    ];
+
+    if (cert.incentivoExtra) {
+      summaryBody.push(['Bonus/Incentivo Extra', `${cert.incentivoExtra.toLocaleString()}€`]);
+    }
+
+    summaryBody.push(['Neto a Certificar', `${(cert.certificado + (cert.incentivoExtra || 0)).toLocaleString()}€`]);
+
     autoTable(doc, {
       startY: 45,
       head: [['Concepto', 'Cantidad']],
-      body: [
-        ['Total Ejecutado', `${cert.ejecutado.toLocaleString()}€`],
-        ['Total Anticipos', `${cert.anticipos.toLocaleString()}€`],
-        ['Neto a Certificar', `${cert.certificado.toLocaleString()}€`]
-      ],
+      body: summaryBody,
       theme: 'grid',
       headStyles: { fillColor: [0, 114, 255] }
     });
@@ -182,7 +189,11 @@ export const shareService = {
     text += `\n*RESUMEN:*\n`;
     text += `- Ejecutado: ${cert.ejecutado.toLocaleString()}€\n`;
     text += `- Anticipos: ${cert.anticipos.toLocaleString()}€\n`;
-    text += `*Neto a Certificar: ${cert.certificado.toLocaleString()}€*`;
+    if (cert.incentivoExtra) {
+      text += `- Bonus Extra: ${cert.incentivoExtra.toLocaleString()}€\n`;
+    }
+    const totalNeto = cert.certificado + (cert.incentivoExtra || 0);
+    text += `*Neto a Certificar: ${totalNeto.toLocaleString()}€*`;
     
     return text;
   }

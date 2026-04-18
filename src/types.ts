@@ -35,12 +35,24 @@ export interface Anticipo {
   cantidad: number;
 }
 
+export interface Gasto {
+  id: string;
+  fecha: string;
+  obraId: string;
+  concepto: string;
+  monto: number;
+  pagadoPor?: string; // Nombre del operario si procede
+}
+
 export interface Certificacion {
   id: string;
   obraId: string;
   mes: string; // YYYY-MM
+  fechaInicio?: string;
+  fechaFin?: string;
   ejecutado: number;
   anticipos: number;
+  incentivoExtra?: number;
   certificado: number;
   estado: "pendiente" | "cobrado";
   fechaCobro?: string;

@@ -2,42 +2,42 @@ export const ITEMS_SATE: Record<string, { nombre: string, precio: number, descri
   fase1: {
     nombre: "Corcho + Tacos",
     descripcion: "Colocación del panel de corcho y fijación con tacos mecánicos.",
-    precio: 0
+    precio: 8
   },
   fase2: {
     nombre: "Esquineros + Malla + Mortero",
     descripcion: "Refuerzo de aristas, malla y capa de mortero.",
-    precio: 0
+    precio: 8
   },
   fase3: {
     nombre: "Pintura + Acrílico",
     descripcion: "Acabado final mediante pintura y revestimiento acrílico.",
-    precio: 0
+    precio: 4
   },
   malla: {
     nombre: "Doble malla",
     descripcion: "Refuerzo adicional mediante doble malla.",
-    precio: 0
+    precio: 2
   },
   anti: {
     nombre: "Antifisuras",
     descripcion: "Capa antifisuras para mayor durabilidad.",
-    precio: 0
+    precio: 8
   },
   cajeado40: {
     nombre: "Cajeado 40%",
     descripcion: "Ejecución parcial del cajeado (40%).",
-    precio: 0
+    precio: 8
   },
   cajeado80: {
     nombre: "Cajeado 80%",
     descripcion: "Ejecución parcial del cajeado (80%).",
-    precio: 0
+    precio: 16
   },
   cajeado100: {
     nombre: "Cajeado 100%",
     descripcion: "Ejecución completa del cajeado (100%).",
-    precio: 0
+    precio: 20
   }
 };
 
@@ -55,4 +55,10 @@ export const TARIFAS = {
   },
 };
 
-export const OPERARIOS: { nombre: string, coste: number }[] = [];
+export const OPERARIOS: { nombre: string, coste: number }[] = [
+  { nombre: "Juan", coste: 120 },
+  { nombre: "Mosquito", coste: 120 },
+  { nombre: "Antonio", coste: 120 },
+  { nombre: "David", coste: 70 },
+  { nombre: "Jesules", coste: 80 }
+];

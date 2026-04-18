@@ -27,11 +27,25 @@ import {
   Database,
   Share2,
   FileDown,
-  MessageCircle
+  MessageCircle,
+  Receipt,
+  Wallet,
+  Activity
 } from "lucide-react";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  AreaChart, 
+  Area 
+} from 'recharts';
 import { storage } from "./lib/storage";
 import { shareService } from "./services/shareService";
-import { Obra, Avance, Certificacion, Produccion, Resumen, Anticipo } from "./types";
+import { Obra, Avance, Certificacion, Produccion, Resumen, Anticipo, Gasto } from "./types";
 import { TARIFAS, OPERARIOS, ITEMS_SATE } from "./constants";
 
 // --- Components ---
@@ -64,7 +78,7 @@ function StatCard({ label, value, color, large = false }: { label: string, value
   );
 }
 
-type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config";
+type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operario_detalle";
 
 interface Notification {
   message: string;
@@ -78,6 +92,7 @@ export default function App() {
   const [avances, setAvances] = useState<Avance[]>([]);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
   const [anticipos, setAnticipos] = useState<Anticipo[]>([]);
+  const [gastos, setGastos] = useState<Gasto[]>([]);
   const [itemsSate, setItemsSate] = useState<Record<string, any>>(ITEMS_SATE);
   const [operariosList, setOperariosList] = useState<any[]>(OPERARIOS);
   const [selectedObraId, setSelectedObraId] = useState<string>("");
@@ -86,6 +101,7 @@ export default function App() {
   const [modal, setModal] = useState<{ title: string, message: string, onConfirm: () => void } | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [manualBloque, setManualBloque] = useState<string>("");
+  const [selectedOperarioName, setSelectedOperarioName] = useState<string | null>(null);
 
   const notify = (message: string, type: "success" | "error" | "info" = "info") => {
     setNotification({ message, type });
@@ -115,20 +131,116 @@ export default function App() {
     const loadedAvances = storage.getAvances();
     const loadedCertificaciones = storage.getCertificaciones();
     const loadedAnticipos = storage.getAnticipos();
+    const loadedGastos = storage.getGastos();
     const loadedItems = storage.getItems();
     const loadedOperarios = storage.getOperarios();
     const loadedTheme = storage.getTheme();
     const activeObraId = storage.getActiveObraId();
 
-    if (loadedItems) setItemsSate(loadedItems);
-    if (loadedOperarios) setOperariosList(loadedOperarios);
+    // --- Limpieza de datos (Migración) ---
+    const cleanOperarios = (loadedOperarios || OPERARIOS).map((op: any) => ({
+      ...op,
+      nombre: op.nombre.trim()
+    }));
+    
+    // Eliminar duplicados exactos en la lista de configuración
+    const configOpsUnique = cleanOperarios.filter((op: any, index: number, self: any[]) =>
+      index === self.findIndex((t: any) => t.nombre.toLowerCase() === op.nombre.toLowerCase())
+    );
+
+    const cleanAvances = loadedAvances.map((a: Avance) => ({
+      ...a,
+      // Trim y eliminar duplicados en cada parte diario
+      operariosPresentes: Array.from(new Set((a.operariosPresentes || []).map(o => o.trim()))).filter(Boolean)
+    }));
+
+    const cleanAnticipos = loadedAnticipos.map((an: Anticipo) => ({
+      ...an,
+      operario: an.operario.trim()
+    }));
+
+    // --- Inyección de datos de Abril compartidos por el usuario ---
+    const normalizeName = (s: string) => 
+      s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const sharedAvancesAbril: Avance[] = [
+      { id: "c48963d9-3a2e-44a5-a3e7-7e09c7e2b0ec", fecha: "2026-04-08", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "fase1", m2: 95, bloque: "Bloque 5" }], resumen: { ingresos: 760, costeManoObra: 510, beneficio: 250, beneficioPorOperario: 50 } },
+      { id: "0943a8ca-03d2-44a1-af59-b9e1d9efd93a", fecha: "2026-04-09", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "fase2", m2: 85, bloque: "Bloque 5" }], resumen: { ingresos: 680, costeManoObra: 510, beneficio: 170, beneficioPorOperario: 34 } },
+      { id: "f1bd76af-82d7-481a-968e-5d283182c313", fecha: "2026-04-10", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "fase2", m2: 85, bloque: "Bloque 5" }], resumen: { ingresos: 680, costeManoObra: 510, beneficio: 170, beneficioPorOperario: 34 } },
+      { id: "a1cea5b7-c820-438a-9744-ef8f06e8fbe1", fecha: "2026-04-13", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "anti", m2: 48, bloque: "Bloque 5" }, { itemId: "malla", m2: 100.5, bloque: "Bloque 5" }, { itemId: "malla", m2: 50.57, bloque: "Bloque 13" }], resumen: { ingresos: 785.84, costeManoObra: 510, beneficio: 275.84, beneficioPorOperario: 55.16 } },
+      { id: "46b5f97c-5fce-40e0-aa2b-6b5ec0f77964", fecha: "2026-04-14", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "fase2", m2: 85, bloque: "Bloque 5" }], resumen: { ingresos: 680, costeManoObra: 510, beneficio: 170, beneficioPorOperario: 34 } },
+      { id: "fa8e8559-a9ff-4597-a519-102f846f0c97", fecha: "2026-04-15", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "fase2", m2: 85, bloque: "Bloque 5" }], resumen: { ingresos: 680, costeManoObra: 510, beneficio: 170, beneficioPorOperario: 34 } },
+      { id: "85ab28b9-b654-4558-a9cb-e49a45b552d6", fecha: "2026-04-16", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 13", operariosPresentes: ["Juan", "Mosquito", "Antonio", "Jesules", "David"], produccion: [{ itemId: "cajeado40", m2: 16.26, bloque: "Bloque 5" }, { itemId: "fase1", m2: 90, bloque: "Bloque 5" }, { itemId: "anti", m2: 8, bloque: "Bloque 13" }], resumen: { ingresos: 914.08, costeManoObra: 510, beneficio: 404.08, beneficioPorOperario: 80.81 } },
+      { id: "12c70e94-ed6a-43c6-b41b-37c938e27514", fecha: "2026-04-17", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", bloque: "Bloque 5", operariosPresentes: ["Juan", "Mosquito", "Antonio", "David", "Jesules"], produccion: [{ itemId: "fase1", m2: 60, bloque: "Bloque 5" }, { itemId: "anti", m2: 22, bloque: "Bloque 5" }], resumen: { ingresos: 656, costeManoObra: 510, beneficio: 146, beneficioPorOperario: 29.2 } }
+    ];
+
+    const sharedAnticiposAbril: Anticipo[] = [
+      { id: "ant-a1", fecha: "2026-04-10", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Mosquito", cantidad: 400 },
+      { id: "ant-a2", fecha: "2026-04-10", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Juan", cantidad: 400 },
+      { id: "ant-a3", fecha: "2026-04-10", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Antonio", cantidad: 400 },
+      { id: "ant-a4", fecha: "2026-04-10", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Jesules", cantidad: 400 },
+      { id: "ant-a5", fecha: "2026-04-10", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "David", cantidad: 400 },
+      { id: "ant-a6", fecha: "2026-04-17", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Juan", cantidad: 400 },
+      { id: "ant-a7", fecha: "2026-04-17", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Mosquito", cantidad: 400 },
+      { id: "ant-a8", fecha: "2026-04-17", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Antonio", cantidad: 400 },
+      { id: "ant-a9", fecha: "2026-04-17", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "Jesules", cantidad: 400 },
+      { id: "ant-a10", fecha: "2026-04-17", obraId: activeObraId || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", operario: "David", cantidad: 400 }
+    ];
+
+    // Combinar evitando duplicados por fecha y bloque (avances) o operario y fecha (anticipos)
+    const finalAvances = [...cleanAvances];
+    sharedAvancesAbril.forEach(shared => {
+      const isDuplicate = finalAvances.some(a => 
+        a.fecha === shared.fecha && 
+        a.bloque === shared.bloque && 
+        a.obraId === shared.obraId
+      );
+      if (!isDuplicate) {
+        finalAvances.push(shared);
+      }
+    });
+
+    const finalAnticipos = [...cleanAnticipos];
+    sharedAnticiposAbril.forEach(shared => {
+      const isDuplicate = finalAnticipos.some(an => 
+        an.fecha === shared.fecha && 
+        normalizeName(an.operario) === normalizeName(shared.operario) &&
+        an.obraId === shared.obraId
+      );
+      if (!isDuplicate) {
+        finalAnticipos.push(shared);
+      }
+    });
+
+    // --- Sincronización de Precios (Crucial) ---
+    // Si los items cargados tienen precio 0, usamos el de constants.ts
+    const syncedItems = { ...(loadedItems || ITEMS_SATE) };
+    Object.keys(ITEMS_SATE).forEach(key => {
+      if (!syncedItems[key]) {
+        syncedItems[key] = { ...ITEMS_SATE[key] };
+      } else if (syncedItems[key].precio === 0 && ITEMS_SATE[key].precio > 0) {
+        syncedItems[key].precio = ITEMS_SATE[key].precio;
+      }
+    });
+
+    setItemsSate(syncedItems);
+    setOperariosList(configOpsUnique);
+    setAvances(finalAvances);
+    setAnticipos(finalAnticipos);
+    setGastos(loadedGastos);
+    setCertificaciones(loadedCertificaciones);
+    
+    // Guardar para que persistan
+    storage.saveAvances(finalAvances);
+    storage.saveAnticipos(finalAnticipos);
+    storage.saveItems(syncedItems);
     setTheme(loadedTheme);
     document.documentElement.classList.toggle('dark', loadedTheme === 'dark');
     document.body.classList.toggle('dark', loadedTheme === 'dark');
 
     if (loadedObras.length === 0) {
       const defaultObras: Obra[] = [
-        { id: "1", nombre: "Nueva Obra", numBloques: 1 },
+        { id: "e41a4d8c-623c-4f89-bfe9-f9565c2d318b", nombre: "Parque Alcosa", numBloques: 20 },
       ];
       storage.saveObras(defaultObras);
       setObras(defaultObras);
@@ -143,10 +255,6 @@ export default function App() {
         storage.saveActiveObraId(loadedObras[0].id);
       }
     }
-
-    setAvances(loadedAvances);
-    setCertificaciones(loadedCertificaciones);
-    setAnticipos(loadedAnticipos);
   }, []);
 
   const handleSetSelectedObraId = (id: string) => {
@@ -164,11 +272,17 @@ export default function App() {
     const now = new Date();
     const month = now.getMonth();
     const year = now.getFullYear();
-    return avances.filter(a => {
+    return (avances || []).filter(a => {
       const d = new Date(a.fecha);
-      return d.getMonth() === month && d.getFullYear() === year && a.obraId === selectedObraId;
+      const isProcessed = certificaciones.some(c => 
+        c.obraId === selectedObraId && 
+        c.estado === 'cobrado' && 
+        c.fechaInicio && c.fechaFin && 
+        a.fecha >= c.fechaInicio && a.fecha <= c.fechaFin
+      );
+      return d.getMonth() === month && d.getFullYear() === year && a.obraId === selectedObraId && !isProcessed;
     });
-  }, [avances, selectedObraId]);
+  }, [avances, selectedObraId, certificaciones]);
 
   const calculateAvanceEconomics = useCallback((a: Avance) => {
     // Normalización robusta para evitar fallos por tildes, espacios o mayúsculas
@@ -224,7 +338,7 @@ export default function App() {
             setSelectedObraId={handleSetSelectedObraId}
             monthlyProfit={monthlyProfit}
             onNavigate={setCurrentScreen}
-            avances={avances}
+            avances={avances.filter(a => a.obraId === selectedObraId)}
             lastAvance={lastAvance}
             lastBloque={lastBloque}
             onSetLastBloque={setManualBloque}
@@ -233,6 +347,8 @@ export default function App() {
             itemsSate={itemsSate}
             operariosList={operariosList}
             calculateEconomics={calculateAvanceEconomics}
+            gastos={gastos.filter(g => g.obraId === selectedObraId)}
+            certificaciones={certificaciones}
           />
         );
       case "obras":
@@ -347,6 +463,7 @@ export default function App() {
             }}
             onBack={() => setCurrentScreen("inicio")}
             notify={notify}
+            setModal={setModal}
           />
         );
       case "certificacion":
@@ -357,10 +474,15 @@ export default function App() {
             obra={selectedObra!}
             certificaciones={certificaciones}
             anticipos={anticipos.filter(an => an.obraId === selectedObraId)}
+            gastos={gastos.filter(g => g.obraId === selectedObraId)}
             operariosList={operariosList}
             itemsSate={itemsSate}
             notify={notify}
             calculateEconomics={calculateAvanceEconomics}
+            onOperarioClick={(name) => {
+              setSelectedOperarioName(name);
+              setCurrentScreen("operario_detalle");
+            }}
             onSaveCertificacion={(cert) => {
               try {
                 const newCerts = [...certificaciones.filter(c => c.id !== cert.id), cert];
@@ -387,6 +509,35 @@ export default function App() {
             onBack={() => setCurrentScreen("inicio")}
           />
         );
+      case "gastos":
+        return (
+          <GastosScreen 
+            gastos={gastos.filter(g => g.obraId === selectedObraId)}
+            obraId={selectedObraId}
+            operarios={operariosList}
+            onSave={(g) => {
+              const newGastos = [...gastos, g];
+              setGastos(newGastos);
+              storage.saveGastos(newGastos);
+            }}
+            onDelete={(id) => {
+              const newGastos = gastos.filter(g => g.id !== id);
+              setGastos(newGastos);
+              storage.saveGastos(newGastos);
+            }}
+            onBack={() => setCurrentScreen("inicio")}
+          />
+        );
+      case "operario_detalle":
+        return (
+          <OperarioDetalleScreen 
+            operarioName={selectedOperarioName!}
+            avances={avances.filter(a => a.obraId === selectedObraId)}
+            anticipos={anticipos.filter(a => a.obraId === selectedObraId)}
+            gastos={gastos.filter(a => a.obraId === selectedObraId)}
+            onBack={() => setCurrentScreen("certificacion")}
+          />
+        );
       default:
         return (
           <Inicio 
@@ -395,7 +546,8 @@ export default function App() {
             setSelectedObraId={handleSetSelectedObraId} 
             monthlyProfit={monthlyProfit} 
             onNavigate={setCurrentScreen} 
-            avances={avances}
+            avances={avances.filter(a => a.obraId === selectedObraId)}
+            gastos={gastos.filter(g => g.obraId === selectedObraId)}
             lastAvance={lastAvance}
             lastBloque={lastBloque}
             onSetLastBloque={setManualBloque}
@@ -404,6 +556,7 @@ export default function App() {
             itemsSate={itemsSate}
             operariosList={operariosList}
             calculateEconomics={calculateAvanceEconomics}
+            certificaciones={certificaciones}
           />
         );
     }
@@ -561,7 +714,9 @@ function Inicio({
   showInstall,
   itemsSate,
   operariosList,
-  calculateEconomics
+  calculateEconomics,
+  gastos,
+  certificaciones
 }: { 
   obras: Obra[], 
   selectedObraId: string, 
@@ -576,10 +731,21 @@ function Inicio({
   showInstall: boolean,
   itemsSate: Record<string, any>,
   operariosList: any[],
-  calculateEconomics: (a: Avance) => { ingresos: number, costeManoObra: number, beneficio: number }
+  calculateEconomics: (a: Avance) => { ingresos: number, costeManoObra: number, beneficio: number },
+  gastos: Gasto[],
+  certificaciones: Certificacion[]
 }) {
   const selectedObra = useMemo(() => obras.find(o => o.id === selectedObraId), [obras, selectedObraId]);
   
+  const isDataProcessed = useCallback((date: string) => {
+    return (certificaciones || []).some(c => 
+      c.obraId === selectedObraId && 
+      c.estado === 'cobrado' && 
+      c.fechaInicio && c.fechaFin && 
+      date >= c.fechaInicio && date <= c.fechaFin
+    );
+  }, [certificaciones, selectedObraId]);
+
   const bloques = useMemo(() => {
     if (!selectedObra) return [];
     return Array.from({ length: selectedObra.numBloques }, (_, i) => `Bloque ${i + 1}`);
@@ -587,7 +753,7 @@ function Inicio({
   
   const produccionPorBloque = useMemo(() => {
     const stats: Record<string, { m2: number, beneficio: number, costeMO: number }> = {};
-    (avances || []).filter(a => a.obraId === selectedObraId).forEach(a => {
+    (avances || []).filter(a => a.obraId === selectedObraId && !isDataProcessed(a.fecha)).forEach(a => {
       const economics = calculateEconomics(a);
       (a.produccion || []).forEach(p => {
         if (!p.bloque) return;
@@ -601,11 +767,11 @@ function Inicio({
       });
     });
     return stats;
-  }, [avances, selectedObraId, itemsSate, operariosList, calculateEconomics]);
+  }, [avances, selectedObraId, itemsSate, operariosList, calculateEconomics, isDataProcessed]);
 
   const totalAcumulado = useMemo(() => {
-    return (avances || [])
-      .filter(a => a.obraId === selectedObraId)
+    const advancesEcon = (avances || [])
+      .filter(a => a.obraId === selectedObraId && !isDataProcessed(a.fecha))
       .reduce((acc, curr) => {
         const econ = calculateEconomics(curr);
         return {
@@ -613,7 +779,51 @@ function Inicio({
           beneficio: acc.beneficio + econ.beneficio
         };
       }, { costeMO: 0, beneficio: 0 });
-  }, [avances, selectedObraId, calculateEconomics]);
+      
+    const totalG = (gastos || [])
+      .filter(g => g.obraId === selectedObraId && !isDataProcessed(g.fecha))
+      .reduce((sum, g) => sum + g.monto, 0);
+
+    return {
+      costeMO: advancesEcon.costeMO,
+      beneficio: advancesEcon.beneficio - totalG,
+      totalGastos: totalG
+    };
+  }, [avances, gastos, calculateEconomics, isDataProcessed, selectedObraId]);
+
+  const weeklyTrend = useMemo(() => {
+    const data: any[] = [];
+    const now = new Date();
+    
+    const currentMonday = new Date(now);
+    const day = currentMonday.getDay();
+    const diff = currentMonday.getDate() - day + (day === 0 ? -6 : 1);
+    currentMonday.setDate(diff);
+    currentMonday.setHours(0,0,0,0);
+
+    for (let i = 3; i >= 0; i--) {
+      const startOfWeek = new Date(currentMonday);
+      startOfWeek.setDate(currentMonday.getDate() - (i * 7));
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23,59,59,999);
+
+      const weekAvances = (avances || []).filter(a => {
+        const d = new Date(a.fecha);
+        return d >= startOfWeek && d <= endOfWeek && a.obraId === selectedObraId && !isDataProcessed(a.fecha);
+      });
+
+      const beneficio = weekAvances.reduce((sum, a) => sum + calculateEconomics(a).beneficio, 0);
+      
+      data.push({
+        name: i === 0 ? 'ACTUAL' : `S- ${i}`,
+        beneficio: Math.round(beneficio),
+        rango: `${startOfWeek.getDate()}/${startOfWeek.getMonth()+1}`
+      });
+    }
+    return data;
+  }, [avances, calculateEconomics, isDataProcessed, selectedObraId]);
 
   return (
     <div className="space-y-4">
@@ -724,17 +934,83 @@ function Inicio({
       )}
 
       {/* Resumen Acumulado Obra */}
-      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
-        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Resumen Acumulado</label>
+      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Resumen Acumulado</label>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-300 uppercase block">Coste M.O. Total</span>
             <span className="text-2xl font-black text-slate-800">{Math.round(totalAcumulado.costeMO).toLocaleString()}€</span>
           </div>
           <div className="space-y-1 text-right">
-            <span className="text-[10px] font-black text-slate-300 uppercase block">Beneficio Total</span>
-            <span className="text-2xl font-black text-blue-600">{Math.round(totalAcumulado.beneficio).toLocaleString()}€</span>
+            <span className="text-[10px] font-black text-orange-300 uppercase block">Gastos Otros</span>
+            <span className="text-2xl font-black text-orange-600">{Math.round(totalAcumulado.totalGastos).toLocaleString()}€</span>
           </div>
+          <div className="col-span-2 pt-4 border-t border-slate-50 flex justify-between items-center">
+            <span className="text-[10px] font-black text-blue-400 uppercase block uppercase tracking-widest">Beneficio Neto Total</span>
+            <span className="text-3xl font-black text-blue-600">{Math.round(totalAcumulado.beneficio).toLocaleString()}€</span>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => onNavigate("gastos")}
+          className="w-full bg-slate-50 p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-all group mt-2"
+        >
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-500 p-2 rounded-xl text-white">
+              <Receipt size={18} />
+            </div>
+            <span className="text-xs font-black text-slate-600 uppercase tracking-tight">Gestionar Gastos</span>
+          </div>
+          <ChevronRight size={18} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+        </button>
+      </section>
+
+      {/* Gráfica de Tendencia */}
+      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tendencia Semanal</label>
+            <p className="text-[10px] font-bold text-slate-300 uppercase">Beneficio Neto Últimas 4 Semanas</p>
+          </div>
+          <Activity size={20} className="text-blue-500 opacity-20" />
+        </div>
+        
+        <div className="h-40 w-full pt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weeklyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorBen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{fontSize: 9, fontWeight: 900, fill: '#94a3b8'}}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{fontSize: 9, fontWeight: 900, fill: '#94a3b8'}}
+                hide
+              />
+              <Tooltip 
+                contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: 900 }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="beneficio" 
+                stroke="#2563eb" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorBen)" 
+                animationDuration={2000}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </section>
 
@@ -976,6 +1252,272 @@ function GestionObras({
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+// --- Screen: Gastos ---
+
+function GastosScreen({ 
+  gastos, 
+  obraId, 
+  operarios, 
+  onSave, 
+  onDelete, 
+  onBack 
+}: { 
+  gastos: Gasto[], 
+  obraId: string, 
+  operarios: any[], 
+  onSave: (g: Gasto) => void, 
+  onDelete: (id: string) => void, 
+  onBack: () => void 
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [concepto, setConcepto] = useState("");
+  const [monto, setMonto] = useState("");
+  const [pagadoPor, setPagadoPor] = useState("");
+
+  const handleSave = () => {
+    if (!concepto || !monto) return;
+    onSave({
+      id: crypto.randomUUID(),
+      fecha: new Date().toISOString().split('T')[0],
+      obraId,
+      concepto,
+      monto: Number(monto),
+      pagadoPor: pagadoPor || undefined
+    });
+    setModalOpen(false);
+    setConcepto("");
+    setMonto("");
+    setPagadoPor("");
+  };
+
+  return (
+    <div className="space-y-6 pb-12">
+      <header className="flex items-center gap-4 mb-2">
+        <button onClick={onBack} className="p-2 bg-white rounded-xl text-slate-400 active:scale-90 transition-transform shadow-sm">
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Otros Gastos</h2>
+      </header>
+
+      <div className="bg-orange-500 rounded-[2.5rem] p-8 text-white shadow-xl shadow-orange-100 flex justify-between items-center">
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-widest opacity-60">Total Gastos</label>
+          <div className="text-4xl font-black">{gastos.reduce((sum, g) => sum + g.monto, 0).toLocaleString()}€</div>
+        </div>
+        <button 
+          onClick={() => setModalOpen(true)}
+          className="bg-white/20 hover:bg-white/30 p-4 rounded-3xl backdrop-blur-md transition-all active:scale-95"
+        >
+          <PlusCircle size={32} />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {gastos.length === 0 ? (
+          <div className="text-center p-12 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
+            <Receipt size={48} className="mx-auto text-slate-200 mb-4" />
+            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No hay gastos registrados</p>
+          </div>
+        ) : (
+          gastos.sort((a,b) => b.fecha.localeCompare(a.fecha)).map(g => (
+            <div key={g.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center group">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-orange-500">
+                  <Receipt size={24} />
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-800 uppercase text-sm leading-tight">{g.concepto}</h4>
+                  <div className="flex gap-2 items-center mt-1">
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{g.fecha}</span>
+                    {g.pagadoPor && (
+                      <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md uppercase">Pagado por {g.pagadoPor}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-xl font-black text-slate-800">{g.monto}€</span>
+                <button 
+                  onClick={() => onDelete(g.id)}
+                  className="p-2 text-slate-200 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <AnimatePresence>
+        {modalOpen && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="bg-white w-full max-w-sm rounded-[3rem] p-8 space-y-6 shadow-2xl overflow-hidden"
+            >
+              <div className="text-center space-y-1">
+                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Nuevo Gasto</h3>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Registra un pago extra</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Concepto / Factura</label>
+                  <input 
+                    type="text" 
+                    value={concepto}
+                    onChange={(e) => setConcepto(e.target.value)}
+                    placeholder="Ej: Alquiler Andamio"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-black outline-none focus:border-orange-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Monto (€)</label>
+                  <input 
+                    type="number" 
+                    value={monto}
+                    onChange={(e) => setMonto(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-black outline-none focus:border-orange-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">¿Pagado por alguien?</label>
+                  <select 
+                    value={pagadoPor}
+                    onChange={(e) => setPagadoPor(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-black outline-none appearance-none"
+                  >
+                    <option value="">Empresa (Caja)</option>
+                    {operarios.map(o => (
+                      <option key={o.nombre} value={o.nombre}>{o.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={handleSave}
+                  className="w-full bg-orange-500 text-white font-black py-5 rounded-[2rem] shadow-xl shadow-orange-100 active:scale-95 transition-all uppercase tracking-widest"
+                >
+                  Guardar Gasto
+                </button>
+                <button 
+                  onClick={() => setModalOpen(false)}
+                  className="w-full font-black text-slate-400 py-2 uppercase tracking-widest text-xs"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// --- Screen: Detalle Operario ---
+
+function OperarioDetalleScreen({ 
+  operarioName, 
+  avances, 
+  anticipos, 
+  gastos,
+  onBack 
+}: { 
+  operarioName: string, 
+  avances: Avance[], 
+  anticipos: Anticipo[], 
+  gastos: Gasto[],
+  onBack: () => void 
+}) {
+  const stats = useMemo(() => {
+    const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const opClean = normalize(operarioName);
+
+    const jornadas = avances.filter(a => 
+      (a.operariosPresentes || []).some(o => normalize(o) === opClean)
+    ).length;
+
+    const totalAnticipos = anticipos.filter(a => normalize(a.operario) === opClean)
+      .reduce((sum, a) => sum + a.cantidad, 0);
+
+    const reembolsosPendientes = gastos.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean)
+      .reduce((sum, g) => sum + g.monto, 0);
+
+    return { jornadas, totalAnticipos, reembolsosPendientes };
+  }, [operarioName, avances, anticipos, gastos]);
+
+  return (
+    <div className="space-y-6 pb-12">
+      <header className="flex items-center gap-4">
+        <button onClick={onBack} className="p-2 bg-white rounded-xl text-slate-400 active:scale-90 transition-transform shadow-sm">
+          <ChevronLeft size={24} />
+        </button>
+        <div>
+          <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{operarioName}</h2>
+          <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Resumen Personal</p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm col-span-2 flex items-center gap-6">
+          <div className="w-16 h-16 bg-blue-50 rounded-3xl flex items-center justify-center text-blue-600">
+            <Users size={32} />
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block">Días Trabajados</label>
+            <span className="text-4xl font-black text-slate-800">{stats.jornadas}</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Anticipos</label>
+          <span className="text-2xl font-black text-red-500">{stats.totalAnticipos}€</span>
+        </div>
+
+        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Reembolsos</label>
+          <span className="text-2xl font-black text-emerald-500">{stats.reembolsosPendientes}€</span>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Actividad Reciente</h3>
+        <div className="bg-white rounded-[2.5rem] p-2 border border-slate-100 shadow-sm space-y-1">
+          {[
+            ...anticipos.filter(a => a.operario.trim().toLowerCase() === operarioName.trim().toLowerCase()).map(a => ({ type: "anticipo", ...a })),
+            ...gastos.filter(g => g.pagadoPor?.trim().toLowerCase() === operarioName.trim().toLowerCase()).map(g => ({ type: "gasto", ...g }))
+          ].sort((a,b) => b.fecha.localeCompare(a.fecha)).map((item: any, idx) => (
+            <div key={idx} className="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.type === 'anticipo' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                  {item.type === 'anticipo' ? <Wallet size={20} /> : <Receipt size={20} />}
+                </div>
+                <div>
+                  <p className="text-sm font-black text-slate-800 uppercase leading-tight">{item.type === 'anticipo' ? 'Anticipo' : item.concepto}</p>
+                  <p className="text-[10px] font-bold text-slate-400">{item.fecha}</p>
+                </div>
+              </div>
+              <span className={`font-black ${item.type === 'anticipo' ? 'text-red-500' : 'text-emerald-500'}`}>
+                {item.type === 'anticipo' ? '-' : '+'}{item.cantidad || item.monto}€
+              </span>
+            </div>
+          ))}
+          {stats.jornadas === 0 && stats.totalAnticipos === 0 && stats.reembolsosPendientes === 0 && (
+            <div className="p-8 text-center text-slate-300 font-bold uppercase text-[10px] tracking-widest">Sin registros este mes</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1708,7 +2250,8 @@ function ConfigScreen({
   operarios,
   setOperarios,
   onBack,
-  notify
+  notify,
+  setModal
 }: {
   theme: "light" | "dark",
   setTheme: (t: "light" | "dark") => void,
@@ -1717,9 +2260,47 @@ function ConfigScreen({
   operarios: any[],
   setOperarios: (ops: any[]) => void,
   onBack: () => void,
-  notify: (m: string, t?: "success" | "error" | "info") => void
+  notify: (m: string, t?: "success" | "error" | "info") => void,
+  setModal: (m: any) => void
 }) {
   const [activeTab, setActiveTab] = useState<"general" | "items" | "operarios">("general");
+  const [showMergeConfirm, setShowMergeConfirm] = useState(false);
+  
+  // Custom states for inline forms
+  const [addingItem, setAddingItem] = useState(false);
+  const [newItem, setNewItem] = useState({ id: '', nombre: '', precio: 0 });
+  const [addingOp, setAddingOp] = useState(false);
+  const [newOp, setNewOp] = useState({ nombre: '', coste: 120 });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<number>(0);
+
+  const currentObras = storage.getObras();
+  const targetObra = currentObras.find(o => o.nombre.toLowerCase().includes("parque alcosa") || o.nombre.toLowerCase() === "alcosa");
+  const sourceObras = currentObras.filter(o => o.nombre.toLowerCase().includes("bloque") && o.id !== targetObra?.id);
+
+  const handleConsolidate = () => {
+    if (!targetObra) return;
+    const sourceIds = sourceObras.map(s => s.id);
+    
+    // Perform migration
+    const currentAvances = storage.getAvances();
+    storage.saveAvances(currentAvances.map(a => sourceIds.includes(a.obraId) ? { ...a, obraId: targetObra.id } : a));
+
+    const currentAnticipos = storage.getAnticipos();
+    storage.saveAnticipos(currentAnticipos.map(an => sourceIds.includes(an.obraId) ? { ...an, obraId: targetObra.id } : an));
+
+    const currentGastos = storage.getGastos();
+    storage.saveGastos(currentGastos.map(g => sourceIds.includes(g.obraId) ? { ...g, obraId: targetObra.id } : g));
+
+    const currentCerts = storage.getCertificaciones();
+    storage.saveCertificaciones(currentCerts.map(c => sourceIds.includes(c.obraId) ? { ...c, obraId: targetObra.id } : c));
+
+    storage.saveObras(currentObras.filter(o => !sourceIds.includes(o.id)));
+    storage.saveActiveObraId(targetObra.id);
+
+    notify("Obras unificadas. Reiniciando panel...", "success");
+    setTimeout(() => window.location.reload(), 1500);
+  };
 
   const handleExport = () => {
     const data = storage.exportData();
@@ -1811,13 +2392,68 @@ function ConfigScreen({
                 </div>
               </div>
 
+              <div className="pt-6 border-t border-slate-50 space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-black text-slate-800 uppercase tracking-tight">Mantenimiento de Datos</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Unifica obras duplicadas tras una importación</p>
+                </div>
+
+                {!showMergeConfirm ? (
+                  <button
+                    onClick={() => {
+                      if (!targetObra) {
+                        notify("No encuentro 'Parque Alcosa'. Asegúrate de que el nombre sea correcto.", "error");
+                        return;
+                      }
+                      if (sourceObras.length === 0) {
+                        notify("No hay obras duplicadas con la palabra 'Bloque' para unir.", "info");
+                        return;
+                      }
+                      setShowMergeConfirm(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-3 p-6 bg-blue-50 rounded-[2rem] border border-blue-100 text-blue-600 active:scale-95 transition-all text-left"
+                  >
+                    <Activity size={24} />
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest block">Consolidar Obras</span>
+                      <span className="text-[9px] font-bold opacity-60 uppercase">Mover datos de Alcosa a Obra Principal</span>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="p-6 bg-blue-600 rounded-[2rem] text-white space-y-4 shadow-xl">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Confirmar Operación</p>
+                    <p className="text-sm font-bold leading-tight">
+                      Se moverán todos los datos de {sourceObras.length} obras secundarias a <span className="underline">{targetObra?.nombre}</span>.
+                    </p>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={handleConsolidate}
+                        className="flex-1 py-3 bg-white text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
+                      >
+                        Sí, unificar ahora
+                      </button>
+                      <button 
+                        onClick={() => setShowMergeConfirm(false)}
+                        className="px-4 py-3 bg-blue-700 text-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="pt-6 border-t border-slate-50">
                 <button
                   onClick={() => {
-                    if (confirm("¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.")) {
-                      localStorage.clear();
-                      window.location.reload();
-                    }
+                    setModal({
+                      title: "Borrar TODO",
+                      message: "¿Estás seguro de que quieres borrar TODOS los datos? Esta acción es irreversible.",
+                      onConfirm: () => {
+                        localStorage.clear();
+                        window.location.reload();
+                      }
+                    });
                   }}
                   className="w-full flex items-center justify-center gap-3 p-6 bg-red-50 rounded-[2rem] border border-red-100 text-red-600 active:scale-95 transition-all"
                 >
@@ -1838,39 +2474,87 @@ function ConfigScreen({
             className="space-y-4"
           >
             <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center px-2">
                 <p className="text-sm font-black text-slate-800 uppercase">Partidas del Sistema</p>
                 <button
-                  onClick={() => {
-                    const id = prompt("ID de la partida (ej: nueva_partida):");
-                    if (!id) return;
-                    const nombre = prompt("Nombre:");
-                    const precio = parseFloat(prompt("Precio por m²:") || "0");
-                    const descripcion = prompt("Descripción:");
-                    if (id && nombre) {
-                      setItems({ ...items, [id]: { nombre, precio, descripcion } });
-                      notify("Partida añadida.", "success");
-                    }
-                  }}
+                  onClick={() => setAddingItem(true)}
                   className="p-2 bg-blue-600 text-white rounded-xl active:scale-90 transition-transform"
                 >
                   <PlusCircle size={20} />
                 </button>
               </div>
+
+              {addingItem && (
+                <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <input 
+                      placeholder="ID (ej: sate_8)"
+                      value={newItem.id}
+                      onChange={(e) => setNewItem({...newItem, id: e.target.value})}
+                      className="bg-white p-3 rounded-xl border-none font-bold text-xs"
+                    />
+                    <input 
+                      placeholder="Nombre"
+                      value={newItem.nombre}
+                      onChange={(e) => setNewItem({...newItem, nombre: e.target.value})}
+                      className="bg-white p-3 rounded-xl border-none font-bold text-xs"
+                    />
+                  </div>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    placeholder="Precio €/m²"
+                    value={newItem.precio}
+                    onChange={(e) => setNewItem({...newItem, precio: Number(e.target.value)})}
+                    className="w-full bg-white p-3 rounded-xl border-none font-bold text-xs"
+                  />
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        if (newItem.id && newItem.nombre) {
+                          setItems({ ...items, [newItem.id]: { nombre: newItem.nombre, precio: newItem.precio } });
+                          setAddingItem(false);
+                          setNewItem({ id: '', nombre: '', precio: 0 });
+                        }
+                      }}
+                      className="flex-1 bg-blue-600 text-white font-black uppercase text-[10px] py-3 rounded-xl"
+                    >
+                      Guardar
+                    </button>
+                    <button onClick={() => setAddingItem(false)} className="px-4 bg-slate-200 text-slate-600 font-black uppercase text-[10px] rounded-xl">X</button>
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-3">
                 {Object.entries(items).map(([id, item]) => (
                   <div key={id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center">
                     <div className="space-y-1">
                       <p className="text-xs font-black text-slate-800 uppercase">{item.nombre}</p>
-                      <p className="text-[10px] font-bold text-blue-600">{item.precio}€/m²</p>
+                      {editingId === id ? (
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            autoFocus
+                            value={editValue} 
+                            onChange={(e) => setEditValue(Number(e.target.value))}
+                            className="w-16 bg-white p-1 rounded font-black text-xs"
+                          />
+                          <button onClick={() => {
+                            setItems({ ...items, [id]: { ...item, precio: editValue } });
+                            setEditingId(null);
+                          }} className="text-emerald-500 font-black text-[9px]">OK</button>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] font-bold text-blue-600">{item.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€/m²</p>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => {
-                          const newPrice = parseFloat(prompt(`Nuevo precio para ${item.nombre}:`, item.precio.toString()) || item.precio.toString());
-                          setItems({ ...items, [id]: { ...item, precio: newPrice } });
-                          notify("Precio actualizado.", "success");
+                          setEditingId(id);
+                          setEditValue(item.precio);
                         }}
                         className="p-2 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-transform"
                       >
@@ -1878,10 +2562,16 @@ function ConfigScreen({
                       </button>
                       <button
                         onClick={() => {
-                          const newItems = { ...items };
-                          delete newItems[id];
-                          setItems(newItems);
-                          notify("Partida eliminada.", "info");
+                          setModal({
+                            title: "Eliminar Partida",
+                            message: `¿Seguro que quieres borrar ${item.nombre}?`,
+                            onConfirm: () => {
+                              const newItems = { ...items };
+                              delete newItems[id];
+                              setItems(newItems);
+                              notify("Partida eliminada.", "info");
+                            }
+                          });
                         }}
                         className="text-red-400 p-2 active:scale-90 transition-transform"
                       >
@@ -1904,43 +2594,81 @@ function ConfigScreen({
             className="space-y-4"
           >
             <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center px-2">
                 <p className="text-sm font-black text-slate-800 uppercase">Lista de Operarios</p>
                 <button
-                  onClick={() => {
-                    const nombre = prompt("Nombre del operario:");
-                    const coste = parseFloat(prompt("Coste por jornal:") || "120");
-                    if (nombre) {
-                      const trimmed = nombre.trim();
-                      if (operarios.some(o => o.nombre.trim().toLowerCase() === trimmed.toLowerCase())) {
-                        notify("Este operario ya existe.", "error");
-                        return;
-                      }
-                      setOperarios([...operarios, { nombre: trimmed, coste }]);
-                      notify("Operario añadido.", "success");
-                    }
-                  }}
+                  onClick={() => setAddingOp(true)}
                   className="p-2 bg-blue-600 text-white rounded-xl active:scale-90 transition-transform"
                 >
                   <PlusCircle size={20} />
                 </button>
               </div>
 
+              {addingOp && (
+                <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <input 
+                      placeholder="Nombre"
+                      value={newOp.nombre}
+                      onChange={(e) => setNewOp({...newOp, nombre: e.target.value})}
+                      className="bg-white p-3 rounded-xl border-none font-bold text-xs"
+                    />
+                    <input 
+                      type="number"
+                      placeholder="Jornal €"
+                      value={newOp.coste}
+                      onChange={(e) => setNewOp({...newOp, coste: Number(e.target.value)})}
+                      className="bg-white p-3 rounded-xl border-none font-bold text-xs"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        if (newOp.nombre) {
+                          setOperarios([...operarios, { ...newOp }]);
+                          setAddingOp(false);
+                          setNewOp({ nombre: '', coste: 120 });
+                        }
+                      }}
+                      className="flex-1 bg-blue-600 text-white font-black uppercase text-[10px] py-3 rounded-xl"
+                    >
+                      Añadir
+                    </button>
+                    <button onClick={() => setAddingOp(false)} className="px-4 bg-slate-200 text-slate-600 font-black uppercase text-[10px] rounded-xl">X</button>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
                 {operarios.map((op, i) => (
                   <div key={i} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center">
                     <div className="space-y-1">
                       <p className="text-xs font-black text-slate-800 uppercase">{op.nombre}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Coste: {op.coste}€</p>
+                      {editingId === `op-${i}` ? (
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="number" 
+                            autoFocus
+                            value={editValue} 
+                            onChange={(e) => setEditValue(Number(e.target.value))}
+                            className="w-16 bg-white p-1 rounded font-black text-xs"
+                          />
+                          <button onClick={() => {
+                            const newOps = [...operarios];
+                            newOps[i] = { ...op, coste: editValue };
+                            setOperarios(newOps);
+                            setEditingId(null);
+                          }} className="text-emerald-500 font-black text-[9px]">OK</button>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Coste: {op.coste}€</p>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => {
-                          const newCoste = parseFloat(prompt(`Nuevo coste para ${op.nombre}:`, op.coste.toString()) || op.coste.toString());
-                          const newOps = [...operarios];
-                          newOps[i] = { ...op, coste: newCoste };
-                          setOperarios(newOps);
-                          notify("Coste actualizado.", "success");
+                          setEditingId(`op-${i}`);
+                          setEditValue(op.coste);
                         }}
                         className="p-2 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-transform"
                       >
@@ -1948,9 +2676,15 @@ function ConfigScreen({
                       </button>
                       <button
                         onClick={() => {
-                          const newOps = operarios.filter((_, idx) => idx !== i);
-                          setOperarios(newOps);
-                          notify("Operario eliminado.", "info");
+                          setModal({
+                            title: "Eliminar Operario",
+                            message: `¿Seguro que quieres borrar a ${op.nombre}?`,
+                            onConfirm: () => {
+                              const newOps = operarios.filter((_, idx) => idx !== i);
+                              setOperarios(newOps);
+                              notify("Operario eliminado.", "info");
+                            }
+                          });
                         }}
                         className="text-red-400 p-2 active:scale-90 transition-transform"
                       >
@@ -1975,6 +2709,7 @@ function CertificacionScreen({
   obraId, 
   certificaciones, 
   anticipos,
+  gastos,
   operariosList,
   itemsSate,
   obra,
@@ -1983,12 +2718,14 @@ function CertificacionScreen({
   onSaveCertificacion, 
   onSaveAnticipo,
   onDeleteAnticipo,
+  onOperarioClick,
   onBack 
 }: { 
   avances: Avance[], 
   obraId: string, 
   certificaciones: Certificacion[], 
   anticipos: Anticipo[],
+  gastos: Gasto[],
   operariosList: any[],
   itemsSate: Record<string, any>,
   obra: Obra,
@@ -1997,11 +2734,20 @@ function CertificacionScreen({
   onSaveCertificacion: (c: Certificacion) => void,
   onSaveAnticipo: (a: Anticipo | Anticipo[]) => void,
   onDeleteAnticipo: (id: string) => void,
+  onOperarioClick: (name: string) => void,
   onBack: () => void 
 }) {
-  const [mes, setMes] = useState(new Date().toISOString().slice(0, 7));
+  const [fechaInicio, setFechaInicio] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1); // Default to start of previous month to cover transitions
+    d.setDate(1); 
+    return d.toISOString().split('T')[0];
+  });
+  const [fechaFin, setFechaFin] = useState(new Date().toISOString().split('T')[0]);
+  const [mes, setMes] = useState(new Date().toISOString().slice(0, 7)); // Keep for ID grouping
   const [estado, setEstado] = useState<"pendiente" | "cobrado">("pendiente");
   const [fechaCobro, setFechaCobro] = useState<string>("");
+  const [incentivoExtra, setIncentivoExtra] = useState(0);
   
   // Manual Advance State
   const [manualOp, setManualOp] = useState(operariosList[0]?.nombre || "");
@@ -2021,61 +2767,93 @@ function CertificacionScreen({
     }
   }, [operariosList, manualOp]);
 
+  // Settlement Logic: Filter out data already covered by PAID certifications
+  const cobradas = useMemo(() => 
+    certificaciones.filter(c => c.obraId === obraId && c.estado === 'cobrado'),
+  [certificaciones, obraId]);
+
+  const isDataProcessed = useCallback((date: string) => {
+    return cobradas.some(c => {
+      if (!c.fechaInicio || !c.fechaFin) return false;
+      return date >= c.fechaInicio && date <= c.fechaFin;
+    });
+  }, [cobradas]);
+
+  const filtradosRange = useMemo(() => {
+    return (avances || []).filter(a => 
+      a.fecha >= fechaInicio && 
+      a.fecha <= fechaFin && 
+      !isDataProcessed(a.fecha)
+    );
+  }, [avances, fechaInicio, fechaFin, isDataProcessed]);
+
   const ejecutado = useMemo(() => {
-    return (avances || [])
-      .filter(a => a.fecha && a.fecha.startsWith(mes))
-      .reduce((acc, curr) => acc + calculateEconomics(curr).ingresos, 0);
-  }, [avances, mes, calculateEconomics]);
+    return filtradosRange.reduce((acc, curr) => acc + calculateEconomics(curr).ingresos, 0);
+  }, [filtradosRange, calculateEconomics]);
 
-  const totalAnticiposMes = useMemo(() => {
+  const totalAnticiposRango = useMemo(() => {
     return (anticipos || [])
-      .filter(an => an.fecha && an.fecha.startsWith(mes))
+      .filter(an => 
+        an.fecha >= fechaInicio && 
+        an.fecha <= fechaFin && 
+        !isDataProcessed(an.fecha)
+      )
       .reduce((acc, curr) => acc + (curr.cantidad || 0), 0);
-  }, [anticipos, mes]);
+  }, [anticipos, fechaInicio, fechaFin, isDataProcessed]);
 
-  const certificado = ejecutado - totalAnticiposMes;
+  const certificado = ejecutado - totalAnticiposRango;
 
   const totalesMensuales = useMemo(() => {
     const items: Record<string, number> = {};
-    let beneficioTotal = 0;
+    let ingresosTotal = 0;
+    let costeMOTotal = 0;
 
-    (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes)).forEach(a => {
+    filtradosRange.forEach(a => {
       const econ = calculateEconomics(a);
-      beneficioTotal += econ.beneficio;
+      ingresosTotal += econ.ingresos;
+      costeMOTotal += econ.costeManoObra;
       (a.produccion || []).forEach(p => {
         items[p.itemId] = (items[p.itemId] || 0) + (p.m2 || 0);
       });
     });
 
-    return { items, beneficioTotal };
-  }, [avances, mes, calculateEconomics]);
+    return { items, ingresosTotal, costeMOTotal, beneficioTotal: ingresosTotal - costeMOTotal };
+  }, [filtradosRange, calculateEconomics]);
 
   const operariosStats = useMemo(() => {
-    const stats: Record<string, { jornales: number, beneficios: number, anticipos: number }> = {};
-    operariosList.forEach(o => stats[o.nombre] = { jornales: 0, beneficios: 0, anticipos: 0 });
+    const stats: Record<string, { jornales: number, beneficios: number, anticipos: number, reembolsos: number, diasTrabajados: number }> = {};
+    operariosList.forEach(o => stats[o.nombre] = { jornales: 0, beneficios: 0, anticipos: 0, reembolsos: 0, diasTrabajados: 0 });
 
-    const filtrados = (avances || []).filter(a => a.fecha && a.fecha.startsWith(mes));
-    
-    filtrados.forEach(a => {
-      const econ = calculateEconomics(a);
-      const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
-      const cantOps = uniqueOpsRaw.length;
-      const beneficioPorOp = cantOps > 0 ? econ.beneficio / cantOps : 0;
-      
-      uniqueOpsRaw.forEach(op => {
-        // Find exact key in stats using robust matching
+    // 1. Calculate base salaries and count workdays in range
+    filtradosRange.forEach(a => {
+      (a.operariosPresentes || []).forEach(opName => {
         const targetOp = Object.keys(stats).find(name => 
-          name.trim().toLowerCase() === op.trim().toLowerCase()
+          name.trim().toLowerCase() === opName.trim().toLowerCase()
         );
         if (targetOp) {
-          stats[targetOp].jornales += operariosList.find(o => o.nombre === targetOp)?.coste || 0;
-          stats[targetOp].beneficios += beneficioPorOp;
+          const baseCost = operariosList.find(o => o.nombre === targetOp)?.coste || 120;
+          stats[targetOp].jornales += baseCost;
+          stats[targetOp].diasTrabajados += 1;
         }
       });
     });
 
-    (anticipos || []).filter(an => an.fecha && an.fecha.startsWith(mes)).forEach(an => {
-      // Robust matching ignoring spaces and case
+    // 2. Distribute PROFIT (Revenue - Total Team Wages)
+    const activeOperators = Object.keys(stats).filter(name => stats[name].diasTrabajados > 0);
+    const n = activeOperators.length;
+    
+    const totalWages = Object.values(stats).reduce((sum, s) => sum + s.jornales, 0);
+    const totalSharedProfit = totalesMensuales.ingresosTotal - totalWages;
+    
+    const profitPerOp = n > 0 ? totalSharedProfit / n : 0;
+    const bonusPerOp = n > 0 ? (incentivoExtra || 0) / n : 0;
+
+    activeOperators.forEach(name => {
+      stats[name].beneficios = profitPerOp + bonusPerOp;
+    });
+
+    // 3. Anticipos and Reembolsos in range
+    (anticipos || []).filter(an => an.fecha >= fechaInicio && an.fecha <= fechaFin && !isDataProcessed(an.fecha)).forEach(an => {
       const targetOp = Object.keys(stats).find(name => 
         name.trim().toLowerCase() === an.operario.trim().toLowerCase()
       );
@@ -2084,8 +2862,17 @@ function CertificacionScreen({
       }
     });
 
+    (gastos || []).filter(g => g.fecha >= fechaInicio && g.fecha <= fechaFin && g.pagadoPor).forEach(g => {
+      const targetOp = Object.keys(stats).find(name => 
+        name.trim().toLowerCase() === g.pagadoPor?.trim().toLowerCase()
+      );
+      if (targetOp) {
+        stats[targetOp].reembolsos += (g.monto || 0);
+      }
+    });
+
     return stats;
-  }, [avances, anticipos, mes, operariosList, calculateEconomics]);
+  }, [filtradosRange, anticipos, gastos, fechaInicio, fechaFin, operariosList, calculateEconomics, incentivoExtra, totalesMensuales.ingresosTotal]);
 
   const existingCert = certificaciones.find(c => c.obraId === obraId && c.mes === mes);
 
@@ -2093,9 +2880,11 @@ function CertificacionScreen({
     if (existingCert) {
       setEstado(existingCert.estado);
       setFechaCobro(existingCert.fechaCobro || "");
+      setIncentivoExtra(existingCert.incentivoExtra || 0);
     } else {
       setEstado("pendiente");
       setFechaCobro("");
+      setIncentivoExtra(0);
     }
   }, [existingCert, mes]);
 
@@ -2103,9 +2892,12 @@ function CertificacionScreen({
     const cert: Certificacion = {
       id: existingCert?.id || crypto.randomUUID(),
       obraId,
-      mes,
+      mes: fechaInicio.slice(0, 7), 
+      fechaInicio,
+      fechaFin,
       ejecutado,
-      anticipos: totalAnticiposMes,
+      anticipos: totalAnticiposRango,
+      incentivoExtra,
       certificado,
       estado,
       fechaCobro: estado === "cobrado" ? fechaCobro : undefined
@@ -2114,12 +2906,13 @@ function CertificacionScreen({
   };
 
   const handleGenerarAnticiposSemanales = () => {
-    if (!mes || !mes.includes('-')) {
-      notify("Selecciona un mes válido.", "error");
+    const start = new Date(fechaInicio);
+    const end = new Date(fechaFin);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      notify("Selecciona un rango de fechas válido.", "error");
       return;
     }
-    const year = parseInt(mes.split('-')[0]);
-    const month = parseInt(mes.split('-')[1]) - 1;
     
     const getLocalISODate = (date: Date) => {
       const y = date.getFullYear();
@@ -2132,8 +2925,8 @@ function CertificacionScreen({
       s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     const viernes: string[] = [];
-    let d = new Date(year, month, 1);
-    while (d.getMonth() === month) {
+    let d = new Date(start);
+    while (d <= end) {
       if (d.getDay() === 5) {
         viernes.push(getLocalISODate(d));
       }
@@ -2215,32 +3008,43 @@ function CertificacionScreen({
         </button>
       </div>
 
-      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
-        <div className="space-y-2">
-          <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-2">Mes de Certificación</label>
-          <input 
-            type="month" 
-            value={mes} 
-            onChange={(e) => setMes(e.target.value)}
-            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-black text-xl text-slate-800 outline-none"
-          />
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-8">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-2">Inicio Periodo</label>
+            <input 
+              type="date" 
+              value={fechaInicio} 
+              onChange={(e) => setFechaInicio(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-sm text-slate-800 dark:text-white outline-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-2">Fin Periodo</label>
+            <input 
+              type="date" 
+              value={fechaFin} 
+              onChange={(e) => setFechaFin(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-sm text-slate-800 dark:text-white outline-none"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+          <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total Ejecutado</label>
-            <span className="text-4xl font-black text-slate-800 tracking-tight">{ejecutado.toLocaleString()}€</span>
+            <span className="text-4xl font-black text-slate-800 dark:text-white tracking-tight">{ejecutado.toLocaleString()}€</span>
           </div>
 
           {/* Totales Mensuales Detallados */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 space-y-4">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-4">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Producción del Mes</label>
             
             <div className="grid grid-cols-2 gap-3">
               {Object.entries(totalesMensuales.items).map(([id, m2]) => (
-                <div key={id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <div key={id} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
                   <span className="text-[10px] font-black text-slate-400 uppercase block mb-1 truncate">{itemsSate[id]?.nombre || "Partida"}</span>
-                  <span className="text-xl font-black text-slate-800">{Math.round(m2 as number)}</span>
+                  <span className="text-xl font-black text-slate-800 dark:text-white">{Math.round(m2 as number)}</span>
                   <span className="text-[10px] font-black text-slate-300 ml-1 uppercase">m²</span>
                 </div>
               ))}
@@ -2249,21 +3053,26 @@ function CertificacionScreen({
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-black text-slate-300 uppercase block">Ingresos Mes</span>
-                <span className="text-2xl font-black text-slate-800">{Math.round(ejecutado).toLocaleString()}€</span>
+                <span className="text-2xl font-black text-slate-800 dark:text-white">{Math.round(totalesMensuales.ingresosTotal).toLocaleString()}€</span>
               </div>
               <div className="space-y-1 text-right">
-                <span className="text-[10px] font-black text-slate-300 uppercase block">Beneficio Mes</span>
-                <span className="text-2xl font-black text-blue-600">{Math.round(totalesMensuales.beneficioTotal).toLocaleString()}€</span>
+                <span className="text-[10px] font-black text-slate-300 uppercase block">Beneficio Real (Sobrante)</span>
+                <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{Math.round(totalesMensuales.beneficioTotal).toLocaleString()}€</span>
               </div>
+            </div>
+            <div className="pt-2">
+              <span className="text-[9px] font-bold text-slate-400 uppercase italic leading-tight">
+                * Beneficio = Ingresos - Coste de todos los jornales del equipo ({totalesMensuales.costeMOTotal}€).
+              </span>
             </div>
           </div>
 
-          <div className="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 space-y-6">
+          <div className="bg-orange-50 dark:bg-orange-950/20 p-6 rounded-[2rem] border border-orange-100 dark:border-orange-900/30 space-y-6">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-black text-orange-400 uppercase tracking-widest block">Anticipos</label>
+              <label className="text-[10px] font-black text-orange-400 uppercase tracking-widest block">Anticipos (Pendientes)</label>
               <button 
                 onClick={handleGenerarAnticiposSemanales}
                 className="text-[10px] font-black bg-orange-600 text-white px-4 py-2 rounded-xl uppercase tracking-widest active:scale-95 transition-transform"
@@ -2271,17 +3080,17 @@ function CertificacionScreen({
                 Auto-Generar
               </button>
             </div>
-            <span className="text-4xl font-black text-orange-700 tracking-tight block">{totalAnticiposMes.toLocaleString()}€</span>
+            <span className="text-4xl font-black text-orange-700 dark:text-orange-400 tracking-tight block">{totalAnticiposRango.toLocaleString()}€</span>
             
             <div className="space-y-4">
               {/* Manual Entry */}
-              <div className="bg-white p-4 rounded-2xl border border-orange-100 space-y-4">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/30 space-y-4">
                 <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest">Añadir Manual</p>
                 <div className="grid grid-cols-2 gap-2">
                   <select 
                     value={manualOp} 
                     onChange={(e) => setManualOp(e.target.value)}
-                    className="bg-slate-50 border-none rounded-xl p-3 text-xs font-black text-slate-800"
+                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-3 text-xs font-black text-slate-800 dark:text-white outline-none"
                   >
                     {operariosList.map(o => <option key={o.nombre} value={o.nombre}>{o.nombre}</option>)}
                   </select>
@@ -2289,7 +3098,7 @@ function CertificacionScreen({
                     type="number" 
                     value={manualCant} 
                     onChange={(e) => setManualCant(Number(e.target.value))}
-                    className="bg-slate-50 border-none rounded-xl p-3 text-xs font-black text-slate-800"
+                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-3 text-[10px] font-black text-slate-800 dark:text-white outline-none"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -2297,11 +3106,11 @@ function CertificacionScreen({
                     type="date" 
                     value={manualFecha} 
                     onChange={(e) => setManualFecha(e.target.value)}
-                    className="flex-1 bg-slate-50 border-none rounded-xl p-3 text-xs font-black text-slate-800"
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-xl p-3 text-[10px] font-black text-slate-800 dark:text-white outline-none"
                   />
                   <button 
                     onClick={handleAddManualAnticipo}
-                    className="bg-orange-600 text-white px-6 rounded-xl text-xs font-black uppercase tracking-widest active:scale-95 transition-transform"
+                    className="bg-orange-600 text-white px-6 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
                   >
                     Añadir
                   </button>
@@ -2309,7 +3118,7 @@ function CertificacionScreen({
               </div>
 
               <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                {anticipos.filter(an => an.fecha.startsWith(mes)).map(an => (
+                {(anticipos || []).filter(an => an.fecha >= fechaInicio && an.fecha <= fechaFin && !isDataProcessed(an.fecha)).map(an => (
                   <div key={an.id} className="flex justify-between items-center bg-white dark:bg-black p-3 rounded-xl border border-orange-100 dark:border-slate-800">
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-slate-700 uppercase">{an.operario}</span>
@@ -2327,9 +3136,26 @@ function CertificacionScreen({
             </div>
           </div>
 
-          <div className="bg-blue-600 p-8 rounded-[2rem] text-white shadow-2xl shadow-blue-100">
-            <label className="text-[10px] font-black opacity-70 uppercase tracking-widest block mb-1">A Certificar Neto</label>
-            <span className="text-5xl font-black tracking-tight">{certificado.toLocaleString()}€</span>
+          <div className="bg-blue-600 p-8 rounded-[2rem] text-white shadow-2xl shadow-blue-100 flex flex-col gap-4">
+            <div>
+              <label className="text-[10px] font-black opacity-70 uppercase tracking-widest block mb-1">A Certificar Neto</label>
+              <span className="text-5xl font-black tracking-tight">{certificado.toLocaleString()}€</span>
+            </div>
+            
+            <div className="pt-4 border-t border-blue-500 space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest block">Bonus/Incentivo Extra</label>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number"
+                  value={incentivoExtra}
+                  onChange={(e) => setIncentivoExtra(Number(e.target.value))}
+                  className="w-full bg-blue-700 border-none rounded-xl p-3 text-white font-black text-lg outline-none"
+                  placeholder="0"
+                />
+                <span className="font-black text-xl">€</span>
+              </div>
+              <p className="text-[9px] font-bold opacity-60 uppercase italic">* Se reparte equitativamente entre los operarios activos</p>
+            </div>
           </div>
 
           {/* Botones de Compartir Certificación */}
@@ -2339,9 +3165,12 @@ function CertificacionScreen({
                 const cert: Certificacion = {
                   id: existingCert?.id || crypto.randomUUID(),
                   obraId,
-                  mes,
+                  mes: fechaInicio.slice(0, 7),
+                  fechaInicio,
+                  fechaFin,
                   ejecutado,
-                  anticipos: totalAnticiposMes,
+                  anticipos: totalAnticiposRango,
+                  incentivoExtra,
                   certificado,
                   estado,
                   fechaCobro: estado === "cobrado" ? fechaCobro : undefined
@@ -2359,15 +3188,18 @@ function CertificacionScreen({
                 const cert: Certificacion = {
                   id: existingCert?.id || crypto.randomUUID(),
                   obraId,
-                  mes,
+                  mes: fechaInicio.slice(0, 7),
+                  fechaInicio,
+                  fechaFin,
                   ejecutado,
-                  anticipos: totalAnticiposMes,
+                  anticipos: totalAnticiposRango,
+                  incentivoExtra,
                   certificado,
                   estado,
                   fechaCobro: estado === "cobrado" ? fechaCobro : undefined
                 };
-                const anticiposMes = anticipos.filter(an => an.fecha.startsWith(mes));
-                shareService.generateCertificacionPDF(cert, obra, anticiposMes, totalesMensuales, itemsSate);
+                const anticiposPeriodo = (anticipos || []).filter(an => an.fecha >= fechaInicio && an.fecha <= fechaFin && !isDataProcessed(an.fecha));
+                shareService.generateCertificacionPDF(cert, obra, anticiposPeriodo, totalesMensuales, itemsSate);
               }}
               className="flex items-center justify-center gap-2 bg-blue-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-100"
             >
@@ -2379,27 +3211,39 @@ function CertificacionScreen({
 
         {/* Resumen por Operario */}
         <div className="space-y-4 pt-8 border-t border-slate-50">
-          <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-2">Liquidación por Operario</h4>
+          <div className="flex justify-between items-center px-2">
+            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Liquidación por Operario</h4>
+            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Pulsa para ver detalle</span>
+          </div>
           <div className="space-y-3">
-            {(Object.entries(operariosStats) as [string, { jornales: number, beneficios: number, anticipos: number }][]).map(([name, stat]) => (
-              <div key={name} className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="font-black text-slate-800 uppercase tracking-tight">{name}</span>
+            {(Object.entries(operariosStats) as [string, { jornales: number, beneficios: number, anticipos: number, reembolsos: number, diasTrabajados: number }][]).map(([name, stat]) => (
+              <button 
+                key={name} 
+                onClick={() => onOperarioClick(name)}
+                className="w-full bg-slate-50 p-5 rounded-[2rem] border border-slate-100 active:scale-[0.98] transition-all text-left flex flex-col group"
+              >
+                <div className="flex justify-between items-center mb-4 w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-300 group-hover:text-blue-600 transition-colors">
+                      <ChevronRight size={14} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-black text-slate-800 uppercase tracking-tight">{name}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">{stat.diasTrabajados} Jornales</span>
+                    </div>
+                  </div>
                   <div className="text-right">
-                    <label className="text-[9px] font-black text-slate-400 uppercase block">Total Devengado</label>
-                    <span className="text-lg font-black text-blue-600">{(stat.jornales + stat.beneficios).toFixed(0)}€</span>
+                    <label className="text-[9px] font-black text-slate-400 uppercase block text-xs">Saldo Neto</label>
+                    <span className="text-xl font-black text-blue-600">{(stat.jornales + stat.beneficios - stat.anticipos + stat.reembolsos).toFixed(2).replace('.', ',')}€</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">
-                  <div className="bg-white p-2 rounded-xl">Jornales<br/><span className="text-slate-800">{stat.jornales}€</span></div>
-                  <div className="bg-white p-2 rounded-xl">Extra<br/><span className="text-slate-800">{stat.beneficios.toFixed(0)}€</span></div>
-                  <div className="bg-orange-100 text-orange-700 p-2 rounded-xl">Anticipos<br/>{stat.anticipos}€</div>
+                <div className="grid grid-cols-4 gap-2 text-[9px] font-black text-slate-400 uppercase tracking-wider text-center w-full">
+                  <div className="bg-white p-2 rounded-xl">Jornales<br/><span className="text-slate-800">{stat.jornales.toFixed(2).replace('.', ',')}€</span></div>
+                  <div className="bg-white p-2 rounded-xl">Reparto<br/><span className="text-blue-600">{stat.beneficios.toFixed(2).replace('.', ',')}€</span></div>
+                  <div className="bg-orange-50 text-orange-700 p-2 rounded-xl">Anti.<br/>-{stat.anticipos.toFixed(2).replace('.', ',')}€</div>
+                  <div className="bg-emerald-50 text-emerald-700 p-2 rounded-xl">Devol.<br/>+{stat.reembolsos.toFixed(2).replace('.', ',')}€</div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo a Cobrar:</span>
-                  <span className="text-xl font-black text-emerald-600">{(stat.jornales + stat.beneficios - stat.anticipos).toFixed(0)}€</span>
-                </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -2443,6 +3287,40 @@ function CertificacionScreen({
         >
           Guardar Certificación
         </button>
+
+        {/* Histórico Section */}
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-6">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Certificaciones Liquidadas (Histórico)</label>
+          <div className="space-y-4">
+            {certificaciones
+              .filter(c => c.obraId === obraId && c.estado === 'cobrado')
+              .filter((c, index, self) => index === self.findIndex(t => t.id === c.id)) // Deduplicate by ID
+              .sort((a,b) => (b.fechaFin || "").localeCompare(a.fechaFin || ""))
+              .map(c => (
+              <div key={c.id} className="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 flex justify-between items-center group">
+                <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest leading-none mb-1">CERRADA Y LIQUIDADA</p>
+                <p className="text-sm font-black text-slate-800 dark:text-white uppercase leading-tight">
+                  {c.fechaInicio && c.fechaFin 
+                    ? `${new Date(c.fechaInicio).toLocaleDateString()} al ${new Date(c.fechaFin).toLocaleDateString()}` 
+                    : `Periodo: ${c.mes}`}
+                </p>
+                {c.fechaCobro && (
+                  <p className="text-[9px] font-bold text-slate-400 uppercase italic">Cobrada el {new Date(c.fechaCobro).toLocaleDateString()}</p>
+                )}
+                <div className="text-right space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase">Total Neto</p>
+                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{Math.round(c.certificado).toLocaleString()}€</p>
+                </div>
+              </div>
+            ))}
+            {certificaciones.filter(c => c.obraId === obraId && c.estado === 'cobrado').length === 0 && (
+              <div className="text-center py-8 opacity-40">
+                <Database className="mx-auto mb-2 text-slate-300" size={32} />
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No hay certificaciones liquidadas</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
