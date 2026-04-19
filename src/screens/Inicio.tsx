@@ -97,7 +97,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         sharedProfit,
         opAnticipos,
         opReembolsos,
-        cobrar: totalJornales + sharedProfit + opReembolsos - opAnticipos
+        cobrar: totalJornales + sharedProfit + opReembolsos - opAnticipos,
+        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0
       };
     }).filter(o => o.jornadas > 0 || o.opAnticipos > 0 || o.opReembolsos > 0);
   }, [operariosList, statsCurrent]);
@@ -108,6 +109,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       `*Estado:* PRODUCCIÓN EN CURSO\n\n` +
       `- Jornales (${o.jornadas}j): ${formatAmount(o.totalJornales)}€\n` +
       `- Reparto Beneficio: +${formatAmount(o.sharedProfit)}€\n` +
+      (o.mediaDiaria > 0 ? `*Media Diaria (J+R): ${formatAmount(o.mediaDiaria)}€/día*\n` : '') +
       (o.opReembolsos > 0 ? `- Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
       (o.opAnticipos > 0 ? `- Anticipos: -${formatAmount(o.opAnticipos)}€\n` : '') +
       `*TOTAL A COBRAR: ${formatAmount(o.cobrar)}€*`;
@@ -244,7 +246,10 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="text-xs font-black text-slate-800 dark:text-white uppercase">{o.nombre} ({o.jornadas}j)</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Neto: {formatAmount(o.cobrar)}€</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">
+                          Neto: {formatAmount(o.cobrar)}€ 
+                          {o.jornadas > 0 && <span className="text-blue-500 ml-1">• {formatAmount(o.mediaDiaria)}€/día</span>}
+                        </p>
                       </div>
                       <button 
                         onClick={() => shareIndividualSettlement(o)}
