@@ -3,6 +3,7 @@ import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, Chevr
 import { useApp } from "../context/AppContext";
 import { Certificacion, Anticipo } from "../types";
 import { shareService } from "../services/shareService";
+import { formatDate } from "../lib/utils";
 
 export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick: (n: string) => void }> = ({ onBack, onOperarioClick }) => {
   const { 
@@ -261,7 +262,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const handleWhatsApp = () => {
     if (!obra) return;
     const text = `*CIERRE - ${obra.nombre}*\n` +
-      `*Periodo:* ${periodoInicio} al ${periodoFin}\n\n` +
+      `*Periodo:* ${formatDate(periodoInicio)} al ${formatDate(periodoFin)}\n\n` +
       `*PRODUCCIÓN:*\n` +
       Object.entries(stats.items).map(([id, m2]) => 
         `- ${(itemsSate[id] as any)?.nombre || id}: ${Math.round(m2 as number)}m²`
@@ -427,7 +428,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                 <div key={an.id} className="flex justify-between items-center py-3">
                   <div>
                     <p className="text-xs font-black text-slate-800 dark:text-white uppercase">{an.operario}</p>
-                    <p className="text-[9px] font-bold text-slate-400">{an.fecha}</p>
+                    <p className="text-[9px] font-bold text-slate-400">{formatDate(an.fecha)}</p>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-black text-red-500">-{an.cantidad}€</span>
@@ -537,7 +538,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                           <h4 className={`font-black uppercase text-sm leading-none ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-slate-800 dark:text-white'}`}>
                             {c.estado === 'cobrado' ? 'COBRADA Y LIQUIDADA' : 'PENDIENTE DE PAGO'}
                           </h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Periodo: {c.fechaInicio || '??'} / {c.fechaFin || '??'}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Periodo: {c.fechaInicio ? formatDate(c.fechaInicio) : '??'} / {c.fechaFin ? formatDate(c.fechaFin) : '??'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -570,7 +571,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                         <div className="space-y-1">
                           {c.anticiposDetalle?.map((an, idx) => (
                               <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                                <span>{an.operario} ({an.fecha})</span>
+                                <span>{an.operario} ({formatDate(an.fecha)})</span>
                                 <span className="text-red-500">-{an.cantidad}€</span>
                               </div>
                             ))}

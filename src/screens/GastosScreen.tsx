@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChevronLeft, PlusCircle, Trash2, Receipt } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Gasto } from "../types";
+import { formatDate } from "../lib/utils";
 
 export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { gastos, setGastos, selectedObraId, notify, operariosList } = useApp();
@@ -9,6 +10,7 @@ export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [concepto, setConcepto] = useState("");
   const [monto, setMonto] = useState("");
   const [pagadoPor, setPagadoPor] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const obraGastos = gastos.filter(g => g.obraId === selectedObraId);
 
@@ -31,9 +33,14 @@ export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const deleteGasto = (id: string) => {
-    if (confirm("¿Borrar gasto?")) {
+    if (confirmDeleteId === id) {
       setGastos(gastos.filter(g => g.id !== id));
+      setConfirmDeleteId(null);
       notify("Gasto eliminado", "success");
+    } else {
+      setConfirmDeleteId(id);
+      setTimeout(() => setConfirmDeleteId(null), 3000);
+      notify("Pulsa otra vez para confirmar", "info");
     }
   };
 
@@ -69,12 +76,17 @@ export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                  <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-orange-500"><Receipt size={24} /></div>
                  <div>
                    <h4 className="font-black text-slate-800 dark:text-white uppercase text-sm leading-none">{g.concepto}</h4>
-                   <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{g.fecha} {g.pagadoPor && `• ${g.pagadoPor}`}</p>
+                   <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{formatDate(g.fecha)} {g.pagadoPor && `• ${g.pagadoPor}`}</p>
                  </div>
                </div>
                <div className="flex items-center gap-4">
                  <span className="text-xl font-black text-slate-800 dark:text-white">{g.monto}€</span>
-                 <button onClick={() => deleteGasto(g.id)} className="p-2 text-red-500"><Trash2 size={18} /></button>
+                 <button 
+                   onClick={() => deleteGasto(g.id)} 
+                   className={`p-2 rounded-xl transition-all ${confirmDeleteId === g.id ? "bg-red-600 text-white animate-pulse shadow-sm" : "text-red-500"}`}
+                 >
+                   <Trash2 size={18} />
+                 </button>
                </div>
             </div>
           ))

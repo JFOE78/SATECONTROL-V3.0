@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance } from "../types";
+import { formatDate } from "../lib/utils";
 
 export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => void, onNew: (date: string) => void }> = ({ onEdit, onBack, onNew }) => {
   const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, itemsSate } = useApp();
@@ -129,7 +130,7 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
       <div className="space-y-4">
         <div className="flex justify-between items-center px-4">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            {selectedDay ? new Date(selectedDay).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : "Selecciona un día"}
+            {selectedDay ? formatDate(selectedDay) : "Selecciona un día"}
           </label>
           {selectedDay && (
             <button 
@@ -217,7 +218,7 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                   <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded-xl text-red-600"><DollarSign size={18} /></div>
                   <div>
                     <p className="text-[10px] font-black text-red-400 uppercase leading-none">Anticipo</p>
-                    <p className="text-sm font-black text-slate-800 dark:text-white uppercase">{an.operario}</p>
+                    <p className="text-sm font-black text-slate-800 dark:text-white uppercase">{an.operario} ({formatDate(an.fecha)})</p>
                   </div>
                 </div>
                 <span className="text-lg font-black text-red-600">-{an.cantidad}€</span>
