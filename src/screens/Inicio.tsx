@@ -138,15 +138,15 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
 
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-4 shadow-xl shadow-slate-100/50 dark:shadow-none">
         <div className="flex justify-between items-center px-2">
-          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Resumen de Cobros Pendientes</label>
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado Local de la Obra</label>
           <Activity size={14} className="text-blue-500 animate-pulse" />
         </div>
         
         <div className="space-y-4">
           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-3xl space-y-3">
              <div className="flex justify-between items-center">
-               <span className="text-[10px] font-black text-slate-400 uppercase">1. Producción en Curso</span>
-               <span className="text-sm font-black text-slate-700 dark:text-slate-300">{Math.round(totalAcumulado.produccionEnCurso).toLocaleString()}€</span>
+               <span className="text-[10px] font-black text-slate-400 uppercase">1. Producción Bruta (En Curso)</span>
+               <span className="text-sm font-black text-slate-700 dark:text-slate-300">{Math.round(totalAcumulado.ingresosCurso).toLocaleString()}€</span>
              </div>
              <div className="flex justify-between items-center">
                <span className="text-[10px] font-black text-slate-400 uppercase">2. Certificaciones por Cobrar</span>
@@ -154,20 +154,21 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
              </div>
           </div>
 
-          <div className="pt-2 flex justify-between items-end border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4">
             <div>
-              <span className="text-[10px] font-black text-blue-400 uppercase block uppercase tracking-widest mb-1">Saldo Total Pendiente</span>
-              <span className="text-4xl font-black text-blue-600 leading-none">{Math.round(totalAcumulado.totalPendiente).toLocaleString()}€</span>
+              <span className="text-[10px] font-black text-slate-300 uppercase block tracking-widest mb-1 leading-tight">Total Bruto<br/>Pendiente</span>
+              <span className="text-xl font-black text-slate-400 leading-none">{(Math.round(totalAcumulado.ingresosCurso + totalAcumulado.certPendiente)).toLocaleString()}€</span>
             </div>
             <div className="text-right">
-               <p className="text-[8px] font-bold text-slate-300 uppercase leading-tight">* Acumulado desde<br/>el primer día</p>
+              <span className="text-[10px] font-black text-blue-400 uppercase block tracking-widest mb-1 leading-tight">Beneficio Neto<br/>Estimado</span>
+              <span className="text-3xl font-black text-blue-600 leading-none">{Math.round(totalAcumulado.totalPendiente).toLocaleString()}€</span>
             </div>
           </div>
         </div>
 
-        <div className="pt-2 px-2">
+        <div className="pt-2 px-2 text-center">
           <p className="text-[9px] text-slate-400 font-bold uppercase italic leading-relaxed">
-            * Se excluye todo lo marcado como "COBRADA Y LIQUIDADA" en el historial de cierres.
+            * El beneficio neto deduce jornales y gastos operativos para mostrar tu ganancia real acumulada.
           </p>
         </div>
         <button 

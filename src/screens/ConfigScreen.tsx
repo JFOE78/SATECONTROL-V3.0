@@ -21,6 +21,18 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<ConfigTab>("general");
   const [editingItem, setEditingItem] = useState<{id: string, nombre: string, precio: number} | null>(null);
   const [editingOp, setEditingOp] = useState<{index: number, nombre: string, coste: number} | null>(null);
+  const [confirmActionId, setConfirmActionId] = useState<string | null>(null);
+
+  const startConfirm = (id: string, callback: () => void) => {
+    if (confirmActionId === id) {
+      callback();
+      setConfirmActionId(null);
+    } else {
+      setConfirmActionId(id);
+      setTimeout(() => setConfirmActionId(null), 4000);
+      notify("Pulsa otra vez para confirmar", "info");
+    }
+  };
 
   const handleExport = () => {
     const data = storage.exportData();
@@ -50,7 +62,6 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const handleUnifyObras = () => {
-    if (!confirm("¿Deseas intentar unificar obras con el mismo nombre? Esto moverá avances y gastos a una sola instancia.")) return;
     const nameMap: Record<string, string> = {}; // nombre -> originalId
     const unifiedObras = [...obras];
     const duplicates: string[] = []; // ids to remove
@@ -75,8 +86,6 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const handleDeduplicateAvances = () => {
-    if (!confirm("¿Deseas eliminar registros duplicados de la agenda (mismo día y bloque)? Esto dejará solo la versión más reciente de cada uno.")) return;
-    
     setAvances(prev => {
       const seen = new Set();
       const next = [];
@@ -94,13 +103,9 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const handleClearAll = () => {
-    if (confirm("¿ESTÁS SEGURO? Se borrarán TODOS los datos de la aplicación permanentemente.")) {
-      if (confirm("Confirmación final: No hay marcha atrás.")) {
-        localStorage.clear();
-        notify("Datos borrados. Reiniciando...", "success");
-        setTimeout(() => window.location.reload(), 1500);
-      }
-    }
+    localStorage.clear();
+    notify("Todo borrado. Reiniciando...", "success");
+    setTimeout(() => window.location.reload(), 1500);
   };
 
   const saveItem = () => {
@@ -112,12 +117,10 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const deleteItem = (id: string) => {
-    if (confirm("¿Borrar esta partida?")) {
-      const next = { ...itemsSate };
-      delete next[id];
-      setItemsSate(next);
-      notify("Partida eliminada", "success");
-    }
+    const next = { ...itemsSate };
+    delete next[id];
+    setItemsSate(next);
+    notify("Partida eliminada", "success");
   };
 
   const saveOp = () => {
@@ -134,10 +137,8 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const deleteOp = (index: number) => {
-    if (confirm("¿Borrar este operario?")) {
-      setOperariosList(operariosList.filter((_, i) => i !== index));
-      notify("Operario eliminado", "success");
-    }
+    setOperariosList(operariosList.filter((_, i) => i !== index));
+    notify("Operario eliminado", "success");
   };
 
   return (
@@ -201,22 +202,37 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <div className="pt-6 border-t border-slate-50 dark:border-slate-800 space-y-4">
               <h3 className="text-sm font-black uppercase text-slate-800 dark:text-white">Mantenimiento</h3>
               <div className="space-y-2">
-                <button onClick={handleDeduplicateAvances} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl active:scale-95 transition-all">
+                <button 
+                  onClick={() => startConfirm('dedup', handleDeduplicateAvances)} 
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${confirmActionId === 'dedup' ? "bg-blue-600 text-white animate-pulse shadow-lg" : "bg-slate-50 dark:bg-slate-800"}`}
+                >
                   <div className="flex items-center gap-3">
-                    <Database className="text-blue-500" size={18} />
-                    <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Limpiar Duplicados Agenda</span>
+                    <Database className={confirmActionId === 'dedup' ? "text-white" : "text-blue-500"} size={18} />
+                    <span className={`text-[10px] font-black uppercase ${confirmActionId === 'dedup' ? "text-white" : "text-slate-600 dark:text-slate-300"}`}>
+                      {confirmActionId === 'dedup' ? "¿CONFIRMAR LIMPIEZA?" : "Limpiar Duplicados Agenda"}
+                    </span>
                   </div>
                 </button>
-                <button onClick={handleUnifyObras} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl active:scale-95 transition-all">
+                <button 
+                  onClick={() => startConfirm('unify', handleUnifyObras)} 
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${confirmActionId === 'unify' ? "bg-emerald-600 text-white animate-pulse shadow-lg" : "bg-slate-50 dark:bg-slate-800"}`}
+                >
                   <div className="flex items-center gap-3">
-                    <Database className="text-emerald-500" size={18} />
-                    <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Unificar Obras Duplicadas</span>
+                    <Database className={confirmActionId === 'unify' ? "text-white" : "text-emerald-500"} size={18} />
+                    <span className={`text-[10px] font-black uppercase ${confirmActionId === 'unify' ? "text-white" : "text-slate-600 dark:text-slate-300"}`}>
+                       {confirmActionId === 'unify' ? "¿CONFIRMAR UNIFICACIÓN?" : "Unificar Obras Duplicadas"}
+                    </span>
                   </div>
                 </button>
-                <button onClick={handleClearAll} className="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl active:scale-95 transition-all">
+                <button 
+                  onClick={() => startConfirm('clear', handleClearAll)} 
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${confirmActionId === 'clear' ? "bg-red-600 text-white animate-pulse shadow-lg" : "bg-red-50 dark:bg-red-900/10"}`}
+                >
                   <div className="flex items-center gap-3">
-                    <AlertTriangle className="text-red-500" size={18} />
-                    <span className="text-[10px] font-black uppercase text-red-600">Borrar Todo el Contenido</span>
+                    <AlertTriangle className={confirmActionId === 'clear' ? "text-white" : "text-red-500"} size={18} />
+                    <span className={`text-[10px] font-black uppercase ${confirmActionId === 'clear' ? "text-white" : "text-red-600"}`}>
+                      {confirmActionId === 'clear' ? "¡PULSA OTRA VEZ PARA BORRAR TODO!" : "Borrar Todo el Contenido"}
+                    </span>
                   </div>
                 </button>
               </div>
@@ -243,8 +259,13 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <p className="text-blue-600 font-bold text-xs">{item.precio?.toLocaleString()}€/m²</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setEditingItem({ id, ...item })} className="p-3 bg-slate-50 dark:bg-slate-800 text-blue-600 rounded-xl"><Edit2 size={18} /></button>
-                  <button onClick={() => deleteItem(id)} className="p-3 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-xl"><Trash2 size={18} /></button>
+                  <button onClick={() => setEditingItem({ id, ...item })} className="p-3 bg-slate-100 dark:bg-slate-800 text-blue-600 rounded-xl"><Edit2 size={18} /></button>
+                  <button 
+                    onClick={() => startConfirm(`item-${id}`, () => deleteItem(id))} 
+                    className={`p-3 rounded-xl transition-all ${confirmActionId === `item-${id}` ? "bg-red-600 text-white animate-pulse" : "bg-red-50 dark:bg-red-900/10 text-red-500"}`}
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -270,8 +291,13 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <p className="text-orange-500 font-bold text-xs">Coste: {op.coste}€/día</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setEditingOp({ index: idx, ...op })} className="p-3 bg-slate-50 dark:bg-slate-800 text-blue-600 rounded-xl"><Edit2 size={18} /></button>
-                  <button onClick={() => deleteOp(idx)} className="p-3 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-xl"><Trash2 size={18} /></button>
+                  <button onClick={() => setEditingOp({ index: idx, ...op })} className="p-3 bg-slate-100 dark:bg-slate-800 text-blue-600 rounded-xl"><Edit2 size={18} /></button>
+                  <button 
+                    onClick={() => startConfirm(`op-${idx}`, () => deleteOp(idx))} 
+                    className={`p-3 rounded-xl transition-all ${confirmActionId === `op-${idx}` ? "bg-red-600 text-white animate-pulse" : "bg-red-50 dark:bg-red-900/10 text-red-500"}`}
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
             ))}

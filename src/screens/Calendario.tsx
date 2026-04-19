@@ -45,11 +45,21 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
     setCurrentMonth(next);
   };
 
-  const deleteAvance = (id: string) => {
-    if (confirm("¿Seguro que quieres borrar este avance?")) {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const deleteAvance = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (confirmDeleteId === id) {
       const nextAvances = avances.filter(a => a.id !== id);
       setAvances(nextAvances);
+      setConfirmDeleteId(null);
       notify("Avance eliminado", "success");
+    } else {
+      setConfirmDeleteId(id);
+      setTimeout(() => setConfirmDeleteId(null), 3000);
+      notify("Pulsa otra vez para confirmar el borrado", "info");
     }
   };
 
@@ -147,8 +157,17 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{a.produccion.length} Partidas registradas</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => onEdit(a)} className="p-2 bg-slate-50 dark:bg-slate-800 text-blue-600 rounded-xl"><Edit2 size={18} /></button>
-                      <button onClick={() => deleteAvance(a.id)} className="p-2 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-xl"><Trash2 size={18} /></button>
+                      <button onClick={() => onEdit(a)} className="p-2 bg-slate-50 dark:bg-slate-800 text-blue-600 rounded-xl active:scale-90 transition-transform"><Edit2 size={18} /></button>
+                      <button 
+                        onClick={(e) => deleteAvance(a.id, e)} 
+                        className={`p-2 rounded-xl transition-all shadow-sm ${
+                          confirmDeleteId === a.id 
+                          ? "bg-red-600 text-white animate-pulse" 
+                          : "bg-red-50 dark:bg-red-900/10 text-red-600"
+                        }`}
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
 
@@ -166,20 +185,22 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-50 dark:border-slate-800">
-                    <div className="flex flex-col">
-                      <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Ingresos</p>
-                      <p className="text-sm font-black text-slate-700 dark:text-slate-200">{Math.round(econ.ingresos)}€</p>
+                    <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-50 dark:border-slate-800">
+                      <div className="flex flex-col">
+                        <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Ingresos</p>
+                        <p className="text-sm font-black text-slate-700 dark:text-slate-200">{Math.round(econ.ingresos)}€</p>
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Coste M.O.</p>
+                        <p className="text-sm font-black text-red-500">{Math.round(econ.costeManoObra)}€</p>
+                      </div>
+                      <div className="flex flex-col text-right">
+                        <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Beneficio</p>
+                        <p className={`text-sm font-black ${econ.beneficio >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                          {econ.beneficio > 0 ? "+" : ""}{Math.round(econ.beneficio)}€
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Coste M.O.</p>
-                      <p className="text-sm font-black text-red-500">{Math.round(econ.costeManoObra)}€</p>
-                    </div>
-                    <div className="flex flex-col text-right">
-                      <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Beneficio</p>
-                      <p className="text-sm font-black text-emerald-500">+{Math.round(econ.beneficio)}€</p>
-                    </div>
-                  </div>
 
                   <div className="flex items-center gap-2 pt-3 border-t border-slate-50 dark:border-slate-800">
                      <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-blue-600"><Users size={14} /></div>
