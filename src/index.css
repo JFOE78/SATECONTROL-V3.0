@@ -111,7 +111,7 @@
   }
 
   :root.dark .bg-slate-900, .dark .bg-slate-900 {
-    @apply bg-white! text-black!;
+    @apply bg-black! text-white!;
   }
 
   :root.dark .text-blue-400, .dark .text-blue-400 {
@@ -161,6 +161,14 @@
   :root.dark select, .dark select, 
   :root.dark textarea, .dark textarea {
     @apply bg-black! text-white! border-slate-800! focus:border-[#00f2ff]! focus:ring-[#00f2ff]/20!;
+    color-scheme: dark;
+  }
+
+  :root.dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(2);
+    cursor: pointer;
+    opacity: 0.8;
   }
 
   :root.dark .shadow-blue-200, .dark .shadow-blue-200 {
