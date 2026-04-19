@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Avance, Certificacion, Anticipo, Obra } from "../types";
+import { formatAmount } from "../lib/utils";
 
 export const shareService = {
   /**
@@ -65,20 +66,21 @@ export const shareService = {
     
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text(`Mes: ${cert.mes}`, 14, 30);
+    const [y, m] = cert.mes.split("-");
+    doc.text(`Mes: ${m}/${y}`, 14, 30);
     doc.text(`Estado: ${cert.estado.toUpperCase()}`, 14, 35);
     
     // Resumen General
     const summaryBody = [
-      ['Total Ejecutado', `${cert.ejecutado.toLocaleString()}€`],
-      ['Total Anticipos', `${cert.anticipos.toLocaleString()}€`]
+      ['Total Ejecutado', `${formatAmount(cert.ejecutado)}€`],
+      ['Total Anticipos', `${formatAmount(cert.anticipos)}€`]
     ];
 
     if (cert.incentivoExtra) {
-      summaryBody.push(['Bonus/Incentivo Extra', `${cert.incentivoExtra.toLocaleString()}€`]);
+      summaryBody.push(['Bonus/Incentivo Extra', `${formatAmount(cert.incentivoExtra)}€`]);
     }
 
-    summaryBody.push(['Neto a Certificar', `${(cert.certificado + (cert.incentivoExtra || 0)).toLocaleString()}€`]);
+    summaryBody.push(['Neto a Certificar', `${formatAmount(cert.certificado + (cert.incentivoExtra || 0))}€`]);
 
     autoTable(doc, {
       startY: 45,
@@ -98,20 +100,31 @@ export const shareService = {
     
     // Items Dinámicos
     if (totalesMensuales.items) {
-      Object.entries(totalesMensuales.items).forEach(([id, m2]) => {
-        if ((m2 as number) > 0) {
-          const item = itemsSate[id];
-          partidasData.push([item ? item.nombre : id, `${Math.round(m2 as number)} m2`]);
-        }
-      });
+      if (Array.isArray(totalesMensuales.items)) {
+        // New detailed format
+        totalesMensuales.items.forEach((row: any) => partidasData.push(row));
+      } else {
+        // Fallback for legacy format (just in case)
+        Object.entries(totalesMensuales.items).forEach(([id, m2]) => {
+          if ((m2 as number) > 0) {
+            const item = itemsSate[id];
+            partidasData.push([item ? item.nombre : id, '-', `${formatAmount(m2 as number)} m2`, '-', '-']);
+          }
+        });
+      }
     }
 
     autoTable(doc, {
       startY: finalYResumen + 5,
-      head: [['Concepto', 'Cantidad']],
+      head: [['Bloque', 'Ítem', 'Cant.', 'Precio', 'Total']],
       body: partidasData,
       theme: 'striped',
-      headStyles: { fillColor: [100, 100, 100] }
+      headStyles: { fillColor: [100, 100, 100] },
+      columnStyles: {
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+        4: { halign: 'right' }
+      }
     });
     
     // Detalle de Anticipos si existen
@@ -124,7 +137,7 @@ export const shareService = {
       const anticiposData = anticipos.map(a => [
         new Date(a.fecha).toLocaleDateString(),
         a.operario,
-        `${a.cantidad.toLocaleString()}€`
+        `${formatAmount(a.cantidad)}€`
       ]);
       
       autoTable(doc, {

@@ -56,6 +56,6 @@ export interface Certificacion {
   certificado: number;
   estado: "pendiente" | "cobrado";
   fechaCobro?: string;
-  items?: { itemId: string, nombre: string, precio: number, m2: number }[];
+  items?: { itemId: string, nombre: string, precio: number, m2: number, bloque?: string }[];
   anticiposDetalle?: { operario: string, cantidad: number, fecha: string }[];
 }

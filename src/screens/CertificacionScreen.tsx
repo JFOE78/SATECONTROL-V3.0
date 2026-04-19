@@ -3,7 +3,7 @@ import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, Chevr
 import { useApp } from "../context/AppContext";
 import { Certificacion, Anticipo } from "../types";
 import { shareService } from "../services/shareService";
-import { formatDate } from "../lib/utils";
+import { formatDate, formatAmount } from "../lib/utils";
 
 export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick: (n: string) => void }> = ({ onBack, onOperarioClick }) => {
   const { 
@@ -35,14 +35,31 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   // Sync dates with filtered advances if empty
   useEffect(() => {
     if (!periodoInicio || !periodoFin) {
-      const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId);
-      if (obraAvances.length > 0) {
-        const sorted = [...obraAvances].sort((a,b) => a.fecha.localeCompare(b.fecha));
-        if (!periodoInicio) setPeriodoInicio(sorted[0].fecha);
-        if (!periodoFin) setPeriodoFin(sorted[sorted.length - 1].fecha);
+      const lastCert = [...certificaciones].filter(c => c.obraId === selectedObraId).sort((a,b) => (b.fechaFin || '').localeCompare(a.fechaFin || ''))[0];
+      
+      if (lastCert && lastCert.fechaFin) {
+        const lastDate = new Date(lastCert.fechaFin);
+        lastDate.setDate(lastDate.getDate() + 1);
+        const nextStart = lastDate.toISOString().split('T')[0];
+        setPeriodoInicio(nextStart);
+        
+        // Find last available avance date for the end
+        const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId).sort((a,b) => a.fecha.localeCompare(b.fecha));
+        if (obraAvances.length > 0) {
+          setPeriodoFin(obraAvances[obraAvances.length - 1].fecha);
+        } else {
+          setPeriodoFin(nextStart);
+        }
+      } else {
+        const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId);
+        if (obraAvances.length > 0) {
+          const sorted = [...obraAvances].sort((a,b) => a.fecha.localeCompare(b.fecha));
+          if (!periodoInicio) setPeriodoInicio(sorted[0].fecha);
+          if (!periodoFin) setPeriodoFin(sorted[sorted.length - 1].fecha);
+        }
       }
     }
-  }, [selectedObraId]);
+  }, [selectedObraId, certificaciones, avances]);
 
   const isDataCertified = useCallback((date: string) => {
     return (certificaciones || []).some(c => 
@@ -244,6 +261,31 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
 
   const handleExportPDF = () => {
     if (!obra) return;
+
+    // Detailed production breakdown for the PDF
+    const prodMap: Record<string, { m2: number, name: string, price: number }> = {};
+    (dataFiltered || []).forEach(a => {
+      (a.produccion || []).forEach(p => {
+        const item = itemsSate[p.itemId];
+        const key = `${a.bloque || '?'}-${p.itemId}`;
+        if (!prodMap[key]) {
+          prodMap[key] = { m2: 0, name: item?.nombre || p.itemId, price: item?.precio || 0 };
+        }
+        prodMap[key].m2 += p.m2;
+      });
+    });
+
+    const detailedItems = Object.entries(prodMap).map(([key, data]) => {
+      const bloque = key.split('-')[0];
+      return [
+        bloque,
+        data.name,
+        `${formatAmount(data.m2)} m2`,
+        `${formatAmount(data.price)}€`,
+        `${formatAmount(data.m2 * data.price)}€`
+      ];
+    });
+
     const cert: Certificacion = {
       id: crypto.randomUUID(),
       obraId: selectedObraId,
@@ -255,27 +297,63 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       certificado: stats.bruto - stats.anticipos,
       estado: "pendiente"
     };
-    shareService.generateCertificacionPDF(cert, obra, stats.listAnticipos, { items: stats.items }, itemsSate);
+    shareService.generateCertificacionPDF(cert, obra, stats.listAnticipos, { items: detailedItems }, itemsSate);
     notify("Generando PDF...", "info");
   };
 
   const handleWhatsApp = () => {
     if (!obra) return;
-    const text = `*CIERRE - ${obra.nombre}*\n` +
-      `*Periodo:* ${formatDate(periodoInicio)} al ${formatDate(periodoFin)}\n\n` +
-      `*PRODUCCIÓN:*\n` +
-      Object.entries(stats.items).map(([id, m2]) => 
-        `- ${(itemsSate[id] as any)?.nombre || id}: ${Math.round(m2 as number)}m²`
-      ).join('\n') + `\n\n` +
-      `*ECONÓMICO:*\n` +
-      `- Total Ejecutado: ${stats.bruto.toLocaleString()}€\n` +
-      `- Anticipos: ${stats.anticipos.toLocaleString()}€\n` +
-      (incentivoExtra > 0 ? `- Incentivo Bonus: ${incentivoExtra}€\n` : '') +
-      `*TOTAL A CERTIFICAR NETO: ${(stats.bruto - stats.anticipos + incentivoExtra).toLocaleString()}€*\n\n` +
+    
+    // Convert YYYY-MM to MM/YYYY
+    const formatMonth = (m: string) => {
+      if (!m) return '';
+      const [y, mm] = m.split('-');
+      return `${mm}/${y}`;
+    };
+
+    // Calculate production grouping by Block and Item
+    const prodMap: Record<string, { m2: number, name: string, price: number }> = {};
+    (dataFiltered || []).forEach(a => {
+      (a.produccion || []).forEach(p => {
+        const item = itemsSate[p.itemId];
+        const key = `${a.bloque || '?'}-${p.itemId}`;
+        if (!prodMap[key]) {
+          prodMap[key] = { m2: 0, name: item?.nombre || p.itemId, price: item?.precio || 0 };
+        }
+        prodMap[key].m2 += p.m2;
+      });
+    });
+
+    const prodDetails = Object.entries(prodMap).map(([key, data]) => {
+      const bloque = key.split('-')[0];
+      return `- Bloque ${bloque}: ${data.name} (${formatAmount(data.m2)} m²) @ ${formatAmount(data.price)}€ = ${formatAmount(data.m2 * data.price)}€`;
+    }).join('\n');
+
+    const opsSettlement = operarioBreakdown.filter(o => o.jornadas > 0).map(o => {
+      const activeOpsCount = operarioBreakdown.filter(x => x.jornadas > 0).length;
+      const opIncentive = (incentivoExtra || 0) / (activeOpsCount || 1);
+      
+      return `*${o.nombre}* (${o.jornadas}j):\n` +
+        `  • Jornales: ${formatAmount(o.totalJornales)}€\n` +
+        `  • Reparto: +${formatAmount(o.sharedProfit)}€\n` +
+        (opIncentive > 0 ? `  • Bonus/Inc: +${formatAmount(opIncentive)}€\n` : '') +
+        (o.opReembolsos > 0 ? `  • Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
+        (o.opAnticipos > 0 ? `  • Anticipos: -${formatAmount(o.opAnticipos)}€\n` : '') +
+        `  *TOTAL A COBRAR: ${formatAmount(o.cobrar + opIncentive)}€*`;
+    }).join('\n\n');
+
+    const text = `*CERTIFICACIÓN MENSUAL - ${obra.nombre}*\n` +
+      `*Mes:* ${formatMonth(periodoFin.substring(0, 7))}\n` +
+      `*Estado: PENDIENTE*\n\n` +
+      `*PARTIDAS ESTIMADAS:*\n` +
+      prodDetails + `\n\n` +
+      `*RESUMEN ECONÓMICO:* \n` +
+      `- Total Ejecutado: ${formatAmount(stats.bruto)}€\n` +
+      `- Anticipos: ${formatAmount(stats.anticipos)}€\n` +
+      (incentivoExtra > 0 ? `- Incentivo Bonus: ${formatAmount(incentivoExtra)}€\n` : '') +
+      `*NETO A CERTIFICAR: ${formatAmount(stats.bruto - stats.anticipos + incentivoExtra)}€*\n\n` +
       `*LIQUIDACIÓN PERSONAL:*\n` +
-      operarioBreakdown.filter(o => o.jornadas > 0).map(o => 
-        `- ${o.nombre} (${o.jornadas}j): ${Math.round(o.cobrar)}€`
-      ).join('\n');
+      opsSettlement;
     
     shareService.shareViaWhatsApp(text);
   };
@@ -311,7 +389,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                 type="date" 
                 value={periodoInicio} 
                 onChange={e => setPeriodoInicio(e.target.value)} 
-                className="w-full bg-slate-50 dark:bg-slate-800 pl-9 p-3 rounded-xl text-xs font-black text-slate-800 dark:text-white outline-none ring-0 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none" 
+                className="w-full bg-slate-50 dark:bg-slate-800 pl-9 p-3 rounded-xl text-xs font-black text-slate-800 dark:text-white outline-none ring-0 focus:ring-2 focus:ring-blue-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark]" 
               />
             </div>
           </div>
@@ -323,7 +401,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                 type="date" 
                 value={periodoFin} 
                 onChange={e => setPeriodoFin(e.target.value)} 
-                className="w-full bg-slate-50 dark:bg-slate-800 pl-9 p-3 rounded-xl text-xs font-black text-slate-800 dark:text-white outline-none ring-0 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none" 
+                className="w-full bg-slate-50 dark:bg-slate-800 pl-9 p-3 rounded-xl text-xs font-black text-slate-800 dark:text-white outline-none ring-0 focus:ring-2 focus:ring-blue-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark]" 
               />
             </div>
           </div>
@@ -334,7 +412,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       <section className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
         <div>
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Total Ejecutado</label>
-          <div className="text-4xl font-black text-slate-800 dark:text-white">{stats.bruto.toLocaleString()}€</div>
+          <div className="text-4xl font-black text-slate-800 dark:text-white">{formatAmount(stats.bruto)}€</div>
         </div>
         
         <div className="space-y-2">
@@ -343,30 +421,24 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
               {Object.entries(stats.items).map(([id, m2]) => (
                 <div key={id} className="flex justify-between py-2 items-center">
                   <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{(itemsSate[id] as any)?.nombre || id}</span>
-                  <span className="text-xs font-black text-slate-800 dark:text-white">{Math.round(m2 as number)} m²</span>
+                  <span className="text-xs font-black text-slate-800 dark:text-white">{formatAmount(m2 as number)} m²</span>
                 </div>
               ))}
-              <div className="flex justify-between py-3 items-center border-t border-slate-100 dark:border-slate-800 pt-3">
-                <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">Total m² Certificados</span>
-                <span className="text-sm font-black text-blue-600 dark:text-blue-400">
-                  {Math.round(Object.values(stats.items).reduce((acc, curr) => Number(acc) + Number(curr), 0) as number)} m²
-                </span>
-              </div>
            </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50 dark:border-slate-800">
           <div>
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Ingresos Mes</label>
-            <p className="text-xl font-black text-slate-800 dark:text-white">{Math.floor(stats.bruto).toLocaleString()}€</p>
+            <p className="text-xl font-black text-slate-800 dark:text-white">{formatAmount(stats.bruto)}€</p>
           </div>
           <div className="text-right">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Beneficio Real</label>
-            <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{Math.floor(stats.realProfit).toLocaleString()}€</p>
+            <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{formatAmount(stats.realProfit)}€</p>
           </div>
         </div>
         <p className="text-[9px] text-slate-400 dark:text-slate-500 italic uppercase font-bold text-center leading-relaxed">
-          * Beneficio = Ingresos - Coste de todos los jornales del equipo ({stats.laborCost.toLocaleString()}€)
+          * Beneficio = Ingresos - Coste de todos los jornales del equipo ({formatAmount(stats.laborCost)}€)
         </p>
       </section>
 
@@ -460,46 +532,6 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       <section className="bg-blue-600 p-8 rounded-[3rem] text-white shadow-xl space-y-2 text-center">
         <label className="text-[10px] font-black uppercase tracking-widest opacity-60">A Certificar Neto</label>
         <div className="text-5xl font-black">{(stats.bruto - stats.anticipos + incentivoExtra).toLocaleString()}€</div>
-      </section>
-
-      {/* Operarios Liquidación */}
-      <section className="space-y-3">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Liquidación por Operario</label>
-        <div className="space-y-4">
-          {operarioBreakdown.filter(op => op.jornadas > 0).map(op => (
-             <div key={op.nombre} className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-black text-slate-800 dark:text-white uppercase text-lg leading-tight">{op.nombre}</h4>
-                    <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full uppercase">{op.jornadas} Jornales</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase">Saldo Neto</p>
-                    <p className="text-2xl font-black text-blue-600">{Math.round(op.cobrar).toLocaleString()}€</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4 pt-4 border-t border-slate-50 dark:border-slate-800">
-                   <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                     <span>Jornales</span>
-                     <span className="text-slate-800 dark:text-white">{op.totalJornales}€</span>
-                   </div>
-                   <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                     <span>Reparto</span>
-                     <span className="text-blue-500">+{Math.round(op.sharedProfit)}€</span>
-                   </div>
-                   <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                     <span>Anti.</span>
-                     <span className="text-red-500">-{op.opAnticipos}€</span>
-                   </div>
-                   <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                     <span>Devol.</span>
-                     <span className="text-emerald-500">+{op.opReembolsos}€</span>
-                   </div>
-                </div>
-             </div>
-          ))}
-        </div>
       </section>
 
       <div className="px-4">

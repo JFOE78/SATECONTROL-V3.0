@@ -2,10 +2,10 @@ import React, { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance } from "../types";
-import { formatDate } from "../lib/utils";
+import { formatDate, formatAmount } from "../lib/utils";
 
 export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => void, onNew: (date: string) => void }> = ({ onEdit, onBack, onNew }) => {
-  const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, itemsSate } = useApp();
+  const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, itemsSate, certificaciones } = useApp();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(new Date().toISOString().split('T')[0]);
 
@@ -16,6 +16,10 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
   const filteredAnticipos = useMemo(() => 
     anticipos.filter(a => a.obraId === selectedObraId)
   , [anticipos, selectedObraId]);
+
+  const filteredCerts = useMemo(() => 
+    certificaciones.filter(c => c.obraId === selectedObraId && c.estado === 'cobrado')
+  , [certificaciones, selectedObraId]);
 
   const monthLabel = currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
@@ -105,6 +109,7 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
             const isSelected = selectedDay === day;
             const hasAvance = filteredAvances.some(a => a.fecha === day);
             const hasAnticipo = filteredAnticipos.some(a => a.fecha === day);
+            const isPaidCert = filteredCerts.some(c => c.fechaFin === day);
             const dateObj = new Date(day);
 
             return (
@@ -112,11 +117,12 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                 key={day}
                 onClick={() => setSelectedDay(day)}
                 className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all ${
-                  isSelected ? "bg-blue-600 text-white shadow-lg shadow-blue-100" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  isSelected ? "bg-purple-600 text-white shadow-lg shadow-purple-200" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                 }`}
               >
                 <span className="text-xs font-black">{parseInt(day.split('-')[2])}</span>
                 <div className="flex gap-0.5 mt-0.5">
+                  {isPaidCert && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]"}`} />}
                   {hasAvance && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`} />}
                   {hasAnticipo && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-red-500"}`} />}
                 </div>
@@ -158,7 +164,7 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{a.produccion.length} Partidas registradas</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => onEdit(a)} className="p-2 bg-slate-50 dark:bg-slate-800 text-blue-600 rounded-xl active:scale-90 transition-transform"><Edit2 size={18} /></button>
+                      <button onClick={() => onEdit(a)} className="p-2 bg-slate-50 dark:bg-slate-800 text-purple-600 rounded-xl active:scale-90 transition-transform"><Edit2 size={18} /></button>
                       <button 
                         onClick={(e) => deleteAvance(a.id, e)} 
                         className={`p-2 rounded-xl transition-all shadow-sm ${
@@ -189,29 +195,30 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                     <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-50 dark:border-slate-800">
                       <div className="flex flex-col">
                         <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Ingresos</p>
-                        <p className="text-sm font-black text-slate-700 dark:text-slate-200">{Math.round(econ.ingresos)}€</p>
+                        <p className="text-sm font-black text-slate-700 dark:text-slate-200">{formatAmount(econ.ingresos)}€</p>
                       </div>
                       <div className="flex flex-col">
                         <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Coste M.O.</p>
-                        <p className="text-sm font-black text-red-500">{Math.round(econ.costeManoObra)}€</p>
+                        <p className="text-sm font-black text-red-500">{formatAmount(econ.costeManoObra)}€</p>
                       </div>
                       <div className="flex flex-col text-right">
                         <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">Beneficio</p>
                         <p className={`text-sm font-black ${econ.beneficio >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                          {econ.beneficio > 0 ? "+" : ""}{Math.round(econ.beneficio)}€
+                          {econ.beneficio > 0 ? "+" : ""}{formatAmount(econ.beneficio)}€
                         </p>
                       </div>
                     </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-slate-50 dark:border-slate-800">
-                     <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-blue-600"><Users size={14} /></div>
-                     <p className="text-xs font-bold text-slate-500">
-                       <span className="text-slate-800 dark:text-white">{econ.cantOps}</span> Operarios presentes
-                     </p>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-2 pt-3 border-t border-slate-50 dark:border-slate-800">
+             <div className="bg-purple-50 dark:bg-purple-900/20 p-2 rounded-lg text-purple-600"><Users size={14} /></div>
+             <p className="text-xs font-bold text-slate-500">
+               <span className="text-slate-800 dark:text-white">{econ.cantOps}</span> Operarios presentes
+             </p>
+          </div>
+        </div>
+      );
+    })}
+
             {selectedDayAnticipos.map(an => (
               <div key={an.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-red-50 dark:border-red-900/10 flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -221,11 +228,30 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                     <p className="text-sm font-black text-slate-800 dark:text-white uppercase">{an.operario} ({formatDate(an.fecha)})</p>
                   </div>
                 </div>
-                <span className="text-lg font-black text-red-600">-{an.cantidad}€</span>
+                <span className="text-lg font-black text-red-600">-{formatAmount(an.cantidad)}€</span>
               </div>
             ))}
           </div>
         )}
+
+        {/* Leyenda del Calendario */}
+        <div className="mt-8 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Leyenda de la Agenda</h4>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]" />
+              <span className="text-[10px] font-black text-slate-500 uppercase">Cierre Cobrado y Liquidado (Punto en fecha fin)</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-[10px] font-black text-slate-500 uppercase">Avances de Trabajo (Partes)</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-[10px] font-black text-slate-500 uppercase">Anticipos Entregados</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

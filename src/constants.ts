@@ -5,7 +5,7 @@ export const ITEMS_SATE = {
   fase1: { nombre: "Corcho + Tacos", precio: 8 },
   fase2: { nombre: "Esquineros + Malla + Mortero", precio: 8 },
   fase3: { nombre: "Pintura + Acrílico", precio: 4 },
-  malla: { nombre: "Doble malla", precio: 2 },
+  malla: { nombre: "Doble malla", precio: 2.66 },
   anti: { nombre: "Antifisuras", precio: 8 },
   cajeado40: { nombre: "Cajeado 40%", precio: 8 },
   cajeado80: { nombre: "Cajeado 80%", precio: 16 },

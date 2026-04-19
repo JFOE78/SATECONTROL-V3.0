@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ChevronLeft, PlusCircle, Trash2, Receipt } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Gasto } from "../types";
-import { formatDate } from "../lib/utils";
+import { formatDate, formatAmount } from "../lib/utils";
 
 export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { gastos, setGastos, selectedObraId, notify, operariosList } = useApp();
@@ -53,10 +53,10 @@ export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Gastos</h2>
       </header>
 
-      <section className="bg-orange-500 rounded-[2.5rem] p-8 text-white flex justify-between items-center shadow-lg shadow-orange-100 dark:shadow-none">
+      <section className="bg-red-600 rounded-[2.5rem] p-8 text-white flex justify-between items-center shadow-lg shadow-red-100 dark:shadow-none">
         <div>
           <label className="text-[10px] font-black uppercase tracking-widest opacity-60">Total Obra</label>
-          <div className="text-4xl font-black">{obraGastos.reduce((sum, g) => sum + g.monto, 0).toLocaleString()}€</div>
+          <div className="text-4xl font-black">{formatAmount(obraGastos.reduce((sum, g) => sum + g.monto, 0))}€</div>
         </div>
         <button onClick={() => setModalOpen(true)} className="bg-white/20 p-4 rounded-3xl backdrop-blur-md active:scale-95 transition-all">
           <PlusCircle size={32} />
@@ -71,24 +71,24 @@ export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </div>
         ) : (
           obraGastos.sort((a,b) => b.fecha.localeCompare(a.fecha)).map(g => (
-            <div key={g.id} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center">
-               <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-orange-500"><Receipt size={24} /></div>
-                 <div>
-                   <h4 className="font-black text-slate-800 dark:text-white uppercase text-sm leading-none">{g.concepto}</h4>
-                   <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{formatDate(g.fecha)} {g.pagadoPor && `• ${g.pagadoPor}`}</p>
+              <div key={g.id} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center">
+                 <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-red-600"><Receipt size={24} /></div>
+                   <div>
+                     <h4 className="font-black text-slate-800 dark:text-white uppercase text-sm leading-none">{g.concepto}</h4>
+                     <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{formatDate(g.fecha)} {g.pagadoPor && `• ${g.pagadoPor}`}</p>
+                   </div>
                  </div>
-               </div>
-               <div className="flex items-center gap-4">
-                 <span className="text-xl font-black text-slate-800 dark:text-white">{g.monto}€</span>
-                 <button 
-                   onClick={() => deleteGasto(g.id)} 
-                   className={`p-2 rounded-xl transition-all ${confirmDeleteId === g.id ? "bg-red-600 text-white animate-pulse shadow-sm" : "text-red-500"}`}
-                 >
-                   <Trash2 size={18} />
-                 </button>
-               </div>
-            </div>
+                 <div className="flex items-center gap-4">
+                   <span className="text-xl font-black text-slate-800 dark:text-white">{formatAmount(g.monto)}€</span>
+                   <button 
+                     onClick={() => deleteGasto(g.id)} 
+                     className={`p-2 rounded-xl transition-all ${confirmDeleteId === g.id ? "bg-red-600 text-white animate-pulse shadow-sm" : "text-red-500"}`}
+                   >
+                     <Trash2 size={18} />
+                   </button>
+                 </div>
+              </div>
           ))
         )}
       </div>
@@ -105,7 +105,7 @@ export const GastosScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                    {operariosList.map(o => <option key={o.nombre} value={o.nombre}>{o.nombre}</option>)}
                 </select>
              </div>
-             <button onClick={handleSave} className="w-full bg-orange-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-100 active:scale-95 transition-all uppercase tracking-widest">Guardar Gasto</button>
+             <button onClick={handleSave} className="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-100 active:scale-95 transition-all uppercase tracking-widest">Guardar Gasto</button>
              <button onClick={() => setModalOpen(false)} className="w-full text-slate-400 font-black uppercase text-xs">Cerrar</button>
            </div>
         </div>
