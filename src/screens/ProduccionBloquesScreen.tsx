@@ -1,16 +1,26 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { formatAmount, formatDate } from "../lib/utils";
 
 export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate: (screen: any) => void }> = ({ onBack, onNavigate }) => {
-  const { avances, selectedObraId, itemsSate } = useApp();
+  const { avances, selectedObraId, itemsSate, certificaciones } = useApp();
+
+  const isDataCertified = useCallback((date: string) => {
+    return (certificaciones || []).some(c => 
+      c.obraId === selectedObraId && 
+      c.fechaInicio && c.fechaFin && 
+      date >= c.fechaInicio && date <= c.fechaFin
+    );
+  }, [certificaciones, selectedObraId]);
 
   // Agrupar producción por bloque e item, capturando también las fechas
   const productionByBlock = useMemo(() => {
     const map: Record<string, { items: Record<string, number>, dates: Set<string> }> = {};
 
-    const obraAvances = (avances || []).filter(a => a.id && a.obraId === selectedObraId);
+    const obraAvances = (avances || [])
+      .filter(a => a.id && a.obraId === selectedObraId)
+      .filter(a => !isDataCertified(a.fecha));
 
     obraAvances.forEach(avance => {
       (avance.produccion || []).forEach(prod => {
@@ -51,7 +61,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
           m2
         }))
       }));
-  }, [avances, selectedObraId, itemsSate]);
+  }, [avances, selectedObraId, itemsSate, isDataCertified]);
 
   // Totales generales para cada partida en toda la obra
   const globalTotals = useMemo(() => {
