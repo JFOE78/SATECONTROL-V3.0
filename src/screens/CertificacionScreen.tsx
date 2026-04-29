@@ -716,16 +716,68 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       {/* Incentivo Extra */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Bonus / Incentivo Extra</label>
-        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl">
+        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl overflow-hidden">
            <input 
              type="number" 
              value={incentivoExtra} 
              onChange={e => setIncentivoExtra(Number(e.target.value))}
-             className="flex-1 bg-transparent font-black text-2xl text-blue-600 outline-none"
+             className="w-full min-w-0 bg-transparent font-black text-2xl text-blue-600 outline-none"
            />
-           <span className="text-xl font-black text-slate-400">€</span>
+           <span className="text-xl font-black text-slate-400 flex-shrink-0">€</span>
         </div>
         <p className="text-[9px] text-slate-400 uppercase text-center font-bold">* Se reparte equitativamente entre los operarios activos</p>
+      </section>
+
+      {/* Cuentas por Operario (En Curso) */}
+      <section className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
+        <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter px-2">Cuentas por Operario (En Curso)</h3>
+        <div className="space-y-4">
+          {operarioBreakdown.filter(o => o.jornadas > 0).map(o => {
+            const activeOpsCount = operarioBreakdown.filter(x => x.jornadas > 0).length;
+            const opIncentive = (incentivoExtra || 0) / (activeOpsCount || 1);
+            
+            return (
+              <div 
+                key={o.nombre} 
+                onClick={() => onOperarioClick(o.nombre)}
+                className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-transparent hover:border-blue-200 dark:hover:border-blue-900/30 transition-all cursor-pointer group"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="text-xs font-black text-slate-800 dark:text-white uppercase">{o.nombre}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">{o.jornadas} jornadas trabajadas</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-black text-blue-600">{formatAmount(o.cobrar + opIncentive)}€</p>
+                    <p className="text-[8px] font-black text-slate-300 uppercase">A Percibir</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-y-1 text-[10px] border-t border-slate-100 dark:border-slate-800 pt-3">
+                  <div className="text-slate-400 font-bold uppercase">Jornales</div>
+                  <div className="text-right font-black text-slate-600 dark:text-slate-400">{formatAmount(o.totalJornales)}€</div>
+                  
+                  <div className="text-slate-400 font-bold uppercase">Beneficio (+Bonus)</div>
+                  <div className="text-right font-black text-emerald-500">+{formatAmount(o.sharedProfit + opIncentive)}€</div>
+                  
+                  {o.opReembolsos > 0 && (
+                    <>
+                      <div className="text-slate-400 font-bold uppercase">Devolución Gastos</div>
+                      <div className="text-right font-black text-blue-500">+{formatAmount(o.opReembolsos)}€</div>
+                    </>
+                  )}
+                  
+                  {o.opAnticipos > 0 && (
+                    <>
+                      <div className="text-slate-400 font-bold uppercase">Anticipos</div>
+                      <div className="text-right font-black text-red-500">-{formatAmount(o.opAnticipos)}€</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* Resultado Final */}
