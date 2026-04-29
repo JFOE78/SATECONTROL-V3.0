@@ -8,7 +8,8 @@ const KEYS = {
   CERTIFICACIONES: 'sate_certificaciones',
   SELECTED_OBRA: 'sate_selected_obra',
   THEME: 'sate_theme',
-  ITEMS: 'sate_items_sate'
+  ITEMS: 'sate_items_sate',
+  ADJUSTMENTS: 'sate_manual_adjustments'
 };
 
 export const storage = {
@@ -72,5 +73,8 @@ export const storage = {
   getItems: (): Record<string, any> => JSON.parse(localStorage.getItem(KEYS.ITEMS) || '{}'),
 
   saveOperarios: (ops: any[]) => localStorage.setItem('sate_operarios_list', JSON.stringify(ops)),
-  getOperarios: (): any[] => JSON.parse(localStorage.getItem('sate_operarios_list') || '[]')
+  getOperarios: (): any[] => JSON.parse(localStorage.getItem('sate_operarios_list') || '[]'),
+
+  saveManualAdjustments: (adj: Record<string, number>) => localStorage.setItem(KEYS.ADJUSTMENTS, JSON.stringify(adj)),
+  getManualAdjustments: (): Record<string, number> => JSON.parse(localStorage.getItem(KEYS.ADJUSTMENTS) || '{}')
 };

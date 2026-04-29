@@ -32,6 +32,8 @@ interface AppContextType {
     cantOps: number; 
   };
   pendingProfit: number;
+  manualAdjustments: Record<string, number>;
+  setManualAdjustments: (adj: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -47,6 +49,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [itemsSate, _setItemsSate] = useState<Record<string, any>>(ITEMS_SATE);
   const [operariosList, _setOperariosList] = useState<any[]>(OPERARIOS);
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [manualAdjustments, _setManualAdjustments] = useState<Record<string, number>>({});
 
   const notify = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setNotification({ message, type });
@@ -61,6 +64,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const loadedGastos = storage.getGastos();
     const loadedItems = storage.getItems();
     const loadedOperarios = storage.getOperarios();
+    const loadedAdjustments = storage.getManualAdjustments();
     const loadedTheme = storage.getTheme();
     const activeObraId = storage.getActiveObraId();
 
@@ -98,6 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     _setAnticipos(cleanAnticipos);
     _setGastos(loadedGastos);
     _setCertificaciones(loadedCertificaciones);
+    _setManualAdjustments(loadedAdjustments);
     _setTheme(loadedTheme);
 
     if (loadedObras.length === 0) {
@@ -222,6 +227,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const setManualAdjustments = (adj: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) => {
+    if (typeof adj === "function") {
+      _setManualAdjustments(prev => {
+        const next = adj(prev);
+        storage.saveManualAdjustments(next);
+        return next;
+      });
+    } else {
+      _setManualAdjustments(adj);
+      storage.saveManualAdjustments(adj);
+    }
+  };
+
   const calculateAvanceEconomics = useCallback((a: Avance) => {
     const normalize = (s: string) => 
       s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -277,7 +295,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       operariosList, setOperariosList,
       notify, notification,
       calculateAvanceEconomics,
-      pendingProfit
+      pendingProfit,
+      manualAdjustments, setManualAdjustments
     }}>
       {children}
     </AppContext.Provider>

@@ -16,7 +16,8 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     notify, 
     operariosList,
     itemsSate,
-    gastos
+    gastos,
+    manualAdjustments, setManualAdjustments
   } = useApp();
   
   const obra = obras.find(o => o.id === selectedObraId);
@@ -35,7 +36,6 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const [excludedAvanceIds, setExcludedAvanceIds] = useState<string[]>([]);
   const [showAvancesList, setShowAvancesList] = useState(false);
 
-  const [manualAdjustments, setManualAdjustments] = useState<Record<string, number>>({});
   const [adjustmentItem, setAdjustmentItem] = useState<{ id: string; name: string } | null>(null);
   const [adjustmentInput, setAdjustmentInput] = useState("");
 
