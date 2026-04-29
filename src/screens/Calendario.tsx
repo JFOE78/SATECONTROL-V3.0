@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus, Sun, Cloud, CloudRain } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance } from "../types";
 import { formatDate, formatAmount } from "../lib/utils";
@@ -107,7 +107,8 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
             if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
             
             const isSelected = selectedDay === day;
-            const hasAvance = filteredAvances.some(a => a.fecha === day);
+            const dayAvance = filteredAvances.find(a => a.fecha === day);
+            const hasAvance = !!dayAvance;
             const hasAnticipo = filteredAnticipos.some(a => a.fecha === day);
             const isPaidCert = filteredCerts.some(c => c.fechaFin === day);
             const dateObj = new Date(day);
@@ -120,6 +121,13 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                   isSelected ? "bg-purple-600 text-white shadow-lg shadow-purple-200" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                 }`}
               >
+                {dayAvance?.clima && !isSelected && (
+                  <div className="absolute top-1 right-1 p-0.5 rounded-full bg-white/10 dark:bg-black/20">
+                    {dayAvance.clima === 'despejado' && <Sun size={14} className="text-amber-400 drop-shadow-sm" />}
+                    {dayAvance.clima === 'nublado' && <Cloud size={14} className="text-slate-300 drop-shadow-sm" />}
+                    {dayAvance.clima === 'lluvia' && <CloudRain size={14} className="text-cyan-400 drop-shadow-lg" />}
+                  </div>
+                )}
                 <span className="text-xs font-black">{parseInt(day.split('-')[2])}</span>
                 <div className="flex gap-0.5 mt-0.5">
                   {isPaidCert && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]"}`} />}
@@ -159,9 +167,22 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
               return (
                 <div key={a.id} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase leading-none">{a.bloque}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{a.produccion.length} Partidas registradas</p>
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase leading-none">{a.bloque}</h3>
+                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">
+                          {a.produccion.length > 0 
+                            ? `${a.produccion.length} Partidas registradas` 
+                            : `SIN PRODUCCIÓN - ${a.motivoSinProduccion?.toUpperCase() || 'NO ESPECIFICADO'}`}
+                        </p>
+                      </div>
+                      {a.clima && (
+                        <div className="p-2 bg-blue-50 dark:bg-blue-900/10 text-blue-600 rounded-xl">
+                          {a.clima === 'despejado' && <Sun size={16} />}
+                          {a.clima === 'nublado' && <Cloud size={16} />}
+                          {a.clima === 'lluvia' && <CloudRain size={16} />}
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => onEdit(a)} className="p-2 bg-slate-50 dark:bg-slate-800 text-purple-600 rounded-xl active:scale-90 transition-transform"><Edit2 size={18} /></button>
@@ -191,6 +212,18 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                       ))}
                     </div>
                   </div>
+
+                  {a.fotos && a.fotos.length > 0 && (
+                    <div className="pt-2">
+                       <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                         {a.fotos.map((f, fIdx) => (
+                           <div key={fIdx} className="min-w-[80px] h-[80px] rounded-xl overflow-hidden shadow-sm">
+                             <img src={f} alt="avance" className="w-full h-full object-cover" />
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                  )}
 
                     <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-50 dark:border-slate-800">
                       <div className="flex flex-col">

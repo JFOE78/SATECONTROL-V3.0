@@ -18,7 +18,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     certificaciones,
     operariosList,
     anticipos,
-    itemsSate
+    itemsSate,
+    manualAdjustments
   } = useApp();
 
   const [expandedLiquidacion, setExpandedLiquidacion] = useState(false);
@@ -67,22 +68,35 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     const listAv = (avances || []).filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha));
     const listGa = (gastos || []).filter(g => g.obraId === selectedObraId && !isDataCertified(g.fecha));
     const listAn = (anticipos || []).filter(an => an.obraId === selectedObraId && !isDataCertified(an.fecha));
-    const bruto = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).ingresos, 0);
+    
+    const adjustmentTotal = Object.entries(manualAdjustments).reduce((sum, [_, m2]) => {
+      const itemId = _ as string;
+      const price = (itemsSate[itemId] as any)?.precio || 0;
+      return sum + ((m2 as number) * price);
+    }, 0);
+
+    const bruto = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).ingresos, 0) + adjustmentTotal;
     const laborCost = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).costeManoObra, 0);
     const profit = bruto - laborCost;
     
     return { listAv, listGa, listAn, bruto, laborCost, profit };
-  }, [avances, selectedObraId, isDataCertified, gastos, anticipos, calculateAvanceEconomics]);
+  }, [avances, selectedObraId, isDataCertified, gastos, anticipos, calculateAvanceEconomics, manualAdjustments, itemsSate]);
 
   const operarioSettlement = useMemo(() => {
-    const totalManDays = statsCurrent.listAv.reduce((sum, a) => sum + (a.operariosPresentes?.length || 0), 0);
+    const totalManDays = statsCurrent.listAv.reduce((sum, a) => {
+      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
+    }, 0);
     const pool = statsCurrent.profit;
     const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
 
     return operariosList.map(op => {
       const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
-      const opAvances = statsCurrent.listAv.filter(a => (a.operariosPresentes || []).some(o => normalize(o) === opClean));
+      const opAvances = statsCurrent.listAv.filter(a => {
+        const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+        return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
+      });
       const jornadas = opAvances.length;
       const totalJornales = jornadas * op.coste;
       const sharedProfit = sharePerJornada * jornadas;
@@ -156,6 +170,11 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     return data;
   }, [avances, calculateAvanceEconomics, isDataCertified, selectedObraId]);
 
+  const todayAvance = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return (avances || []).find(a => a.fecha === todayStr && a.obraId === selectedObraId);
+  }, [avances, selectedObraId]);
+
   return (
     <div className="space-y-4">
       {showInstall && (
@@ -173,6 +192,49 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           <ChevronRight size={20} className="opacity-40" />
         </button>
       )}
+
+      {/* Recordatorio Hoy */}
+      {!todayAvance ? (
+        <button 
+          onClick={() => onNavigate("registrar")}
+          className="w-full bg-blue-600 p-6 rounded-[2.5rem] text-white flex flex-col items-center gap-2 shadow-xl shadow-blue-200 dark:shadow-none animate-in zoom-in duration-300"
+        >
+          <div className="bg-white/20 p-3 rounded-2xl">
+            <Activity className="animate-pulse" size={32} />
+          </div>
+          <div className="text-center">
+             <p className="text-lg font-black uppercase tracking-tight">Reporte de Hoy Pendiente</p>
+             <p className="text-[10px] font-bold uppercase opacity-80">Registra la producción de hoy ahora</p>
+          </div>
+        </button>
+      ) : (
+        <div className="bg-emerald-500/10 dark:bg-emerald-500/5 p-4 rounded-[2rem] border border-emerald-500/20 text-center">
+          <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">✓ Reporte de Hoy Completado</p>
+        </div>
+      )}
+
+      {/* Gráfica de Tendencia */}
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Semanal (Beneficio)</label>
+        <div className="h-40 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weeklyTrend}>
+              <defs>
+                <linearGradient id="colorB" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="name" fontSize={10} fontStyle="bold" axisLine={false} tickLine={false} />
+              <Tooltip 
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '12px' }} 
+              />
+              <Area type="monotone" dataKey="beneficio" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorB)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
 
       <section className="bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center mb-2 px-2">
@@ -320,6 +382,13 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
             title="CIERRE" 
             compact 
             className="bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/30"
+          />
+          <ActionButton 
+            onClick={() => onNavigate("historial")} 
+            icon={<FileText className="text-amber-500" size={24} />} 
+            title="HISTS." 
+            compact 
+            className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
           />
         </div>
       </div>

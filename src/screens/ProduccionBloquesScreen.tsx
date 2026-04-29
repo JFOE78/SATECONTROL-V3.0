@@ -164,17 +164,44 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    {bloqueData.items.map(item => (
-                      <div key={item.itemId} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
-                        <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-tight">
-                          {item.nombre}
-                        </span>
-                        <span className="text-sm font-black text-slate-800 dark:text-white">
-                          {formatAmount(item.m2)} <span className="text-[9px] opacity-60">m²</span>
-                        </span>
-                      </div>
-                    ))}
+                  <div className="space-y-4">
+                    {bloqueData.items.map(item => {
+                      const TARGETS: Record<string, number> = {
+                        fase1: 530,
+                        fase2: 530,
+                        fase3: 530,
+                        anti: 105,
+                        malla: 190
+                      };
+                      const target = TARGETS[item.itemId];
+                      const percentage = target ? Math.min((item.m2 / target) * 100, 100) : null;
+                      
+                      return (
+                        <div key={item.itemId} className="space-y-1.5">
+                          <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
+                            <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                              {item.nombre}
+                            </span>
+                            <span className="text-sm font-black text-slate-800 dark:text-white">
+                              {formatAmount(item.m2)} {target && <span className="text-[9px] text-slate-400">/ {target}</span>} <span className="text-[9px] opacity-60">m²</span>
+                            </span>
+                          </div>
+                          {percentage !== null && (
+                            <div className="px-2">
+                              <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${percentage >= 100 ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <p className="text-[8px] font-black text-right mt-1 uppercase text-slate-400">
+                                {Math.round(percentage)}% Completado
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

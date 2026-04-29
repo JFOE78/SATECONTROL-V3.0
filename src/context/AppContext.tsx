@@ -252,10 +252,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return acc + (p.m2 * (item?.precio || 0));
     }, 0);
 
-    const costeManoObra = uniqueOpsNormalized.reduce((acc, nameToFind) => {
-      const op = operariosList.find(o => normalize(o.nombre) === nameToFind);
-      return acc + (op?.coste || 0);
-    }, 0);
+    const costeManoObra = (a.produccion.length === 0 && a.motivoSinProduccion) 
+      ? 0 
+      : uniqueOpsNormalized.reduce((acc, nameToFind) => {
+          const op = operariosList.find(o => normalize(o.nombre) === nameToFind);
+          return acc + (op?.coste || 0);
+        }, 0);
 
     const beneficio = ingresos - costeManoObra;
     const beneficioPorOperario = uniqueOpsNormalized.length > 0 ? beneficio / uniqueOpsNormalized.length : 0;

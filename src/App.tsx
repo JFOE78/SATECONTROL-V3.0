@@ -20,9 +20,10 @@ import { GestionObras } from "./screens/GestionObras";
 import { GastosScreen } from "./screens/GastosScreen";
 import { OperarioDetalleScreen } from "./screens/OperarioDetalleScreen";
 import { ProduccionBloquesScreen } from "./screens/ProduccionBloquesScreen";
+import { HistorialCertificacionesScreen } from "./screens/HistorialCertificacionesScreen";
 import { Avance } from "./types";
 
-type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operario_detalle" | "produccion_bloques";
+type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operario_detalle" | "produccion_bloques" | "historial";
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("inicio");
@@ -95,6 +96,8 @@ function AppContent() {
         return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => setCurrentScreen("certificacion")} />;
       case "produccion_bloques":
         return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} onNavigate={navigateTo} />;
+      case "historial":
+        return <HistorialCertificacionesScreen onBack={() => navigateTo("inicio")} />;
       default:
         return <Inicio onNavigate={navigateTo} onInstall={handleInstallClick} showInstall={!!deferredPrompt} />;
     }

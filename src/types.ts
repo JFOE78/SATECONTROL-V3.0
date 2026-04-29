@@ -25,6 +25,9 @@ export interface Avance {
   operariosPresentes: string[];
   produccion: Produccion[];
   resumen: Resumen;
+  fotos?: string[];
+  clima?: string;
+  motivoSinProduccion?: string;
 }
 
 export interface Anticipo {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, Moon, Sun, Download, Upload, Trash2, Plus, Edit2, Database, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Moon, Sun, Download, Upload, Trash2, Plus, Edit2, Database, AlertTriangle, FileText } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { storage } from "../lib/storage";
 
@@ -141,6 +141,34 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     notify("Operario eliminado", "success");
   };
 
+  const handleExportCSV = () => {
+    if (avances.length === 0) {
+      notify("No hay avances para exportar", "error");
+      return;
+    }
+    
+    // Header
+    let csv = "Fecha,Obra,Bloque,Item,M2,Operarios,Clima\n";
+    
+    // Rows
+    avances.forEach(a => {
+      const obraName = obras.find(o => o.id === a.obraId)?.nombre || a.obraId;
+      const ops = a.operariosPresentes.join(" | ");
+      a.produccion.forEach(p => {
+        const itemName = itemsSate[p.itemId]?.nombre || p.itemId;
+        csv += `${a.fecha},"${obraName}","${a.bloque}","${itemName}",${p.m2},"${ops}","${a.clima || ''}"\n`;
+      });
+    });
+    
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `satecontrol_produccion_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    notify("CSV exportado correctamente", "success");
+  };
+
   return (
     <div className="space-y-6 pb-24">
       <header className="flex items-center justify-between">
@@ -186,16 +214,20 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
             <div className="pt-6 border-t border-slate-50 dark:border-slate-800 space-y-4">
               <h3 className="text-sm font-black uppercase text-slate-800 dark:text-white">Copia de Seguridad</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button onClick={handleExport} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-all">
                   <Download className="text-blue-600" />
-                  <span className="text-[10px] font-black uppercase text-slate-400">Exportar</span>
+                  <span className="text-[10px] font-black uppercase text-slate-400">Backup</span>
                 </button>
                 <label className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-all cursor-pointer">
                   <Upload className="text-orange-500" />
-                  <span className="text-[10px] font-black uppercase text-slate-400">Importar</span>
+                  <span className="text-[10px] font-black uppercase text-slate-400">Import</span>
                   <input type="file" onChange={handleImport} className="hidden" accept=".json" />
                 </label>
+                <button onClick={handleExportCSV} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-all">
+                  <FileText className="text-emerald-500" />
+                  <span className="text-[10px] font-black uppercase text-slate-400">Excel</span>
+                </button>
               </div>
             </div>
 

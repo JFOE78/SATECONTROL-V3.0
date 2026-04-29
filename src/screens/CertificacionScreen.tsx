@@ -164,14 +164,20 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   };
 
   const operarioBreakdown = useMemo(() => {
-    const totalManDays = dataFiltered.reduce((sum, a) => sum + (a.operariosPresentes?.length || 0), 0);
+    const totalManDays = dataFiltered.reduce((sum, a) => {
+      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
+    }, 0);
     const pool = stats.realProfit + incentivoExtra;
     const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
 
     return operariosList.map(op => {
       const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
-      const opAvances = dataFiltered.filter(a => (a.operariosPresentes || []).some(o => normalize(o) === opClean));
+      const opAvances = dataFiltered.filter(a => {
+        const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+        return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
+      });
       const jornadas = opAvances.length;
       const totalJornales = jornadas * op.coste;
       const sharedProfit = sharePerJornada * jornadas;
@@ -716,16 +722,16 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       {/* Incentivo Extra */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Bonus / Incentivo Extra</label>
-        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl overflow-hidden">
+        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl">
            <input 
              type="number" 
              value={incentivoExtra} 
              onChange={e => setIncentivoExtra(Number(e.target.value))}
              className="w-full min-w-0 bg-transparent font-black text-2xl text-blue-600 outline-none"
            />
-           <span className="text-xl font-black text-slate-400 flex-shrink-0">€</span>
+           <span className="text-xl font-black text-slate-400 shrink-0">€</span>
         </div>
-        <p className="text-[9px] text-slate-400 uppercase text-center font-bold">* Se reparte equitativamente entre los operarios activos</p>
+        <p className="text-[9px] text-slate-400 uppercase text-center font-bold px-2">* Se reparte equitativamente entre los operarios activos</p>
       </section>
 
       {/* Cuentas por Operario (En Curso) */}

@@ -10,7 +10,10 @@ export const OperarioDetalleScreen: React.FC<{ operarioName: string, onBack: () 
     const opClean = normalize(operarioName);
     const obAvances = avances.filter(a => a.obraId === selectedObraId);
     
-    const jornadas = obAvances.filter(a => (a.operariosPresentes || []).some(o => normalize(o) === opClean)).length;
+    const jornadas = obAvances.filter(a => {
+      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+      return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
+    }).length;
     const totalAnticipos = anticipos.filter(a => a.obraId === selectedObraId && normalize(a.operario) === opClean).reduce((sum, a) => sum + a.cantidad, 0);
     const reembolsos = gastos.filter(g => g.obraId === selectedObraId && g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
 

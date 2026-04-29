@@ -1,6 +1,6 @@
 {
   "name": "SATE Control",
   "description": "Aplicación simple para el control diario de producción de SATE en obra.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["camera"],
   "majorCapabilities": []
 }
