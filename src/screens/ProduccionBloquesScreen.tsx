@@ -13,23 +13,35 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBa
     const obraAvances = (avances || []).filter(a => a.id && a.obraId === selectedObraId);
 
     obraAvances.forEach(avance => {
-      // Usamos el bloque del avance como referencia principal, 
-      // o el de cada producción si existe y es diferente
       (avance.produccion || []).forEach(prod => {
-        const bloqueId = prod.bloque || avance.bloque || "Sin Bloque";
-        const itemId = prod.itemId;
-
-        if (!map[bloqueId]) {
-          map[bloqueId] = {};
+        let rawBloque = (prod.bloque || avance.bloque || "").trim();
+        
+        let normalizedBloque = rawBloque;
+        const upper = normalizedBloque.toUpperCase();
+        
+        if (!normalizedBloque || upper === "BLOQUE") {
+          normalizedBloque = "Sin asignar";
+        } else if (upper.startsWith("BLOQUE ")) {
+          normalizedBloque = normalizedBloque.substring(7).trim();
         }
 
-        map[bloqueId][itemId] = (map[bloqueId][itemId] || 0) + prod.m2;
+        const itemId = prod.itemId;
+
+        if (!map[normalizedBloque]) {
+          map[normalizedBloque] = {};
+        }
+
+        map[normalizedBloque][itemId] = (map[normalizedBloque][itemId] || 0) + prod.m2;
       });
     });
 
-    // Convertir a array ordenado por nombre de bloque
+    // Convertir a array ordenado por nombre de bloque (con "Sin asignar" al final)
     return Object.entries(map)
-      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' }))
+      .sort((a, b) => {
+        if (a[0] === "Sin asignar") return 1;
+        if (b[0] === "Sin asignar") return -1;
+        return a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' });
+      })
       .map(([bloque, items]) => ({
         bloque,
         items: Object.entries(items).map(([itemId, m2]) => ({
@@ -101,7 +113,11 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBa
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
-                      Bloque <span className="text-blue-600">{bloqueData.bloque}</span>
+                      {bloqueData.bloque === "Sin asignar" ? (
+                        <span className="text-slate-400 italic">Sin Bloque Asignado</span>
+                      ) : (
+                        <>Bloque <span className="text-blue-600">{bloqueData.bloque}</span></>
+                      )}
                     </h3>
                     <div className="bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">
                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{bloqueData.items.length} Partidas</span>
