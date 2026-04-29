@@ -138,11 +138,11 @@ function AppContent() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl">
-        <NavButton active={currentScreen === "inicio"} onClick={() => navigateTo("inicio")} icon={<HomeIcon size={24} />} label="Inicio" />
-        <NavButton active={currentScreen === "calendario"} onClick={() => navigateTo("calendario")} icon={<Calendar size={24} />} label="Agenda" />
-        <NavButton active={currentScreen === "gastos"} onClick={() => navigateTo("gastos")} icon={<Receipt size={24} />} label="Gastos" />
-        <NavButton active={currentScreen === "operarios"} onClick={() => navigateTo("operarios")} icon={<Users size={24} />} label="Operarios" />
-        <NavButton active={currentScreen === "certificacion"} onClick={() => navigateTo("certificacion")} icon={<FileText size={24} />} label="Cierre" />
+        <NavButton active={currentScreen === "inicio"} onClick={() => navigateTo("inicio")} icon={<HomeIcon size={24} />} label="Inicio" activeColor="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+        <NavButton active={currentScreen === "calendario"} onClick={() => navigateTo("calendario")} icon={<Calendar size={24} />} label="Agenda" activeColor="text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
+        <NavButton active={currentScreen === "gastos"} onClick={() => navigateTo("gastos")} icon={<Receipt size={24} />} label="Gastos" activeColor="text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.8)]" />
+        <NavButton active={currentScreen === "operarios"} onClick={() => navigateTo("operarios")} icon={<Users size={24} />} label="Operarios" activeColor="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+        <NavButton active={currentScreen === "certificacion"} onClick={() => navigateTo("certificacion")} icon={<FileText size={24} />} label="Cierre" activeColor="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
       </nav>
 
       <AnimatePresence>
@@ -176,11 +176,15 @@ function AppContent() {
   );
 }
 
-function NavButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
+function NavButton({ active, onClick, icon, label, activeColor }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string, activeColor: string }) {
   return (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center min-w-[70px] transition-all duration-200 ${active ? "text-blue-600 scale-110" : "text-slate-400"}`}>
-      <div className={`${active ? "bg-blue-50 dark:bg-blue-900/20 p-1 rounded-xl" : ""}`}>{icon}</div>
-      <span className={`text-[10px] font-black mt-1 uppercase tracking-tighter ${active ? "opacity-100" : "opacity-60"}`}>{label}</span>
+    <button onClick={onClick} className={`flex flex-col items-center justify-center min-w-[64px] transition-all duration-300 ${active ? "scale-110" : "text-slate-400"}`}>
+      <div className={`transition-all duration-300 ${active ? activeColor : ""}`}>
+        {icon}
+      </div>
+      <span className={`text-[9px] font-black mt-1.5 uppercase tracking-tighter transition-opacity ${active ? "text-slate-800 dark:text-white opacity-100" : "opacity-40"}`}>
+        {label}
+      </span>
     </button>
   );
 }

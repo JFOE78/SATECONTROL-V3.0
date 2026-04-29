@@ -64,76 +64,6 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     };
   }, [avances, gastos, calculateAvanceEconomics, isDataCertified, selectedObraId, certificaciones]);
 
-  const statsCurrent = useMemo(() => {
-    const listAv = (avances || []).filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha));
-    const listGa = (gastos || []).filter(g => g.obraId === selectedObraId && !isDataCertified(g.fecha));
-    const listAn = (anticipos || []).filter(an => an.obraId === selectedObraId && !isDataCertified(an.fecha));
-    
-    const adjustmentTotal = Object.entries(manualAdjustments).reduce((sum, [_, m2]) => {
-      const itemId = _ as string;
-      const price = (itemsSate[itemId] as any)?.precio || 0;
-      return sum + ((m2 as number) * price);
-    }, 0);
-
-    const bruto = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).ingresos, 0) + adjustmentTotal;
-    const laborCost = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).costeManoObra, 0);
-    const profit = bruto - laborCost;
-    
-    return { listAv, listGa, listAn, bruto, laborCost, profit };
-  }, [avances, selectedObraId, isDataCertified, gastos, anticipos, calculateAvanceEconomics, manualAdjustments, itemsSate]);
-
-  const operarioSettlement = useMemo(() => {
-    const totalManDays = statsCurrent.listAv.reduce((sum, a) => {
-      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
-    }, 0);
-    const pool = statsCurrent.profit;
-    const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
-
-    return operariosList.map(op => {
-      const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const opClean = normalize(op.nombre);
-      const opAvances = statsCurrent.listAv.filter(a => {
-        const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-        return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
-      });
-      const jornadas = opAvances.length;
-      const totalJornales = jornadas * op.coste;
-      const sharedProfit = sharePerJornada * jornadas;
-      
-      const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
-      const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
-      const bruto = totalJornales + sharedProfit + opReembolsos;
-
-      return {
-        ...op,
-        jornadas,
-        totalJornales,
-        sharedProfit,
-        opAnticipos,
-        opReembolsos,
-        bruto,
-        cobrar: bruto - opAnticipos,
-        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0
-      };
-    }).filter(o => o.jornadas > 0 || o.opAnticipos > 0 || o.opReembolsos > 0);
-  }, [operariosList, statsCurrent]);
-
-  const shareIndividualSettlement = (o: any) => {
-    const text = `*CUENTAS - ${o.nombre}*\n` +
-      `*Obra:* ${selectedObra?.nombre || 'Obra'}\n` +
-      `*Estado:* PRODUCCIÓN EN CURSO\n\n` +
-      `- Jornales (${o.jornadas}j): ${formatAmount(o.totalJornales)}€\n` +
-      `- Reparto Beneficio: +${formatAmount(o.sharedProfit)}€\n` +
-      (o.opReembolsos > 0 ? `- Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
-      `*TOTAL BRUTO: ${formatAmount(o.bruto)}€*\n` +
-      (o.mediaDiaria > 0 ? `*Media Diaria (J+R): ${formatAmount(o.mediaDiaria)}€/día*\n` : '') +
-      (o.opAnticipos > 0 ? `- Anticipos: -${formatAmount(o.opAnticipos)}€\n` : '') +
-      `*TOTAL NETO A COBRAR: ${formatAmount(o.cobrar)}€*`;
-    
-    shareService.shareViaWhatsApp(text);
-  };
-
   const lastAvance = useMemo(() => 
     [...avances]
       .filter(a => a.obraId === selectedObraId)
@@ -273,14 +203,14 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
              </div>
           </div>
 
-             <div className="flex justify-between items-center px-4">
-               <div>
-                 <span className="text-[10px] font-black text-slate-300 uppercase block tracking-widest mb-1 leading-tight">Total Bruto<br/>Pendiente</span>
-                 <span className="text-xl font-black text-slate-400 leading-none">{formatAmount(totalAcumulado.ingresosCurso + totalAcumulado.certPendiente)}€</span>
+             <div className="flex justify-between items-end px-4 gap-4">
+               <div className="flex-1">
+                 <span className="text-[10px] font-black text-cyan-400/60 uppercase block tracking-widest mb-1 leading-tight">Total Bruto<br/>Pendiente</span>
+                 <span className="text-3xl font-black text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)] leading-none">{formatAmount(totalAcumulado.ingresosCurso + totalAcumulado.certPendiente)}€</span>
                </div>
-               <div className="text-right">
-                 <span className="text-[10px] font-black text-emerald-400 uppercase block tracking-widest mb-1 leading-tight">Ganancia Neta<br/>Estimada</span>
-                 <span className="text-3xl font-black text-emerald-500 shadow-emerald-500/20 drop-shadow-sm leading-none">{formatAmount(totalAcumulado.totalPendiente)}€</span>
+               <div className="flex-1 text-right">
+                 <span className="text-[10px] font-black text-emerald-400/60 uppercase block tracking-widest mb-1 leading-tight">Ganancia Neta<br/>Estimada</span>
+                 <span className="text-3xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none">{formatAmount(totalAcumulado.totalPendiente)}€</span>
                </div>
              </div>
         </div>
