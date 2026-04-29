@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Receipt, Activity, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Receipt, Activity, ChevronDown, ChevronUp, MessageCircle, BarChart3 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
@@ -89,6 +89,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
+      const bruto = totalJornales + sharedProfit + opReembolsos;
 
       return {
         ...op,
@@ -97,7 +98,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         sharedProfit,
         opAnticipos,
         opReembolsos,
-        cobrar: totalJornales + sharedProfit + opReembolsos - opAnticipos,
+        bruto,
+        cobrar: bruto - opAnticipos,
         mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0
       };
     }).filter(o => o.jornadas > 0 || o.opAnticipos > 0 || o.opReembolsos > 0);
@@ -109,10 +111,11 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       `*Estado:* PRODUCCIÓN EN CURSO\n\n` +
       `- Jornales (${o.jornadas}j): ${formatAmount(o.totalJornales)}€\n` +
       `- Reparto Beneficio: +${formatAmount(o.sharedProfit)}€\n` +
-      (o.mediaDiaria > 0 ? `*Media Diaria (J+R): ${formatAmount(o.mediaDiaria)}€/día*\n` : '') +
       (o.opReembolsos > 0 ? `- Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
+      `*TOTAL BRUTO: ${formatAmount(o.bruto)}€*\n` +
+      (o.mediaDiaria > 0 ? `*Media Diaria (J+R): ${formatAmount(o.mediaDiaria)}€/día*\n` : '') +
       (o.opAnticipos > 0 ? `- Anticipos: -${formatAmount(o.opAnticipos)}€\n` : '') +
-      `*TOTAL A COBRAR: ${formatAmount(o.cobrar)}€*`;
+      `*TOTAL NETO A COBRAR: ${formatAmount(o.cobrar)}€*`;
     
     shareService.shareViaWhatsApp(text);
   };
@@ -247,7 +250,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                       <div>
                         <p className="text-xs font-black text-slate-800 dark:text-white uppercase">{o.nombre} ({o.jornadas}j)</p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase">
-                          Neto: {formatAmount(o.cobrar)}€ 
+                          Bruto: {formatAmount(o.bruto)}€ • Neto: {formatAmount(o.cobrar)}€ 
                           {o.jornadas > 0 && <span className="text-blue-500 ml-1">• {formatAmount(o.mediaDiaria)}€/día</span>}
                         </p>
                       </div>
@@ -296,13 +299,20 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           description="Producción hoy" 
           className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <ActionButton 
             onClick={() => onNavigate("calendario")} 
             icon={<Calendar className="text-purple-500" size={24} />} 
             title="AGENDA" 
             compact 
             className="bg-purple-50/50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800/30"
+          />
+          <ActionButton 
+            onClick={() => onNavigate("produccion_bloques")} 
+            icon={<BarChart3 className="text-blue-500" size={24} />} 
+            title="PROD." 
+            compact 
+            className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30"
           />
           <ActionButton 
             onClick={() => onNavigate("certificacion")} 

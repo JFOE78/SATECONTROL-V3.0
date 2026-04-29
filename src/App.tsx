@@ -19,9 +19,10 @@ import { ConfigScreen } from "./screens/ConfigScreen";
 import { GestionObras } from "./screens/GestionObras";
 import { GastosScreen } from "./screens/GastosScreen";
 import { OperarioDetalleScreen } from "./screens/OperarioDetalleScreen";
+import { ProduccionBloquesScreen } from "./screens/ProduccionBloquesScreen";
 import { Avance } from "./types";
 
-type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operario_detalle";
+type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operario_detalle" | "produccion_bloques";
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("inicio");
@@ -92,6 +93,8 @@ function AppContent() {
         return <GastosScreen onBack={() => navigateTo("inicio")} />;
       case "operario_detalle":
         return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => setCurrentScreen("certificacion")} />;
+      case "produccion_bloques":
+        return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} />;
       default:
         return <Inicio onNavigate={navigateTo} onInstall={handleInstallClick} showInstall={!!deferredPrompt} />;
     }
@@ -128,7 +131,6 @@ function AppContent() {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl">
         <NavButton active={currentScreen === "inicio"} onClick={() => navigateTo("inicio")} icon={<HomeIcon size={26} />} label="Inicio" />
-        <NavButton active={currentScreen === "registrar"} onClick={() => navigateTo("registrar")} icon={<PlusCircle size={26} />} label="Nuevo" />
         <NavButton active={currentScreen === "calendario"} onClick={() => navigateTo("calendario")} icon={<Calendar size={26} />} label="Agenda" />
         <NavButton active={currentScreen === "certificacion"} onClick={() => navigateTo("certificacion")} icon={<FileText size={26} />} label="Cierre" />
       </nav>
