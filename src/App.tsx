@@ -94,7 +94,7 @@ function AppContent() {
       case "operario_detalle":
         return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => setCurrentScreen("certificacion")} />;
       case "produccion_bloques":
-        return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} />;
+        return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} onNavigate={navigateTo} />;
       default:
         return <Inicio onNavigate={navigateTo} onInstall={handleInstallClick} showInstall={!!deferredPrompt} />;
     }

@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import { ChevronLeft, BarChart3, LayoutGrid } from "lucide-react";
+import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { formatAmount } from "../lib/utils";
+import { formatAmount, formatDate } from "../lib/utils";
 
-export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate: (screen: any) => void }> = ({ onBack, onNavigate }) => {
   const { avances, selectedObraId, itemsSate } = useApp();
 
-  // Agrupar producción por bloque e item
+  // Agrupar producción por bloque e item, capturando también las fechas
   const productionByBlock = useMemo(() => {
-    const map: Record<string, Record<string, number>> = {};
+    const map: Record<string, { items: Record<string, number>, dates: Set<string> }> = {};
 
     const obraAvances = (avances || []).filter(a => a.id && a.obraId === selectedObraId);
 
@@ -25,13 +25,13 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBa
           normalizedBloque = normalizedBloque.substring(7).trim();
         }
 
-        const itemId = prod.itemId;
-
         if (!map[normalizedBloque]) {
-          map[normalizedBloque] = {};
+          map[normalizedBloque] = { items: {}, dates: new Set() };
         }
 
-        map[normalizedBloque][itemId] = (map[normalizedBloque][itemId] || 0) + prod.m2;
+        const itemId = prod.itemId;
+        map[normalizedBloque].items[itemId] = (map[normalizedBloque].items[itemId] || 0) + prod.m2;
+        map[normalizedBloque].dates.add(avance.fecha);
       });
     });
 
@@ -42,9 +42,10 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBa
         if (b[0] === "Sin asignar") return -1;
         return a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' });
       })
-      .map(([bloque, items]) => ({
+      .map(([bloque, data]) => ({
         bloque,
-        items: Object.entries(items).map(([itemId, m2]) => ({
+        dates: Array.from(data.dates).sort((a, b) => b.localeCompare(a)),
+        items: Object.entries(data.items).map(([itemId, m2]) => ({
           itemId,
           nombre: (itemsSate[itemId] as any)?.nombre || itemId,
           m2
@@ -101,7 +102,16 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBa
 
       {/* Listado por Bloques */}
       <section className="space-y-4">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Desglose por Bloques</label>
+        <div className="flex justify-between items-center px-4">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Desglose por Bloques</label>
+          <button 
+            onClick={() => onNavigate("calendario")}
+            className="flex items-center gap-1 text-[10px] font-black text-blue-600 uppercase bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full active:scale-95 transition-all"
+          >
+            <Calendar size={12} /> Ir a Agenda <ArrowRight size={12} />
+          </button>
+        </div>
+        
         <div className="space-y-6">
           {productionByBlock.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 text-center">
@@ -109,18 +119,28 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void }> = ({ onBa
             </div>
           ) : (
             productionByBlock.map(bloqueData => (
-              <div key={bloqueData.bloque} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden border-l-4 border-l-blue-500">
+              <div key={bloqueData.bloque} className={`bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden border-l-4 ${bloqueData.bloque === "Sin asignar" ? "border-l-red-500" : "border-l-blue-500"}`}>
                 <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
-                      {bloqueData.bloque === "Sin asignar" ? (
-                        <span className="text-slate-400 italic">Sin Bloque Asignado</span>
-                      ) : (
-                        <>Bloque <span className="text-blue-600">{bloqueData.bloque}</span></>
-                      )}
-                    </h3>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">
-                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{bloqueData.items.length} Partidas</span>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+                        {bloqueData.bloque === "Sin asignar" ? (
+                          <span className="text-red-500 italic">Sin asignar</span>
+                        ) : (
+                          <>Bloque <span className="text-blue-600">{bloqueData.bloque}</span></>
+                        )}
+                      </h3>
+                      {/* Fechas asociadas */}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {bloqueData.dates.map(d => (
+                          <span key={d} className="text-[8px] font-bold text-slate-400 border border-slate-100 dark:border-slate-800 px-1.5 py-0.5 rounded-md uppercase">
+                            {formatDate(d)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-full">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{bloqueData.items.length} Partidas</span>
                     </div>
                   </div>
                   
