@@ -6,12 +6,22 @@ import { formatAmount, formatDate } from "../lib/utils";
 export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate: (screen: any) => void }> = ({ onBack, onNavigate }) => {
   const { avances, selectedObraId, itemsSate, certificaciones } = useApp();
 
-  const isDataCertified = useCallback((date: string) => {
-    return (certificaciones || []).some(c => 
-      c.obraId === selectedObraId && 
-      c.fechaInicio && c.fechaFin && 
-      date >= c.fechaInicio && date <= c.fechaFin
-    );
+  const isDataCertified = useCallback((avance: any) => {
+    return (certificaciones || []).some(c => {
+      if (c.obraId !== selectedObraId) return false;
+      
+      // Prioridad 1: Por ID (Sistema nuevo)
+      if (c.avanceIds && c.avanceIds.length > 0) {
+        return c.avanceIds.includes(avance.id);
+      }
+
+      // Prioridad 2: Por rango (Legacy)
+      if (c.fechaInicio && c.fechaFin) {
+        return avance.fecha >= c.fechaInicio && avance.fecha <= c.fechaFin;
+      }
+
+      return false;
+    });
   }, [certificaciones, selectedObraId]);
 
   // Agrupar producción por bloque e item, capturando también las fechas
@@ -20,7 +30,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
 
     const obraAvances = (avances || [])
       .filter(a => a.id && a.obraId === selectedObraId)
-      .filter(a => !isDataCertified(a.fecha));
+      .filter(a => !isDataCertified(a));
 
     obraAvances.forEach(avance => {
       (avance.produccion || []).forEach(prod => {

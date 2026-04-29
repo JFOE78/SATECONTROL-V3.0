@@ -32,10 +32,30 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const [manualAnticipoOp, setManualAnticipoOp] = useState("");
   const [manualAnticipoAmount, setManualAnticipoAmount] = useState<number>(400);
 
+  const [excludedAvanceIds, setExcludedAvanceIds] = useState<string[]>([]);
+  const [showAvancesList, setShowAvancesList] = useState(false);
+
+  const [manualAdjustments, setManualAdjustments] = useState<Record<string, number>>({});
+  const [adjustmentItem, setAdjustmentItem] = useState<{ id: string; name: string } | null>(null);
+  const [adjustmentInput, setAdjustmentInput] = useState("");
+
+  const applyAdjustment = () => {
+    if (!adjustmentItem) return;
+    const num = parseFloat(adjustmentInput);
+    if (!isNaN(num)) {
+      setManualAdjustments(prev => ({ ...prev, [adjustmentItem.id]: (prev[adjustmentItem.id] || 0) + num }));
+      setAdjustmentItem(null);
+      setAdjustmentInput("");
+      notify("Ajuste aplicado", "success");
+    } else {
+      notify("Introduce un número válido", "error");
+    }
+  };
+
   // Sync dates with filtered advances if empty
   useEffect(() => {
     if (!periodoInicio || !periodoFin) {
-      const lastCert = [...certificaciones].filter(c => c.obraId === selectedObraId).sort((a,b) => (b.fechaFin || '').localeCompare(a.fechaFin || ''))[0];
+      const lastCert = [...certificaciones].filter(c => c.id !== editingCertId && c.obraId === selectedObraId).sort((a,b) => (b.fechaFin || '').localeCompare(a.fechaFin || ''))[0];
       
       if (lastCert && lastCert.fechaFin) {
         const lastDate = new Date(lastCert.fechaFin);
@@ -59,27 +79,59 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
         }
       }
     }
-  }, [selectedObraId, certificaciones, avances]);
+  }, [selectedObraId, certificaciones, avances, editingCertId]);
 
-  const isDataCertified = useCallback((date: string) => {
-    return (certificaciones || []).some(c => 
-      c.id !== editingCertId && // Si editamos, permitimos recuperarlos
-      c.obraId === selectedObraId && 
-      c.fechaInicio && c.fechaFin && 
-      date >= c.fechaInicio && date <= c.fechaFin
-    );
+  const isDataCertified = useCallback((avance: any) => {
+    return (certificaciones || []).some(c => {
+      // Si estamos editando esta certificación, no bloquear sus propios avances
+      if (c.id === editingCertId) return false;
+      if (c.obraId !== selectedObraId) return false;
+
+      // Prioridad 1: Bloqueo por ID específico (Nuevo sistema)
+      if (c.avanceIds && c.avanceIds.length > 0) {
+        return c.avanceIds.includes(avance.id);
+      }
+
+      // Prioridad 2: Fallback por rango de fechas (Sistema antiguo/legacy)
+      if (c.fechaInicio && c.fechaFin) {
+        return avance.fecha >= c.fechaInicio && avance.fecha <= c.fechaFin;
+      }
+
+      return false;
+    });
   }, [certificaciones, selectedObraId, editingCertId]);
 
-  const dataFiltered = useMemo(() => {
+  const rawDataInPeriod = useMemo(() => {
     let list = (avances || []).filter(a => a.obraId === selectedObraId);
     if (periodoInicio) list = list.filter(a => a.fecha >= periodoInicio);
     if (periodoFin) list = list.filter(a => a.fecha <= periodoFin);
     
-    return list.filter(a => !isDataCertified(a.fecha));
+    // El filtro base es lo que NO está en OTRA certificación
+    return list.filter(a => !isDataCertified(a));
   }, [avances, selectedObraId, periodoInicio, periodoFin, isDataCertified]);
 
+  const dataFiltered = useMemo(() => {
+    return rawDataInPeriod.filter(a => !excludedAvanceIds.includes(a.id));
+  }, [rawDataInPeriod, excludedAvanceIds]);
+
   const stats = useMemo(() => {
-    const bruto = dataFiltered.reduce((sum, a) => sum + calculateAvanceEconomics(a).ingresos, 0);
+    const itemStats: Record<string, number> = {};
+    dataFiltered.forEach(a => {
+      (a.produccion || []).forEach(p => {
+        itemStats[p.itemId] = (itemStats[p.itemId] || 0) + p.m2;
+      });
+    });
+
+    // Add manual adjustments
+    Object.entries(manualAdjustments).forEach(([id, extra]) => {
+      itemStats[id] = (itemStats[id] || 0) + (extra as number);
+    });
+
+    const bruto = Object.entries(itemStats).reduce((sum, [id, m2]) => {
+      const price = (itemsSate[id] as any)?.precio || 0;
+      return sum + (m2 * price);
+    }, 0);
+
     const laborCost = dataFiltered.reduce((sum, a) => sum + calculateAvanceEconomics(a).costeManoObra, 0);
     const realProfit = bruto - laborCost;
 
@@ -94,13 +146,6 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       });
     const totalAnticipos = currentAnticipos.reduce((sum, an) => sum + an.cantidad, 0);
     
-    const itemStats: Record<string, number> = {};
-    dataFiltered.forEach(a => {
-      (a.produccion || []).forEach(p => {
-        itemStats[p.itemId] = (itemStats[p.itemId] || 0) + p.m2;
-      });
-    });
-
     const processedGastos = (gastos || [])
       .filter(g => {
         let ok = g.obraId === selectedObraId;
@@ -110,7 +155,13 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       });
 
     return { bruto, laborCost, realProfit, anticipos: totalAnticipos, listAnticipos: currentAnticipos, items: itemStats, processedGastos };
-  }, [dataFiltered, anticipos, selectedObraId, periodoInicio, periodoFin, calculateAvanceEconomics, gastos]);
+  }, [dataFiltered, anticipos, selectedObraId, periodoInicio, periodoFin, calculateAvanceEconomics, gastos, manualAdjustments, itemsSate]);
+
+  const toggleExcludeAvance = (id: string) => {
+    setExcludedAvanceIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
   const operarioBreakdown = useMemo(() => {
     const totalManDays = dataFiltered.reduce((sum, a) => sum + (a.operariosPresentes?.length || 0), 0);
@@ -207,6 +258,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       incentivoExtra,
       certificado: stats.bruto - stats.anticipos + incentivoExtra,
       estado: "pendiente",
+      avanceIds: dataFiltered.map(a => a.id),
       items: itemsSnapshot,
       anticiposDetalle: anticiposSnapshot
     };
@@ -219,6 +271,11 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       setCertificaciones(prev => [...prev, newCert]);
       notify("Cierre guardado con éxito", "success");
     }
+
+    // Reset states
+    setExcludedAvanceIds([]);
+    setIncentivoExtra(0);
+    setManualAdjustments({});
   };
 
   const startEdit = (c: Certificacion) => {
@@ -226,6 +283,41 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     setPeriodoInicio(c.fechaInicio || "");
     setPeriodoFin(c.fechaFin || "");
     setIncentivoExtra(c.incentivoExtra || 0);
+    
+    // Restaurar los excluidos: son los que están en el periodo de la cert pero no están en c.avanceIds
+    const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId);
+    let inPeriod = obraAvances;
+    if (c.fechaInicio) inPeriod = inPeriod.filter(a => a.fecha >= c.fechaInicio!);
+    if (c.fechaFin) inPeriod = inPeriod.filter(a => a.fecha <= c.fechaFin!);
+    
+    const certIds = c.avanceIds || [];
+    const excluded = inPeriod
+      .filter(a => !certIds.includes(a.id))
+      .map(a => a.id);
+    
+    setExcludedAvanceIds(excluded);
+
+    // RESTORE MANUAL ADJUSTMENTS
+    // manual adjustments = (c.items m2) - (sum m2 in advances)
+    const adjMap: Record<string, number> = {};
+    if (c.items && certIds.length > 0) {
+      const includedAvances = obraAvances.filter(a => certIds.includes(a.id));
+      const advanceItemStats: Record<string, number> = {};
+      includedAvances.forEach(a => {
+         (a.produccion || []).forEach(p => {
+            advanceItemStats[p.itemId] = (advanceItemStats[p.itemId] || 0) + p.m2;
+         });
+      });
+
+      c.items.forEach(it => {
+         const diff = it.m2 - (advanceItemStats[it.itemId] || 0);
+         if (Math.abs(diff) > 0.01) {
+            adjMap[it.itemId] = diff;
+         }
+      });
+    }
+    setManualAdjustments(adjMap);
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -348,10 +440,10 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       `*PARTIDAS ESTIMADAS:*\n` +
       prodDetails + `\n\n` +
       `*RESUMEN ECONÓMICO:* \n` +
-      `- Total Ejecutado: ${formatAmount(stats.bruto)}€\n` +
+      `*TOTAL BRUTO A CERTIFICAR: ${formatAmount(stats.bruto)}€*\n` +
       `- Anticipos: ${formatAmount(stats.anticipos)}€\n` +
       (incentivoExtra > 0 ? `- Incentivo Bonus: ${formatAmount(incentivoExtra)}€\n` : '') +
-      `*NETO A CERTIFICAR: ${formatAmount(stats.bruto - stats.anticipos + incentivoExtra)}€*\n\n` +
+      `*NETO A PERCIBIR: ${formatAmount(stats.bruto - stats.anticipos + incentivoExtra)}€*\n\n` +
       `*LIQUIDACIÓN PERSONAL:*\n` +
       opsSettlement;
     
@@ -408,10 +500,76 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
         </div>
       </section>
 
+      {/* Listado de Avances (Selección) */}
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex justify-between items-center px-2">
+          <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Partes de Trabajo en Periodo</label>
+          <button 
+            onClick={() => setShowAvancesList(!showAvancesList)}
+            className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full"
+          >
+            {showAvancesList ? "Ocultar" : `Ver ${rawDataInPeriod.length}`}
+            {showAvancesList ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+
+        {showAvancesList && (
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            {rawDataInPeriod.length === 0 ? (
+              <p className="text-[10px] text-slate-400 italic text-center py-4 uppercase font-bold">No hay partes pendientes en este rango</p>
+            ) : (
+              [...rawDataInPeriod].sort((a,b) => b.fecha.localeCompare(a.fecha)).map(a => {
+                const isExcluded = excludedAvanceIds.includes(a.id);
+                return (
+                  <div 
+                    key={a.id} 
+                    onClick={() => toggleExcludeAvance(a.id)}
+                    className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all border-2 ${
+                      isExcluded 
+                        ? "bg-slate-50 dark:bg-slate-800/50 border-transparent opacity-50" 
+                        : "bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        !isExcluded ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 dark:border-slate-700"
+                      }`}>
+                        {!isExcluded && <Check size={12} />}
+                      </div>
+                      <div>
+                        <p className={`text-xs font-black uppercase ${isExcluded ? "text-slate-400" : "text-slate-800 dark:text-white"}`}>
+                          {formatDate(a.fecha)}
+                        </p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">
+                          {a.bloque ? `Bloque ${a.bloque}` : "Sin bloque"} • {a.operariosPresentes?.length || 0} op.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-xs font-black ${isExcluded ? "text-slate-400" : "text-blue-600"}`}>
+                        {formatAmount(calculateAvanceEconomics(a).ingresos)}€
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+        
+        {!showAvancesList && rawDataInPeriod.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-2">
+            <span className="text-[10px] font-black text-slate-400 uppercase">
+              {dataFiltered.length} de {rawDataInPeriod.length} partes seleccionados
+            </span>
+          </div>
+        )}
+      </section>
+
       {/* Resumen Principal */}
       <section className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
         <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Total Ejecutado</label>
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Total Bruto Ejecutado</label>
           <div className="text-4xl font-black text-slate-800 dark:text-white">{formatAmount(stats.bruto)}€</div>
         </div>
         
@@ -419,11 +577,53 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Producción del Mes</label>
            <div className="space-y-1 grid grid-cols-1 divide-y divide-slate-50 dark:divide-slate-800">
               {Object.entries(stats.items).map(([id, m2]) => (
-                <div key={id} className="flex justify-between py-2 items-center">
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{(itemsSate[id] as any)?.nombre || id}</span>
-                  <span className="text-xs font-black text-slate-800 dark:text-white">{formatAmount(m2 as number)} m²</span>
+                <div key={id} className="py-2 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{(itemsSate[id] as any)?.nombre || id}</span>
+                    <div className="flex items-center gap-2">
+                       <span className="text-xs font-black text-slate-800 dark:text-white">{formatAmount(m2 as number)} m²</span>
+                       <button 
+                        onClick={() => {
+                          setAdjustmentItem({ id, name: (itemsSate[id] as any)?.nombre || id });
+                          setAdjustmentInput("");
+                        }}
+                        className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"
+                       >
+                         <Edit2 size={12} />
+                       </button>
+                    </div>
+                  </div>
+                  {manualAdjustments[id] !== undefined && Math.abs(manualAdjustments[id]) > 0.001 && (
+                    <div className="flex justify-end gap-2">
+                      <span className="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full uppercase">
+                        Ajuste: {manualAdjustments[id] > 0 ? '+' : ''}{formatAmount(manualAdjustments[id])} m²
+                      </span>
+                      <button 
+                        onClick={() => {
+                          const newAdj = { ...manualAdjustments };
+                          delete newAdj[id];
+                          setManualAdjustments(newAdj);
+                        }}
+                        className="text-red-400"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
+           </div>
+           
+           <div className="pt-4">
+              <button 
+                onClick={() => {
+                  setAdjustmentItem({ id: "", name: "" }); // Mode select
+                  setAdjustmentInput("");
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase text-slate-400 hover:text-blue-500 hover:border-blue-500 transition-all"
+              >
+                <Plus size={14} /> Ajustar m² extra (Partida no listada)
+              </button>
            </div>
         </div>
 
@@ -528,10 +728,23 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
         <p className="text-[9px] text-slate-400 uppercase text-center font-bold">* Se reparte equitativamente entre los operarios activos</p>
       </section>
 
-      {/* Resultado Neto Final */}
-      <section className="bg-blue-600 p-8 rounded-[3rem] text-white shadow-xl space-y-2 text-center">
-        <label className="text-[10px] font-black uppercase tracking-widest opacity-60">A Certificar Neto</label>
-        <div className="text-5xl font-black">{(stats.bruto - stats.anticipos + incentivoExtra).toLocaleString()}€</div>
+      {/* Resultado Final */}
+      <section className="bg-slate-900 dark:bg-blue-600 p-8 rounded-[3rem] text-white shadow-xl space-y-4">
+        <div className="text-center">
+          <label className="text-[10px] font-black uppercase tracking-widest opacity-60">Total Bruto a Certificar</label>
+          <div className="text-5xl font-black">{stats.bruto.toLocaleString()}€</div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+          <div className="text-center">
+            <p className="text-[10px] font-black uppercase opacity-60">Anticipos</p>
+            <p className="text-xl font-black text-red-300">-{stats.anticipos.toLocaleString()}€</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] font-black uppercase opacity-60">Neto Final</p>
+            <p className="text-xl font-black text-emerald-300">{(stats.bruto - stats.anticipos + incentivoExtra).toLocaleString()}€</p>
+          </div>
+        </div>
       </section>
 
       <div className="px-4">
@@ -640,6 +853,72 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
            })}
         </div>
       </section>
+      {/* Modal Ajuste Manual */}
+      {adjustmentItem && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-in fade-in slide-in-from-bottom-10">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Ajustar Producción</h3>
+              <button onClick={() => setAdjustmentItem(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl"><X size={20} /></button>
+            </div>
+
+            {adjustmentItem.id === "" ? (
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Seleccionar Partida</label>
+                <select 
+                  className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-xs font-black outline-none border-2 border-transparent focus:border-blue-500"
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    if (id) {
+                      setAdjustmentItem({ id, name: (itemsSate[id] as any)?.nombre || id });
+                    }
+                  }}
+                >
+                  <option value="">Seleccionar...</option>
+                  {Object.keys(itemsSate).map(id => (
+                    <option key={id} value={id}>{(itemsSate[id] as any)?.nombre || id}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Partida Seleccionada</p>
+                  <p className="text-sm font-black text-blue-600 px-2 mt-1 uppercase">{adjustmentItem.name}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Metros Extra (+ o -)</label>
+                  <input 
+                    autoFocus
+                    type="number" 
+                    step="0.01"
+                    placeholder="Ej: 10.5 o -5"
+                    className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-xl font-black outline-none border-2 border-transparent focus:border-blue-500"
+                    value={adjustmentInput}
+                    onChange={e => setAdjustmentInput(e.target.value)}
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button 
+                    onClick={applyAdjustment}
+                    className="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase tracking-widest text-xs"
+                  >
+                    Confirmar Cambio
+                  </button>
+                  <button 
+                    onClick={() => setAdjustmentItem({ id: "", name: "" })}
+                    className="px-6 bg-slate-100 dark:bg-slate-800 text-slate-500 font-black py-4 rounded-2xl uppercase text-[10px]"
+                  >
+                    Cambiar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

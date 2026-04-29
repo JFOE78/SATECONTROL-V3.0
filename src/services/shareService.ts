@@ -72,7 +72,7 @@ export const shareService = {
     
     // Resumen General
     const summaryBody = [
-      ['Total Ejecutado', `${formatAmount(cert.ejecutado)}€`],
+      ['Total Bruto a Certificar', `${formatAmount(cert.ejecutado)}€`],
       ['Total Anticipos', `${formatAmount(cert.anticipos)}€`]
     ];
 
@@ -200,13 +200,13 @@ export const shareService = {
     }
 
     text += `\n*RESUMEN:*\n`;
-    text += `- Ejecutado: ${cert.ejecutado.toLocaleString()}€\n`;
-    text += `- Anticipos: ${cert.anticipos.toLocaleString()}€\n`;
+    text += `*TOTAL BRUTO A CERTIFICAR: ${cert.ejecutado.toLocaleString()}€*\n`;
+    text += `- Anticipos Aplicados: ${cert.anticipos.toLocaleString()}€\n`;
     if (cert.incentivoExtra) {
       text += `- Bonus Extra: ${cert.incentivoExtra.toLocaleString()}€\n`;
     }
     const totalNeto = cert.certificado + (cert.incentivoExtra || 0);
-    text += `*Neto a Certificar: ${totalNeto.toLocaleString()}€*`;
+    text += `*NETO A PERCIBIR: ${totalNeto.toLocaleString()}€*`;
     
     return text;
   }
