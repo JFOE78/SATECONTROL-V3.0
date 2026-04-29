@@ -7,7 +7,9 @@ import {
   ChevronRight,
   Edit2,
   Check,
-  X
+  X,
+  Users,
+  Receipt
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { AppProvider, useApp } from "./context/AppContext";
@@ -19,11 +21,12 @@ import { ConfigScreen } from "./screens/ConfigScreen";
 import { GestionObras } from "./screens/GestionObras";
 import { GastosScreen } from "./screens/GastosScreen";
 import { OperarioDetalleScreen } from "./screens/OperarioDetalleScreen";
+import { OperariosScreen } from "./screens/OperariosScreen";
 import { ProduccionBloquesScreen } from "./screens/ProduccionBloquesScreen";
 import { HistorialCertificacionesScreen } from "./screens/HistorialCertificacionesScreen";
 import { Avance } from "./types";
 
-type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operario_detalle" | "produccion_bloques" | "historial";
+type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operarios" | "operario_detalle" | "produccion_bloques" | "historial";
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("inicio");
@@ -92,8 +95,10 @@ function AppContent() {
         return <GestionObras onBack={() => navigateTo("inicio")} />;
       case "gastos":
         return <GastosScreen onBack={() => navigateTo("inicio")} />;
+      case "operarios":
+        return <OperariosScreen onBack={() => navigateTo("inicio")} onOperarioClick={(n) => { setSelectedOperarioName(n); setCurrentScreen("operario_detalle"); }} />;
       case "operario_detalle":
-        return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => setCurrentScreen("certificacion")} />;
+        return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => setCurrentScreen("operarios")} />;
       case "produccion_bloques":
         return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} onNavigate={navigateTo} />;
       case "historial":
@@ -133,9 +138,11 @@ function AppContent() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl">
-        <NavButton active={currentScreen === "inicio"} onClick={() => navigateTo("inicio")} icon={<HomeIcon size={26} />} label="Inicio" />
-        <NavButton active={currentScreen === "calendario"} onClick={() => navigateTo("calendario")} icon={<Calendar size={26} />} label="Agenda" />
-        <NavButton active={currentScreen === "certificacion"} onClick={() => navigateTo("certificacion")} icon={<FileText size={26} />} label="Cierre" />
+        <NavButton active={currentScreen === "inicio"} onClick={() => navigateTo("inicio")} icon={<HomeIcon size={24} />} label="Inicio" />
+        <NavButton active={currentScreen === "calendario"} onClick={() => navigateTo("calendario")} icon={<Calendar size={24} />} label="Agenda" />
+        <NavButton active={currentScreen === "gastos"} onClick={() => navigateTo("gastos")} icon={<Receipt size={24} />} label="Gastos" />
+        <NavButton active={currentScreen === "operarios"} onClick={() => navigateTo("operarios")} icon={<Users size={24} />} label="Operarios" />
+        <NavButton active={currentScreen === "certificacion"} onClick={() => navigateTo("certificacion")} icon={<FileText size={24} />} label="Cierre" />
       </nav>
 
       <AnimatePresence>

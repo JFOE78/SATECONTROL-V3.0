@@ -141,34 +141,30 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     [avances, selectedObraId]
   );
 
-  const weeklyTrend = useMemo(() => {
+  const monthlyTrend = useMemo(() => {
     const data: any[] = [];
     const now = new Date();
-    const currentMonday = new Date(now);
-    const day = currentMonday.getDay();
-    const diff = currentMonday.getDate() - day + (day === 0 ? -6 : 1);
-    currentMonday.setDate(diff);
-    currentMonday.setHours(0,0,0,0);
+    const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
-    for (let i = 3; i >= 0; i--) {
-      const startOfWeek = new Date(currentMonday);
-      startOfWeek.setDate(currentMonday.getDate() - (i * 7));
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      endOfWeek.setHours(23,59,59,999);
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const m = targetDate.getMonth();
+      const y = targetDate.getFullYear();
       
-      const weekAvances = (avances || []).filter(a => {
+      const monthAvances = (avances || []).filter(a => {
         const d = new Date(a.fecha);
-        return d >= startOfWeek && d <= endOfWeek && a.obraId === selectedObraId && !isDataCertified(a.fecha);
+        return d.getMonth() === m && d.getFullYear() === y && a.obraId === selectedObraId;
       });
-      const beneficio = weekAvances.reduce((sum, a) => sum + calculateAvanceEconomics(a).beneficio, 0);
+
+      const beneficio = monthAvances.reduce((sum, a) => sum + calculateAvanceEconomics(a).beneficio, 0);
+      
       data.push({
-        name: i === 0 ? 'ACTUAL' : `S- ${i}`,
+        name: monthNames[m],
         beneficio: Math.round(beneficio),
       });
     }
     return data;
-  }, [avances, calculateAvanceEconomics, isDataCertified, selectedObraId]);
+  }, [avances, calculateAvanceEconomics, selectedObraId]);
 
   const todayAvance = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -215,10 +211,10 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
 
       {/* Gráfica de Tendencia */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Semanal (Beneficio)</label>
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Mensual (Beneficio)</label>
         <div className="h-40 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={weeklyTrend}>
+            <AreaChart data={monthlyTrend}>
               <defs>
                 <linearGradient id="colorB" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -289,105 +285,34 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
              </div>
         </div>
 
-        {/* Liquidación por Operario Desplegable */}
-        <section className="bg-slate-50 dark:bg-slate-800/30 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 transition-all">
-          <button 
-            onClick={() => setExpandedLiquidacion(!expandedLiquidacion)}
-            className="w-full flex justify-between items-center p-4 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Cuentas por Operario (En Curso)</span>
-            </div>
-            {expandedLiquidacion ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-          </button>
-          
-          {expandedLiquidacion && (
-            <div className="p-4 pt-0 space-y-4 divide-y divide-slate-100 dark:divide-slate-800">
-              {operarioSettlement.length === 0 ? (
-                <p className="text-center py-4 text-[10px] font-bold text-slate-400 uppercase italic">Sin actividad registrada en curso</p>
-              ) : (
-                operarioSettlement.map(o => (
-                  <div key={o.nombre} className="pt-4 first:pt-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase">{o.nombre} ({o.jornadas}j)</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">
-                          Bruto: {formatAmount(o.bruto)}€ • Neto: {formatAmount(o.cobrar)}€ 
-                          {o.jornadas > 0 && <span className="text-blue-500 ml-1">• {formatAmount(o.mediaDiaria)}€/día</span>}
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => shareIndividualSettlement(o)}
-                        className="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-xl active:scale-90 transition-transform"
-                      >
-                        <MessageCircle size={14} />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px] font-bold text-slate-500 uppercase">
-                      <div className="flex justify-between italic"><span>Jornales:</span> <span>{formatAmount(o.totalJornales)}€</span></div>
-                      <div className="flex justify-between italic text-emerald-500"><span>Reparto:</span> <span>+{formatAmount(o.sharedProfit)}€</span></div>
-                      {o.opReembolsos > 0 && <div className="flex justify-between italic text-blue-500"><span>Gastos:</span> <span>+{formatAmount(o.opReembolsos)}€</span></div>}
-                      {o.opAnticipos > 0 && <div className="flex justify-between italic text-red-500"><span>Anticipos:</span> <span>-{formatAmount(o.opAnticipos)}€</span></div>}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </section>
-
         <div className="pt-2 px-2 text-center border-t border-slate-50 dark:border-slate-800/50">
           <p className="text-[9px] text-slate-400 font-bold uppercase italic leading-relaxed">
             * El beneficio neto deduce jornales y gastos operativos para mostrar tu ganancia real acumulada.
           </p>
         </div>
-        <button 
-          onClick={() => onNavigate("gastos")}
-          className="w-full bg-red-50 dark:bg-red-950/20 p-4 rounded-2xl flex items-center justify-between active:scale-95 transition-all group border border-red-100/50 dark:border-red-900/20"
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-red-600 p-2 rounded-xl text-white shadow-lg shadow-red-200 dark:shadow-none"><Receipt size={18} /></div>
-            <span className="text-xs font-black text-red-600 dark:text-red-400 uppercase tracking-tight">Gestionar Gastos</span>
-          </div>
-          <ChevronRight size={18} className="text-red-300" />
-        </button>
       </section>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-4">
         <ActionButton 
           onClick={() => onNavigate("registrar")} 
           icon={<PlusCircle className="text-emerald-500" size={28} />} 
-          title="REGISTRAR AVANCE" 
-          description="Producción hoy" 
+          title="REGISTRAR PRODUCCIÓN" 
+          description="Añadir las partidas ejecutadas hoy" 
           className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
         />
-        <div className="grid grid-cols-3 gap-4">
-          <ActionButton 
-            onClick={() => onNavigate("calendario")} 
-            icon={<Calendar className="text-purple-500" size={24} />} 
-            title="AGENDA" 
-            compact 
-            className="bg-purple-50/50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800/30"
-          />
+        <div className="grid grid-cols-2 gap-4">
           <ActionButton 
             onClick={() => onNavigate("produccion_bloques")} 
             icon={<BarChart3 className="text-blue-500" size={24} />} 
-            title="PROD." 
-            compact 
+            title="PRODUCCIÓN POR BLOQUES" 
+            compact
             className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30"
-          />
-          <ActionButton 
-            onClick={() => onNavigate("certificacion")} 
-            icon={<FileText className="text-indigo-500" size={24} />} 
-            title="CIERRE" 
-            compact 
-            className="bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/30"
           />
           <ActionButton 
             onClick={() => onNavigate("historial")} 
             icon={<FileText className="text-amber-500" size={24} />} 
-            title="HISTS." 
-            compact 
+            title="HISTORIAL DE AVANCES" 
+            compact
             className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
           />
         </div>
