@@ -196,14 +196,18 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
               <span className="text-[10px] font-black uppercase tracking-widest leading-none">Ejecución Real (Acumulado)</span>
               <Clock size={14} />
             </div>
-            <div className="flex justify-between items-end">
-              <div>
-                <p className="text-3xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{formatAmount(statsCurrent.bruto)}€</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase">Bruto acumulado actual</p>
+            <div className="flex justify-between items-end gap-2">
+              <div className="flex-1">
+                <p className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] truncate">
+                  {formatAmount(statsCurrent.bruto)}<span className="text-xs ml-0.5 opacity-40">€</span>
+                </p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase">Bruto acumulado</p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.6)]">+{formatAmount(statsCurrent.profit)}€</p>
-                <p className="text-[10px] font-bold text-emerald-900 uppercase">Beneficio hoy</p>
+              <div className="text-right flex-1">
+                <p className="text-xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.6)] truncate">
+                  +{formatAmount(statsCurrent.profit)}<span className="text-xs ml-0.5 opacity-40">€</span>
+                </p>
+                <p className="text-[9px] font-bold text-emerald-900 uppercase">Beneficio hoy</p>
               </div>
             </div>
           </motion.section>
@@ -219,18 +223,20 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
               <span className="text-[10px] font-black uppercase tracking-widest leading-none">Estimación de Liquidación</span>
               <Calculator size={14} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 items-end">
               <div>
-                <p className="text-3xl font-black text-indigo-400 drop-shadow-[0_0_10px_rgba(129,140,248,0.6)]">{formatAmount(statsCurrent.profit + incentivoExtra)}€</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase">Fondo de Reparto Total</p>
+                <p className="text-xl font-black text-indigo-400 drop-shadow-[0_0_10px_rgba(129,140,248,0.6)] truncate">
+                  {formatAmount(statsCurrent.profit + incentivoExtra)}<span className="text-xs ml-0.5 opacity-40">€</span>
+                </p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase">Fondo Reparto</p>
               </div>
-              <div className="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1">
-                <label className="text-[9px] font-black uppercase text-indigo-400/60 ml-1">Bonus Extra €</label>
+              <div className="bg-slate-900 p-2.5 rounded-2xl border border-slate-800 space-y-0.5">
+                <label className="text-[8px] font-black uppercase text-indigo-400/60 ml-1">Bonus €</label>
                 <input 
                   type="number" 
                   value={incentivoExtra} 
                   onChange={e => setIncentivoExtra(Number(e.target.value))}
-                  className="w-full bg-transparent font-black text-2xl text-white outline-none placeholder:text-white/10"
+                  className="w-full bg-transparent font-black text-lg text-white outline-none placeholder:text-white/10"
                   placeholder="0"
                 />
               </div>

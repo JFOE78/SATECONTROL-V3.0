@@ -204,14 +204,18 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           </div>
 
              <div className="flex justify-between items-end px-4 gap-4">
-               <div className="flex-1">
-                 <span className="text-[10px] font-black text-cyan-400/60 uppercase block tracking-widest mb-1 leading-tight">Total Bruto<br/>Pendiente</span>
-                 <span className="text-3xl font-black text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)] leading-none">{formatAmount(totalAcumulado.ingresosCurso + totalAcumulado.certPendiente)}€</span>
-               </div>
-               <div className="flex-1 text-right">
-                 <span className="text-[10px] font-black text-emerald-400/60 uppercase block tracking-widest mb-1 leading-tight">Ganancia Neta<br/>Estimada</span>
-                 <span className="text-3xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none">{formatAmount(totalAcumulado.totalPendiente)}€</span>
-               </div>
+                <div className="flex-1">
+                  <span className="text-[10px] font-black text-cyan-400/60 uppercase block tracking-widest mb-1 leading-tight">Total Bruto<br/>Pendiente</span>
+                  <span className="text-2xl font-black text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)] leading-none">
+                    {formatAmount(totalAcumulado.ingresosCurso + totalAcumulado.certPendiente)}<span className="text-sm ml-0.5 opacity-70">€</span>
+                  </span>
+                </div>
+                <div className="flex-1 text-right">
+                  <span className="text-[10px] font-black text-emerald-400/60 uppercase block tracking-widest mb-1 leading-tight">Ganancia Neta<br/>Estimada</span>
+                  <span className="text-2xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none">
+                    {formatAmount(totalAcumulado.totalPendiente)}<span className="text-sm ml-0.5 opacity-70">€</span>
+                  </span>
+                </div>
              </div>
         </div>
 
