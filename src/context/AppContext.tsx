@@ -103,49 +103,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     _setGastos(loadedGastos);
 
     const targetObraId = activeObraId || (loadedObras[0]?.id) || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b";
+    
+    // Forzar datos si faltan o están incompletos
+    const cert1: Certificacion = {
+      id: "cert-historical-1",
+      obraId: targetObraId,
+      mes: "2026-03", // Certificación 08/04
+      fechaInicio: "2026-03-01",
+      fechaFin: "2026-04-08",
+      ejecutado: 11724.54,
+      anticipos: 8000,
+      certificado: 3724.54,
+      estado: "cobrado",
+      items: [
+        { itemId: "bl13_l1", nombre: "Línea 1 (BL-13)", precio: 16, m2: 88.89, bloque: "13" },
+        { itemId: "bl13_l2", nombre: "Línea 2 (BL-13)", precio: 16, m2: 73.406, bloque: "13" },
+        { itemId: "bl13_l3", nombre: "Línea 3 (BL-13)", precio: 16, m2: 28.557, bloque: "13" },
+        { itemId: "bl13_l4", nombre: "Línea 4 (BL-13)", precio: 16, m2: 73.984, bloque: "13" },
+        { itemId: "bl13_l5", nombre: "Línea 5 (BL-13)", precio: 16, m2: 89.936, bloque: "13" },
+        { itemId: "bl13_l6", nombre: "Línea 6 (BL-13)", precio: 16, m2: 89.59, bloque: "13" },
+        { itemId: "bl13_l7", nombre: "Línea 7 (BL-13)", precio: 16, m2: 72.25, bloque: "13" },
+        { itemId: "bl13_caj", nombre: "Cajeado Metro (BL-13)", precio: 16, m2: 25, bloque: "13" },
+        { itemId: "bl13_malla", nombre: "Doble Malla (BL-13)", precio: 2.66, m2: 50.57, bloque: "13" },
+        { itemId: "bl5_l1", nombre: "Línea 1 (BL-5)", precio: 8, m2: 89.24, bloque: "5" },
+        { itemId: "bl5_l2", nombre: "Línea 2 (BL-5)", precio: 8, m2: 72.82, bloque: "5" },
+        { itemId: "bl5_l3", nombre: "Línea 3 (BL-5)", precio: 8, m2: 73.52, bloque: "5" },
+        { itemId: "bl5_l4", nombre: "Línea 4 (BL-5)", precio: 8, m2: 89.24, bloque: "5" },
+        { itemId: "bl5_l5", nombre: "Línea 5 (BL-5)", precio: 8, m2: 24.45, bloque: "5" },
+        { itemId: "bl5_caj", nombre: "Cajeado Metro (BL-5)", precio: 8, m2: 16.26, bloque: "5" },
+      ]
+    };
+
+    const cert2: Certificacion = {
+      id: "cert-historical-2",
+      obraId: targetObraId,
+      mes: "2026-04", // Certificación 05/05
+      fechaInicio: "2026-04-09",
+      fechaFin: "2026-05-05",
+      ejecutado: 16147.84,
+      anticipos: 8000,
+      certificado: 8147.84,
+      estado: "cobrado",
+      items: [
+        { itemId: "bl13_anti", nombre: "Antifisuras cornisas (BL-13)", precio: 8, m2: 109, bloque: "13" },
+        { itemId: "bl13_malla", nombre: "Doble Malla (BL-13)", precio: 8, m2: 50.72, bloque: "13" },
+        { itemId: "bl5_mf", nombre: "Malla + Fino (BL-5)", precio: 8, m2: 324.84, bloque: "5" },
+        { itemId: "bl5_ca", nombre: "Cornisas antifisura (BL-5)", precio: 8, m2: 113.96, bloque: "5" },
+        { itemId: "bl5_cm", nombre: "Corcho + Malla (BL-5)", precio: 16, m2: 285.48, bloque: "5" },
+        { itemId: "bl5_caj_m", nombre: "Cajeado Malla (BL-5)", precio: 8, m2: 16.26, bloque: "5" },
+        { itemId: "bl5_caj_cm", nombre: "Cajeado Corcho + Malla (BL-5)", precio: 16, m2: 16.26, bloque: "5" },
+        { itemId: "bl5_dm", nombre: "Doble Malla (BL-5)", precio: 8, m2: 118.92, bloque: "5" },
+        { itemId: "bl6_cm", nombre: "Corcho + Malla (BL-6)", precio: 16, m2: 161.84, bloque: "6" },
+        { itemId: "bl6_c", nombre: "Corcho (BL-6)", precio: 8, m2: 357.62, bloque: "6" }
+      ]
+    };
+
+    const isMissingItems1 = !loadedCertificaciones.find(c => c.id === "cert-historical-1")?.items?.length;
+    const isMissingItems2 = !loadedCertificaciones.find(c => c.id === "cert-historical-2")?.items?.length;
     const hasHistorical = loadedCertificaciones.some(c => c.id === "cert-historical-1");
     
-    if (!hasHistorical) {
-      const cert1: Certificacion = {
-        id: "cert-historical-1",
-        obraId: targetObraId,
-        mes: "2026-04",
-        fechaInicio: "2026-03-01",
-        fechaFin: "2026-04-08",
-        ejecutado: 11724.54,
-        anticipos: 8000,
-        certificado: 11724.54,
-        estado: "cobrado",
-        items: [
-          { itemId: "cajeado", nombre: "Cajeados", precio: 16, m2: 25, bloque: "13" },
-          { itemId: "malla", nombre: "Doble Malla", precio: 3, m2: 101.29, bloque: "13" },
-          { itemId: "anti", nombre: "Antifisuras", precio: 8, m2: 109, bloque: "13" },
-          { itemId: "fase1", nombre: "Corcho + Tacos", precio: 8, m2: 634.77, bloque: "13" },
-          { itemId: "fase2", nombre: "Malla + Fino", precio: 8, m2: 634.77, bloque: "13" },
-        ]
-      };
-
-      const cert2: Certificacion = {
-        id: "cert-historical-2",
-        obraId: targetObraId,
-        mes: "2026-05",
-        fechaInicio: "2026-04-09",
-        fechaFin: "2026-05-05",
-        ejecutado: 16147.84,
-        anticipos: 8000,
-        certificado: 16147.84,
-        estado: "cobrado",
-        items: [
-          { itemId: "fase1", nombre: "Corcho", precio: 8, m2: 324.84, bloque: "5" },
-          { itemId: "fase2", nombre: "Malla + Fino", precio: 8, m2: 324.84, bloque: "5" },
-          { itemId: "malla", nombre: "Doble Malla", precio: 3, m2: 118.92, bloque: "5" },
-          { itemId: "cajeado", nombre: "Cajeados", precio: 16, m2: 33.04, bloque: "5" },
-          { itemId: "fase1", nombre: "Corcho (Total)", precio: 8, m2: 519.46, bloque: "6" },
-          { itemId: "fase2", nombre: "Malla + Fino", precio: 8, m2: 161.84, bloque: "6" }
-        ]
-      };
-
-      const nextCerts = [...loadedCertificaciones.filter(c => c.id !== "historical-bloque-6"), cert1, cert2];
+    if (!hasHistorical || isMissingItems1 || isMissingItems2) {
+      // Reemplazar o añadir los certificados históricos con los datos completos
+      const filteredCerts = loadedCertificaciones.filter(c => c.id !== "cert-historical-1" && c.id !== "cert-historical-2" && c.id !== "historical-bloque-6");
+      const nextCerts = [...filteredCerts, cert1, cert2];
       storage.saveCertificaciones(nextCerts);
       _setCertificaciones(nextCerts);
     } else {

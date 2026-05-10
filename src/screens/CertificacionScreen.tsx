@@ -473,15 +473,16 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       prodMap[key].m2 += extra;
     });
 
-    const detailedItems = Object.entries(prodMap).sort().map(([key, data]) => {
-      const bloque = key.split('-')[0];
-      return [
-        bloque,
-        data.name,
-        `${formatAmount(data.m2)}`,
-        `${formatAmount(data.price)}€`,
-        `${formatAmount(data.m2 * data.price)}€`
-      ];
+    const detailedCertifiedItems = Object.entries(prodMap).sort().map(([key, data]) => {
+      const parts = key.split('-');
+      const bloque = parts[0] === 'AJUSTE' ? 'AJ' : parts[0];
+      return {
+        itemId: parts[1] || key,
+        nombre: data.name,
+        precio: data.price,
+        m2: data.m2,
+        bloque: bloque
+      };
     });
 
     const cert: Certificacion = {
@@ -493,7 +494,8 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       ejecutado: stats.bruto,
       anticipos: stats.anticipos,
       certificado: stats.bruto - stats.anticipos,
-      estado: "pendiente"
+      estado: "pendiente",
+      items: detailedCertifiedItems
     };
     shareService.generateCertificacionPDF(cert, obra, stats.listAnticipos, itemsSate);
     notify("Generando PDF...", "info");

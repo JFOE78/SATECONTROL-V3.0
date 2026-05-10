@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Receipt, Activity, ChevronDown, ChevronUp, MessageCircle, BarChart3, Zap, AlertTriangle } from "lucide-react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Activity, ChevronRight as ChevronRightIcon, BarChart3 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
@@ -105,163 +105,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     return data;
   }, [avances, calculateAvanceEconomics, selectedObraId]);
 
-  const todayAvance = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    return (avances || []).find(a => a.fecha === todayStr && a.obraId === selectedObraId);
-  }, [avances, selectedObraId]);
-
-    const activeMonitoring = useMemo(() => {
-      if (!selectedObraId || !avances) return [];
-      
-      const CUTOFF_DATE = "2026-05-06";
-      const items = ["fase1", "fase2", "anti", "malla", "cajeado"];
-      
-      const normalize = (name: string) => {
-        return name.toUpperCase()
-          .replace("BLOQUE", "")
-          .replace("BLOK", "")
-          .replace("BL", "")
-          .replace("B-", "")
-          .replace("B", "")
-          .trim();
-      };
-
-      // Mapa para agrupar por bloque: Record<bloqueNorm, { displayName, items: [] }>
-      const blocksMap: Record<string, { displayName: string, items: any[] }> = {};
-
-      items.forEach(itemId => {
-        const productionMap: Record<string, { m2: number, days: number, displayName: string }> = {};
-        const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE);
-        
-        obraAvances.forEach(a => {
-          const itemsInThisAvance = new Set<string>();
-          (a.produccion || []).forEach(p => {
-            if (p.itemId !== itemId) return;
-            const bRaw = (p.bloque || a.bloque || "S/B").toString().trim();
-            const bRef = normalize(bRaw);
-            
-            if (!productionMap[bRef]) {
-              productionMap[bRef] = { m2: 0, days: 0, displayName: bRaw };
-            }
-            productionMap[bRef].m2 += p.m2;
-            
-            if (!itemsInThisAvance.has(bRef)) {
-              productionMap[bRef].days += 1;
-              itemsInThisAvance.add(bRef);
-            }
-          });
-        });
-
-        // Sumar producción histórica certificada
-        (certificaciones || []).forEach(c => {
-          if (c.obraId !== selectedObraId) return;
-          (c.items || []).forEach(it => {
-            if (it.itemId !== itemId) return;
-            const bRaw = (it.bloque || "S/B").toString().trim();
-            const bRef = normalize(bRaw);
-            if (!productionMap[bRef]) {
-              productionMap[bRef] = { m2: 0, days: 0, displayName: bRaw };
-            }
-            productionMap[bRef].m2 += it.m2;
-          });
-        });
-
-        Object.entries(productionMap).forEach(([normId, stats]) => {
-          const dimensions = BLOQUE_DIMENSIONS[normId] || BLOQUE_DIMENSIONS["DEFAULT"];
-          const targetM2 = dimensions[itemId] || 1;
-          
-          // Solo incluimos en "Rendimiento en Vivo" si está en curso (<99%) 
-          // O si es un bloque que queremos que el usuario vea como "Recién Certificado"
-          const isFinished = stats.m2 >= (targetM2 * 0.99);
-          
-          if (stats.m2 > 0) {
-            const percentage = (stats.m2 / targetM2) * 100;
-
-            if (!blocksMap[normId]) {
-              blocksMap[normId] = { displayName: stats.displayName, items: [] };
-            }
-
-            blocksMap[normId].items.push({
-              itemId,
-              nombre: (itemsSate[itemId] as any)?.nombre || itemId,
-              percentage,
-              isFinished,
-              amount: stats.m2 * ((itemsSate[itemId] as any)?.precio || 0)
-            });
-          }
-        });
-      });
-
-      // Convertir el mapa en un array ordenado por bloque
-      // Priorizar bloques "En curso" sobre "Terminados" en el orden
-      return Object.entries(blocksMap)
-        .sort((a, b) => {
-          const aFinished = a[1].items.every(it => it.isFinished);
-          const bFinished = b[1].items.every(it => it.isFinished);
-          if (aFinished !== bFinished) return aFinished ? 1 : -1;
-          return a[0].localeCompare(b[0], undefined, { numeric: true });
-        })
-        .map(([_, data]) => data);
-    }, [avances, selectedObraId, itemsSate]);
-
   return (
     <div className="space-y-4">
-      {/* MONITOREO DE EFICIENCIA */}
-      {activeMonitoring.length > 0 && (
-        <section className="space-y-2 p-1">
-          <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-3 flex items-center gap-2">
-            <Zap size={14} className="text-amber-500" /> Rendimiento en Vivo
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {activeMonitoring.map((block) => (
-              <div 
-                key={block.displayName} 
-                className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-6"
-              >
-                <div className="border-b border-slate-50 dark:border-slate-800 pb-3">
-                  <h4 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque {block.displayName}</h4>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">{block.items.length} partidas en ejecución</p>
-                </div>
-
-                <div className="space-y-8">
-                  {block.items.map((item) => (
-                    <div key={item.itemId} className={`space-y-3 p-4 rounded-[2rem] border transition-all ${item.isFinished ? 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800' : 'bg-white dark:bg-slate-900 border-transparent shadow-sm'}`}>
-                      <div className="flex justify-between items-start">
-                        <div className="max-w-[70%] text-left">
-                          <h5 className={`text-xs font-black uppercase leading-tight ${item.isFinished ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                            {item.nombre}
-                            {item.isFinished && <span className="ml-2 text-[8px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 px-1.5 py-0.5 rounded-lg">Cerrado</span>}
-                          </h5>
-                        </div>
-                        <div className="text-right">
-                          <p className={`text-xl font-black leading-none ${item.isFinished ? 'text-emerald-500' : (item.isOver ? 'text-rose-600' : 'text-blue-600')}`}>
-                            {Math.round(item.percentage)}%
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-end">
-                          <span className="text-[8px] font-black text-slate-400 uppercase">Progreso Ejecutado</span>
-                          <span className={`text-[10px] font-black ${item.isFinished ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-300'}`}>
-                            {formatAmount(item.amount)}€
-                          </span>
-                        </div>
-                        <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-                          <div 
-                            className={`h-full transition-all duration-700 ${item.isFinished ? 'bg-emerald-500' : 'bg-blue-500'}`} 
-                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
       {showInstall && (
         <button 
           onClick={onInstall}
@@ -277,49 +122,6 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           <ChevronRight size={20} className="opacity-40" />
         </button>
       )}
-
-      {/* Recordatorio Hoy */}
-      {!todayAvance ? (
-        <button 
-          onClick={() => onNavigate("registrar")}
-          className="w-full bg-blue-600 p-6 rounded-[2.5rem] text-white flex flex-col items-center gap-2 shadow-xl shadow-blue-200 dark:shadow-none animate-in zoom-in duration-300"
-        >
-          <div className="bg-white/20 p-3 rounded-2xl">
-            <Activity className="animate-pulse" size={32} />
-          </div>
-          <div className="text-center">
-             <p className="text-lg font-black uppercase tracking-tight">Reporte de Hoy Pendiente</p>
-             <p className="text-[10px] font-bold uppercase opacity-80">Registra la producción de hoy ahora</p>
-          </div>
-        </button>
-      ) : (
-        <div className="bg-emerald-500/10 dark:bg-emerald-500/5 p-4 rounded-[2rem] border border-emerald-500/20 text-center">
-          <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">✓ Reporte de Hoy Completado</p>
-        </div>
-      )}
-
-      {/* Gráfica de Tendencia */}
-      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Mensual (Beneficio)</label>
-        <div className="h-40 w-full" style={{ minHeight: '160px', minWidth: '0px' }}>
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <AreaChart data={monthlyTrend}>
-              <defs>
-                <linearGradient id="colorB" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" fontSize={10} fontStyle="bold" axisLine={false} tickLine={false} />
-              <Tooltip 
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '12px' }} 
-              />
-              <Area type="monotone" dataKey="beneficio" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorB)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
 
       <section className="bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center mb-2 px-2">
@@ -414,6 +216,29 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           />
         </div>
       </div>
+
+      {/* Gráfica de Tendencia */}
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Mensual (Beneficio)</label>
+        <div className="h-40 w-full" style={{ minHeight: '160px', minWidth: '0px' }}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <AreaChart data={monthlyTrend}>
+              <defs>
+                <linearGradient id="colorB" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="name" fontSize={10} fontStyle="bold" axisLine={false} tickLine={false} />
+              <Tooltip 
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '12px' }} 
+              />
+              <Area type="monotone" dataKey="beneficio" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorB)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
     </div>
   );
 };

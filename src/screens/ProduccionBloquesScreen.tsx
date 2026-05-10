@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from "react";
-import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight, Check } from "lucide-react";
+import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight, Check, Zap } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { formatAmount, formatDate } from "../lib/utils";
 import { BLOQUE_DIMENSIONS } from "../constants";
@@ -114,6 +114,85 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
       }));
   }, [avances, selectedObraId, itemsSate, isDataCertified]);
 
+  const activeMonitoring = useMemo(() => {
+    if (!selectedObraId || !avances) return [];
+    
+    const items = ["fase1", "fase2", "anti", "malla", "cajeado"];
+    
+    // Mapa para agrupar por bloque: Record<bloqueNorm, { displayName, items: [] }>
+    const blocksMap: Record<string, { displayName: string, items: any[] }> = {};
+
+    items.forEach(itemId => {
+      const productionMap: Record<string, { m2: number, days: number, displayName: string }> = {};
+      const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE);
+      
+      obraAvances.forEach(a => {
+        const itemsInThisAvance = new Set<string>();
+        (a.produccion || []).forEach(p => {
+          if (p.itemId !== itemId) return;
+          const bRaw = (p.bloque || a.bloque || "S/B").toString().trim();
+          const bRef = normalize(bRaw);
+          
+          if (!productionMap[bRef]) {
+            productionMap[bRef] = { m2: 0, days: 0, displayName: bRaw };
+          }
+          productionMap[bRef].m2 += p.m2;
+          
+          if (!itemsInThisAvance.has(bRef)) {
+            productionMap[bRef].days += 1;
+            itemsInThisAvance.add(bRef);
+          }
+        });
+      });
+
+      // Sumar producción histórica certificada
+      (certificaciones || []).forEach(c => {
+        if (c.obraId !== selectedObraId) return;
+        (c.items || []).forEach(it => {
+          if (it.itemId !== itemId) return;
+          const bRaw = (it.bloque || "S/B").toString().trim();
+          const bRef = normalize(bRaw);
+          if (!productionMap[bRef]) {
+            productionMap[bRef] = { m2: 0, days: 0, displayName: bRaw };
+          }
+          productionMap[bRef].m2 += it.m2;
+        });
+      });
+
+      Object.entries(productionMap).forEach(([normId, stats]) => {
+        const dimensions = BLOQUE_DIMENSIONS[normId] || BLOQUE_DIMENSIONS["DEFAULT"];
+        const targetM2 = dimensions[itemId] || 1;
+        
+        const isFinished = stats.m2 >= (targetM2 * 0.99);
+        
+        if (stats.m2 > 0) {
+          const percentage = (stats.m2 / targetM2) * 100;
+
+          if (!blocksMap[normId]) {
+            blocksMap[normId] = { displayName: stats.displayName, items: [] };
+          }
+
+          blocksMap[normId].items.push({
+            itemId,
+            nombre: (itemsSate[itemId] as any)?.nombre || itemId,
+            percentage,
+            isFinished,
+            amount: stats.m2 * ((itemsSate[itemId] as any)?.precio || 0)
+          });
+        }
+      });
+    });
+
+    return Object.entries(blocksMap)
+      .sort((a, b) => {
+        const aFinished = a[1].items.every(it => it.isFinished);
+        const bFinished = b[1].items.every(it => it.isFinished);
+        if (aFinished !== bFinished) return aFinished ? 1 : -1;
+        return a[0].localeCompare(b[0], undefined, { numeric: true });
+      })
+      .map(([_, data]) => data);
+  }, [avances, selectedObraId, itemsSate, normalize, certificaciones]);
+
   // Totales generales para cada partida en toda la obra
   const globalTotals = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -136,6 +215,53 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
           <LayoutGrid size={24} />
         </div>
       </header>
+
+      {/* MONITOREO DE EFICIENCIA / RENDIMIENTO EN VIVO */}
+      {activeMonitoring.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-3 flex items-center gap-2">
+            <Zap size={14} className="text-amber-500" /> Rendimiento en Vivo
+          </h3>
+          <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar -mx-4 px-4">
+            {activeMonitoring.map((block) => (
+              <div 
+                key={block.displayName} 
+                className="min-w-[280px] bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-6 snap-center"
+              >
+                <div className="border-b border-slate-50 dark:border-slate-800 pb-3">
+                  <h4 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque {block.displayName}</h4>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">{block.items.filter(it => !it.isFinished).length} en ejecución • {block.items.filter(it => it.isFinished).length} cerradas</p>
+                </div>
+
+                <div className="space-y-4 max-h-60 overflow-y-auto pr-2 no-scrollbar">
+                  {block.items.map((item) => (
+                    <div key={item.itemId} className={`space-y-2 p-3 rounded-[1.5rem] border transition-all ${item.isFinished ? 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800' : 'bg-white dark:bg-slate-900 border-transparent shadow-sm'}`}>
+                      <div className="flex justify-between items-start">
+                        <h5 className={`text-[10px] font-black uppercase leading-tight max-w-[70%] ${item.isFinished ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {item.nombre}
+                          {item.isFinished && <span className="ml-2 text-[7px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 px-1 py-0.5 rounded-lg whitespace-nowrap">✓ OK</span>}
+                        </h5>
+                        <p className={`text-sm font-black leading-none ${item.isFinished ? 'text-emerald-500' : 'text-blue-600'}`}>
+                          {Math.round(item.percentage)}%
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                          <div 
+                            className={`h-full transition-all duration-700 ${item.isFinished ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Resumen Global */}
       <section className="bg-slate-900 dark:bg-blue-600 p-6 rounded-[2.5rem] text-white shadow-xl space-y-4">
