@@ -373,12 +373,25 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       });
     });
 
-    const detailedItems = Object.entries(prodMap).map(([key, data]) => {
+    // En edición, manualAdjustments ya están aplicados a stats.items, pero para el PDF detallado 
+    // podemos mostrarlos como línea aparte o integrarlos. Aquí los añadimos si no estaban en avances.
+    Object.entries(manualAdjustments).forEach(([id, extraVal]) => {
+      const extra = extraVal as number;
+      if (Math.abs(extra) < 0.01) return;
+      const item = itemsSate[id];
+      const key = `AJUSTE-${id}`;
+      if (!prodMap[key]) {
+        prodMap[key] = { m2: 0, name: `Ajuste ${item?.nombre || id}`, price: item?.precio || 0 };
+      }
+      prodMap[key].m2 += extra;
+    });
+
+    const detailedItems = Object.entries(prodMap).sort().map(([key, data]) => {
       const bloque = key.split('-')[0];
       return [
         bloque,
         data.name,
-        `${formatAmount(data.m2)} m2`,
+        `${formatAmount(data.m2)}`,
         `${formatAmount(data.price)}€`,
         `${formatAmount(data.m2 * data.price)}€`
       ];
@@ -402,30 +415,18 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const handleWhatsApp = () => {
     if (!obra) return;
     
-    // Convert YYYY-MM to MM/YYYY
-    const formatMonth = (m: string) => {
-      if (!m) return '';
-      const [y, mm] = m.split('-');
-      return `${mm}/${y}`;
-    };
-
-    // Calculate production grouping by Block and Item
-    const prodMap: Record<string, { m2: number, name: string, price: number }> = {};
-    (dataFiltered || []).forEach(a => {
-      (a.produccion || []).forEach(p => {
-        const item = itemsSate[p.itemId];
-        const key = `${a.bloque || '?'}-${p.itemId}`;
-        if (!prodMap[key]) {
-          prodMap[key] = { m2: 0, name: item?.nombre || p.itemId, price: item?.precio || 0 };
-        }
-        prodMap[key].m2 += p.m2;
-      });
+    // Group production by Item for the Jefe de Obra report
+    const globalItems: Record<string, { m2: number, name: string, price: number }> = {};
+    Object.entries(stats.items).forEach(([id, m2]) => {
+      const item = itemsSate[id];
+      globalItems[id] = { m2: m2 as number, name: item?.nombre || id, price: item?.precio || 0 };
     });
 
-    const prodDetails = Object.entries(prodMap).map(([key, data]) => {
-      const bloque = key.split('-')[0];
-      return `- Bloque ${bloque}: ${data.name} (${formatAmount(data.m2)} m²) @ ${formatAmount(data.price)}€ = ${formatAmount(data.m2 * data.price)}€`;
-    }).join('\n');
+    const breakdownText = Object.values(globalItems)
+      .filter(d => d.m2 > 0)
+      .map(data => {
+        return `• ${data.name}: ${formatAmount(data.m2)} m² @ ${formatAmount(data.price)}€ = *${formatAmount(data.m2 * data.price)}€*`;
+      }).join('\n');
 
     const opsSettlement = operarioBreakdown.filter(o => o.jornadas > 0).map(o => {
       const activeOpsCount = operarioBreakdown.filter(x => x.jornadas > 0).length;
@@ -440,18 +441,18 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
         `  *TOTAL A COBRAR: ${formatAmount(o.cobrar + opIncentive)}€*`;
     }).join('\n\n');
 
-    const text = `*CERTIFICACIÓN MENSUAL - ${obra.nombre}*\n` +
-      `*Mes:* ${formatMonth(periodoFin.substring(0, 7))}\n` +
-      `*Estado: PENDIENTE*\n\n` +
-      `*PARTIDAS ESTIMADAS:*\n` +
-      prodDetails + `\n\n` +
-      `*RESUMEN ECONÓMICO:* \n` +
-      `*TOTAL BRUTO A CERTIFICAR: ${formatAmount(stats.bruto)}€*\n` +
-      `- Anticipos: ${formatAmount(stats.anticipos)}€\n` +
-      (incentivoExtra > 0 ? `- Incentivo Bonus: ${formatAmount(incentivoExtra)}€\n` : '') +
-      `*NETO A PERCIBIR: ${formatAmount(stats.bruto - stats.anticipos + incentivoExtra)}€*\n\n` +
-      `*LIQUIDACIÓN PERSONAL:*\n` +
-      opsSettlement;
+    const text = `*CERTIFICACIÓN Y PRODUCCIÓN - ${obra.nombre}*\n` +
+      `*Periodo:* ${formatDate(periodoInicio)} al ${formatDate(periodoFin)}\n\n` +
+      `*1. DESGLOSE PARA JEFE DE OBRA:*\n` +
+      breakdownText + `\n\n` +
+      `*TOTAL BRUTO EJECUTADO: ${formatAmount(stats.bruto)}€*\n\n` +
+      `*2. RESUMEN DE LIQUIDACIÓN:*\n` +
+      `*Ingresos:* ${formatAmount(stats.bruto)}€\n` +
+      `*Coste Mano Obra:* -${formatAmount(stats.laborCost)}€\n` +
+      `*Beneficio Real:* ${formatAmount(stats.realProfit)}€\n\n` +
+      `*3. REPARTO POR OPERARIO:*\n` +
+      opsSettlement + `\n\n` +
+      `_SATE CONTROL Maestro - Reporte Automático_`;
     
     shareService.shareViaWhatsApp(text);
   };

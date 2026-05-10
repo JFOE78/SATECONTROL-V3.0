@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { ChevronLeft, Moon, Sun, Download, Upload, Trash2, Plus, Edit2, Database, AlertTriangle, FileText } from "lucide-react";
+import { ChevronLeft, Moon, Sun, Download, Upload, Trash2, Plus, Edit2, Database, AlertTriangle, FileText, History } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { storage } from "../lib/storage";
+import { Avance, Certificacion } from "../types";
+import { BLOQUE_DIMENSIONS } from "../constants";
 
 type ConfigTab = "general" | "partidas" | "operarios";
 
@@ -12,6 +14,7 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     operariosList, setOperariosList, 
     notify, 
     obras, setObras,
+    selectedObraId, setSelectedObraId,
     avances, setAvances,
     anticipos, setAnticipos,
     gastos, setGastos,
@@ -100,6 +103,104 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       return next.reverse();
     });
     notify("Limpieza de duplicados completada", "success");
+  };
+
+  const handleHistoricalInjection = () => {
+    try {
+      const activeObraId = selectedObraId || (obras.length > 0 ? obras[0].id : null);
+      
+      if (!activeObraId) {
+        notify("ERROR: No hay obras. Crea una obra primero.", "error");
+        return;
+      }
+
+      const generateId = () => {
+        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      };
+
+      // Limpiar estado de confirmación inmediatamente
+      setConfirmActionId(null);
+      notify("Procesando datos históricos...", "info");
+
+      // Cert 1: Cierre 08/04 - 11.724,54€
+      const cert1: Certificacion = {
+        id: generateId(),
+        obraId: activeObraId,
+        mes: "2026-03",
+        fechaInicio: "2026-03-01",
+        fechaFin: "2026-04-08",
+        ejecutado: 11724.54,
+        anticipos: 0,
+        certificado: 11724.54,
+        estado: "cobrado",
+        fechaCobro: "2026-04-10"
+      };
+
+      // Cert 2: Cierre 05/05 - 16.147,84€
+      const cert2: Certificacion = {
+        id: generateId(),
+        obraId: activeObraId,
+        mes: "2026-04",
+        fechaInicio: "2026-04-09",
+        fechaFin: "2026-05-05",
+        ejecutado: 16147.84,
+        anticipos: 0,
+        certificado: 16147.84,
+        estado: "cobrado",
+        fechaCobro: "2026-05-07"
+      };
+
+      const ops = operariosList.length > 0 ? operariosList.map(o => o.nombre) : ["Juan", "Mosquito", "Antonio", "Jesules", "David"];
+
+      const createExactDays = (startDateStr: string, count: number, totalAmount: number, bloque: string) => {
+        const result: Avance[] = [];
+        let currentDate = new Date(startDateStr);
+        let daysCreated = 0;
+        const amountPerDay = totalAmount / count;
+
+        while (daysCreated < count) {
+          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            const a: Avance = {
+              id: generateId(),
+              fecha: currentDate.toISOString().split('T')[0],
+              obraId: activeObraId,
+              bloque: bloque,
+              operariosPresentes: ops,
+              produccion: [{ itemId: 'fase1', m2: amountPerDay / 8, bloque }],
+              resumen: { 
+                ingresos: amountPerDay, 
+                costeManoObra: 510, 
+                beneficio: amountPerDay - 510, 
+                beneficioPorOperario: (amountPerDay - 510) / (ops.length || 1) 
+              }
+            };
+            result.push(a);
+            daysCreated++;
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        return result;
+      };
+
+      const batch1 = createExactDays("2026-03-02", 17, 11724.54, "13");
+      const batch2 = createExactDays("2026-04-09", 17, 16147.84, "5");
+
+      // Actualizar estado
+      setCertificaciones(prev => [...prev, cert1, cert2]);
+      setAvances(prev => [...prev, ...batch1, ...batch2]);
+      
+      notify("¡HISTÓRICO CARGADO CON ÉXITO!", "success");
+      
+      // Forzar recarga para asegurar que todo se visualiza correctamente si el usuario tiene dudas
+      setTimeout(() => {
+        notify("Recargando panel...", "info");
+        setTimeout(() => window.location.reload(), 1000);
+      }, 2000);
+
+    } catch (error) {
+      console.error("Injection error:", error);
+      notify("Error crítico al inyectar datos", "error");
+    }
   };
 
   const handleClearAll = () => {
@@ -267,6 +368,21 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     </span>
                   </div>
                 </button>
+
+                <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
+                  <h4 className="text-[10px] font-black uppercase text-slate-400 mb-2">Herramientas de Desarrollador</h4>
+                  <button 
+                    onClick={() => startConfirm('inject', handleHistoricalInjection)} 
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${confirmActionId === 'inject' ? "bg-indigo-600 text-white animate-pulse shadow-lg" : "bg-indigo-50 dark:bg-indigo-900/10"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <History className={confirmActionId === 'inject' ? "text-white" : "text-indigo-500"} size={18} />
+                      <span className={`text-[10px] font-black uppercase ${confirmActionId === 'inject' ? "text-white" : "text-indigo-600"}`}>
+                        {confirmActionId === 'inject' ? "¡SÍ, CARGAR DATOS AHORA!" : "Cargar Histórico (Abril/Mayo)"}
+                      </span>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           </section>

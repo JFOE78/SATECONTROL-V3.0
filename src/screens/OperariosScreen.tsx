@@ -34,6 +34,14 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     );
   }, [certificaciones, selectedObraId]);
 
+  const totalManDays = useMemo(() => {
+    const listAv = (avances || []).filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha));
+    return listAv.reduce((sum, a) => {
+      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
+    }, 0);
+  }, [avances, selectedObraId, isDataCertified]);
+
   const statsCurrent = useMemo(() => {
     const listAv = (avances || []).filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha));
     const listGa = (gastos || []).filter(g => g.obraId === selectedObraId && !isDataCertified(g.fecha));
@@ -48,16 +56,13 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     const bruto = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).ingresos, 0) + adjustmentTotal;
     const laborCost = listAv.reduce((sum, a) => sum + calculateAvanceEconomics(a).costeManoObra, 0);
     const profit = bruto - laborCost;
+    const brutoPorJornada = totalManDays > 0 ? bruto / totalManDays : 0;
     
-    return { listAv, listGa, listAn, bruto, laborCost, profit };
-  }, [avances, selectedObraId, isDataCertified, gastos, anticipos, calculateAvanceEconomics, manualAdjustments, itemsSate]);
+    return { listAv, listGa, listAn, bruto, laborCost, profit, brutoPorJornada };
+  }, [avances, selectedObraId, isDataCertified, gastos, anticipos, calculateAvanceEconomics, manualAdjustments, itemsSate, totalManDays]);
 
   // CÁLCULO PARA VISTA EN CURSO
   const operarioSettlementCurso = useMemo(() => {
-    const totalManDays = statsCurrent.listAv.reduce((sum, a) => {
-      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
-    }, 0);
     const pool = statsCurrent.profit;
     const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
 
@@ -74,7 +79,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
-      const bruto = totalJornales + sharedProfit + opReembolsos;
+      const brutoTotal = totalJornales + sharedProfit + opReembolsos;
 
       return {
         ...op,
@@ -83,12 +88,13 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
         sharedProfit,
         opAnticipos,
         opReembolsos,
-        bruto,
-        cobrar: bruto - opAnticipos,
-        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0
+        bruto: brutoTotal,
+        cobrar: brutoTotal - opAnticipos,
+        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0,
+        beneficioAportado: statsCurrent.brutoPorJornada - op.coste
       };
     });
-  }, [operariosList, statsCurrent]);
+  }, [operariosList, statsCurrent, totalManDays]);
 
   // CÁLCULO PARA VISTA SIMULACIÓN (CON INCENTIVO)
   const operarioSettlementSimulacion = useMemo(() => {
@@ -112,7 +118,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
-      const bruto = totalJornales + sharedProfitAndBonus + opReembolsos;
+      const brutoTotal = totalJornales + sharedProfitAndBonus + opReembolsos;
 
       return {
         ...op,
@@ -121,12 +127,13 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
         sharedProfit: sharedProfitAndBonus,
         opAnticipos,
         opReembolsos,
-        bruto,
-        cobrar: bruto - opAnticipos,
-        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfitAndBonus) / jornadas : 0
+        bruto: brutoTotal,
+        cobrar: brutoTotal - opAnticipos,
+        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfitAndBonus) / jornadas : 0,
+        beneficioAportado: (statsCurrent.brutoPorJornada + (incentivoExtra / (totalManDays || 1))) - op.coste
       };
     });
-  }, [operariosList, statsCurrent, incentivoExtra]);
+  }, [operariosList, statsCurrent, incentivoExtra, totalManDays]);
 
   const currentSettlement = activeTab === 'simulacion' ? operarioSettlementSimulacion : operarioSettlementCurso;
 
@@ -299,6 +306,12 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
                       <TrendingUp size={8} /> Media Diaria
                     </p>
                     <p className={`text-xs font-black ${activeTab === 'simulacion' ? 'text-indigo-600' : 'text-blue-600'}`}>{formatAmount(o.mediaDiaria)}€/día</p>
+                  </div>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/10 p-2 rounded-xl col-span-2">
+                    <p className="text-[8px] font-black text-emerald-400 uppercase mb-1 flex items-center gap-1">
+                      <Calculator size={8} /> Beneficio Aportado (Jornada)
+                    </p>
+                    <p className="text-xs font-black text-emerald-600">{formatAmount(o.beneficioAportado)}€/día</p>
                   </div>
               </div>
 

@@ -1,7 +1,9 @@
 import React, { useMemo, useCallback } from "react";
-import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight } from "lucide-react";
+import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight, Check } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { formatAmount, formatDate } from "../lib/utils";
+import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
+import { AlertTriangle, Info } from "lucide-react";
 
 export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate: (screen: any) => void }> = ({ onBack, onNavigate }) => {
   const { avances, selectedObraId, itemsSate, certificaciones } = useApp();
@@ -24,15 +26,17 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
     });
   }, [certificaciones, selectedObraId]);
 
-  // Agrupar producción por bloque e item, capturando también las fechas
+  // Agrupar producción por bloque e item, capturando también las fechas y días consumidos
   const productionByBlock = useMemo(() => {
-    const map: Record<string, { items: Record<string, number>, dates: Set<string> }> = {};
+    const map: Record<string, { items: Record<string, { m2: number, days: number }>, dates: Set<string> }> = {};
 
     const obraAvances = (avances || [])
-      .filter(a => a.id && a.obraId === selectedObraId)
-      .filter(a => !isDataCertified(a));
+      .filter(a => a.id && a.obraId === selectedObraId);
 
     obraAvances.forEach(avance => {
+      // Necesitamos evitar contar doble el mismo día para la misma partida si hay varias entradas de producción (un poco raro pero posible)
+      const itemsInThisAvance = new Set<string>();
+
       (avance.produccion || []).forEach(prod => {
         let rawBloque = (prod.bloque || avance.bloque || "").trim();
         
@@ -50,7 +54,17 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
         }
 
         const itemId = prod.itemId;
-        map[normalizedBloque].items[itemId] = (map[normalizedBloque].items[itemId] || 0) + prod.m2;
+        if (!map[normalizedBloque].items[itemId]) {
+          map[normalizedBloque].items[itemId] = { m2: 0, days: 0 };
+        }
+        
+        map[normalizedBloque].items[itemId].m2 += prod.m2;
+        
+        if (!itemsInThisAvance.has(itemId)) {
+          map[normalizedBloque].items[itemId].days += 1;
+          itemsInThisAvance.add(itemId);
+        }
+
         map[normalizedBloque].dates.add(avance.fecha);
       });
     });
@@ -65,10 +79,11 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
       .map(([bloque, data]) => ({
         bloque,
         dates: Array.from(data.dates).sort((a, b) => b.localeCompare(a)),
-        items: Object.entries(data.items).map(([itemId, m2]) => ({
+        items: Object.entries(data.items).map(([itemId, stats]) => ({
           itemId,
           nombre: (itemsSate[itemId] as any)?.nombre || itemId,
-          m2
+          m2: stats.m2,
+          daysSpent: stats.days
         }))
       }));
   }, [avances, selectedObraId, itemsSate, isDataCertified]);
@@ -152,11 +167,25 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                       </h3>
                       {/* Fechas asociadas */}
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {bloqueData.dates.map(d => (
-                          <span key={d} className="text-[8px] font-bold text-slate-400 border border-slate-100 dark:border-slate-800 px-1.5 py-0.5 rounded-md uppercase">
-                            {formatDate(d)}
-                          </span>
-                        ))}
+                        {bloqueData.dates.map(d => {
+                          const certified = (certificaciones || []).some(c => 
+                            c.obraId === selectedObraId && 
+                            c.fechaInicio && c.fechaFin && 
+                            d >= c.fechaInicio && d <= c.fechaFin
+                          );
+                          return (
+                            <span 
+                              key={d} 
+                              className={`text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase border ${
+                                certified 
+                                  ? "text-slate-300 border-slate-50 dark:border-slate-800/30" 
+                                  : "text-slate-400 border-slate-100 dark:border-slate-800"
+                              }`}
+                            >
+                              {formatDate(d)}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-full">
@@ -166,25 +195,44 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                   
                   <div className="space-y-4">
                     {bloqueData.items.map(item => {
-                      const TARGETS: Record<string, number> = {
-                        fase1: 530,
-                        fase2: 530,
-                        fase3: 530,
-                        anti: 105,
-                        malla: 190
-                      };
-                      const target = TARGETS[item.itemId];
+                      const normalizedNum = bloqueData.bloque.toUpperCase().replace("BLOQUE", "").trim();
+                      const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+                      const target = dimensions[item.itemId];
                       const percentage = target ? Math.min((item.m2 / target) * 100, 100) : null;
                       
+                      const estimatedDays = RENDIMIENTOS_EQUIPO[item.itemId];
+                      const isCompleted = percentage !== null && percentage > 99;
+                      const isOverBudget = estimatedDays && item.daysSpent > estimatedDays;
+                      const diff = estimatedDays ? item.daysSpent - estimatedDays : 0;
+
                       return (
                         <div key={item.itemId} className="space-y-1.5">
-                          <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
-                            <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-tight">
-                              {item.nombre}
-                            </span>
-                            <span className="text-sm font-black text-slate-800 dark:text-white">
-                              {formatAmount(item.m2)} {target && <span className="text-[9px] text-slate-400">/ {target}</span>} <span className="text-[9px] opacity-60">m²</span>
-                            </span>
+                          <div className={`p-3 rounded-2xl border transition-colors ${isOverBudget ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/30' : (isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100/50 dark:border-slate-800/50')}`}>
+                            <div className="flex justify-between items-center mb-1">
+                              <span className={`text-[10px] font-black uppercase tracking-tight flex items-center gap-1 ${isOverBudget ? 'text-rose-600' : (isCompleted ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400')}`}>
+                                {item.nombre}
+                                {isOverBudget && <AlertTriangle size={10} className="animate-pulse" />}
+                                {isCompleted && !isOverBudget && <Check size={10} />}
+                              </span>
+                              <span className="text-sm font-black text-slate-800 dark:text-white">
+                                {formatAmount(item.m2)} {target && <span className="text-[9px] text-slate-400">/ {target}</span>} <span className="text-[9px] opacity-60">m²</span>
+                              </span>
+                            </div>
+                            
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                <span className={isOverBudget ? 'text-rose-600' : (isCompleted ? 'text-emerald-600' : '')}>
+                                  {item.daysSpent} jornadas
+                                </span>
+                                {estimatedDays && <span className="opacity-50"> de {estimatedDays} prev.</span>}
+                              </span>
+                              
+                              {estimatedDays && (
+                                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${isOverBudget ? 'text-rose-600 bg-rose-100 dark:bg-rose-900/40' : (isCompleted ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/40' : 'text-slate-400 bg-slate-100 dark:bg-slate-800')}`}>
+                                  {isOverBudget ? `Pérdida: ${diff}d` : (isCompleted ? 'Optimizado (OK)' : 'En curso')}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {percentage !== null && (
                             <div className="px-2">

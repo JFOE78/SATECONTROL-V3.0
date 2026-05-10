@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { ChevronLeft, PlusCircle, Trash2, Check, X, Camera, Image as ImageIcon, Pencil, Save, Sun, Cloud, CloudRain, Thermometer } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { ChevronLeft, PlusCircle, Trash2, Check, X, Camera, Image as ImageIcon, Pencil, Save, Sun, Cloud, CloudRain, Thermometer, AlertTriangle } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Produccion, Avance } from "../types";
+import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO, OPERARIOS, EQUIPOS } from "../constants";
 
 export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel: () => void }> = ({ initialAvance, onCancel }) => {
   const { 
@@ -27,7 +28,77 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
   // Formulario producción
   const [selectedItemId, setSelectedItemId] = useState<string>(Object.keys(itemsSate)[0] || "fase1");
   const [m2, setM2] = useState<string>("");
+  const [porcentaje, setPorcentaje] = useState<string>("");
   const [editingProdIndex, setEditingProdIndex] = useState<number | null>(null);
+  const [showCompletionPrompt, setShowCompletionPrompt] = useState<{itemId: string, bloque: string} | null>(null);
+
+  // Calcular jornadas consumidas para el bloque/partida actual
+  const statsLocal = useMemo(() => {
+    if (!selectedObraId || !bloque || !selectedItemId) return { days: 0 };
+    const itemsInAvances = (avances || [])
+      .filter(a => a.obraId === selectedObraId)
+      .reduce((map, a) => {
+        const itemSet = new Set<string>();
+        (a.produccion || []).forEach(p => {
+          const b = (p.bloque || a.bloque || "").trim();
+          if (b === bloque.trim() && p.itemId === selectedItemId) {
+            itemSet.add(p.itemId);
+          }
+        });
+        if (itemSet.has(selectedItemId)) return map + 1;
+        return map;
+      }, 0);
+    return { days: itemsInAvances };
+  }, [avances, selectedObraId, bloque, selectedItemId]);
+
+  const isOverBudget = useMemo(() => {
+    const planned = RENDIMIENTOS_EQUIPO[selectedItemId];
+    return planned && statsLocal.days >= planned;
+  }, [selectedItemId, statsLocal.days]);
+
+  // Auto-propuesta de % basada en especialización de equipos
+  useEffect(() => {
+    if (editingProdIndex !== null) return;
+
+    const isEquipoA = operarios.length === 2 && EQUIPOS.A.every(name => operarios.includes(name));
+    const isEquipoB = operarios.length === 3 && EQUIPOS.B.every(name => operarios.includes(name));
+
+    if (isEquipoA) {
+      setSelectedItemId("fase1");
+      const prop = (1 / RENDIMIENTOS_EQUIPO["fase1"]) * 100;
+      handlePorcentajeChange(prop.toFixed(2));
+      return;
+    }
+
+    if (isEquipoB) {
+      // Para Equipo B, el usuario elige la partida, pero el % es automático para 1 día
+      const targetRendimiento = RENDIMIENTOS_EQUIPO[selectedItemId];
+      if (targetRendimiento && selectedItemId !== "fase1") {
+        const prop = (1 / targetRendimiento) * 100;
+        handlePorcentajeChange(prop.toFixed(2));
+      }
+    }
+  }, [operarios, selectedItemId]);
+
+  const handlePorcentajeChange = (val: string) => {
+    setPorcentaje(val);
+    if (!val || isNaN(Number(val))) {
+      setM2("");
+      return;
+    }
+    const normalizedNum = bloque.toUpperCase().replace("BLOQUE", "").trim();
+    const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+    const target = dimensions[selectedItemId];
+    if (target) {
+      const calculated = (Number(val) / 100) * target;
+      setM2(calculated.toFixed(2));
+    }
+  };
+
+  const handleM2Change = (val: string) => {
+    setM2(val);
+    setPorcentaje(""); // Clear percentage if manual m2 is entered
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -48,6 +119,20 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
 
   const handleAddProd = () => {
     if (!m2 || isNaN(Number(m2))) return;
+    
+    // Calcular si con esto llegamos al 100% para el aviso de cierre
+    const normalizedNum = bloque.toUpperCase().replace("BLOQUE", "").trim();
+    const targetM2 = BLOQUE_DIMENSIONS[normalizedNum]?. [selectedItemId] || BLOQUE_DIMENSIONS["DEFAULT"][selectedItemId] || 0;
+    const currentM2InBlock = (avances || [])
+      .filter(a => a.obraId === selectedObraId)
+      .reduce((sum, a) => {
+        return sum + (a.produccion || [])
+          .filter(p => (p.bloque || a.bloque || "").trim() === (bloque || "General").trim() && p.itemId === selectedItemId)
+          .reduce((s, p) => s + p.m2, 0);
+      }, 0);
+
+    const totalAfterAdd = currentM2InBlock + Number(m2);
+    
     const newProd: Produccion = {
       itemId: selectedItemId,
       m2: Number(m2),
@@ -61,9 +146,37 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
       setEditingProdIndex(null);
     } else {
       setProducciones([...producciones, newProd]);
+      
+      // Si llegamos al 99%+, mostrar aviso de cierre
+      if (totalAfterAdd >= (targetM2 * 0.99) && targetM2 > 0) {
+        setShowCompletionPrompt({ itemId: selectedItemId, bloque: bloque || "General" });
+      }
     }
     
     setM2("");
+    setPorcentaje("");
+  };
+
+  const handleCloseAndNext = () => {
+    if (!showCompletionPrompt) return;
+    const currentNum = parseInt(showCompletionPrompt.bloque.replace(/\D/g, ""));
+    if (!isNaN(currentNum)) {
+      setBloque((currentNum + 1).toString());
+    }
+    setShowCompletionPrompt(null);
+    notify(`Partida cerrada.`, "success");
+  };
+
+  const autofillM2 = () => {
+    const normalizedNum = bloque.toUpperCase().replace("BLOQUE", "").trim();
+    const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+    const target = dimensions[selectedItemId];
+    if (target) {
+      setM2(target.toString());
+      notify(`Cargados metros reales: ${target}m²`, "info");
+    } else {
+      notify("No hay medidas predefinidas", "error");
+    }
   };
 
   const startEditProd = (index: number) => {
@@ -150,6 +263,38 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
 
   return (
     <div className="space-y-6 pb-24">
+      {/* MODAL CIERRE PARTIDA */}
+      {showCompletionPrompt && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl space-y-6 border border-slate-100 dark:border-slate-800">
+              <div className="bg-emerald-100 dark:bg-emerald-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                <Check size={40} className="text-emerald-600" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-slate-800 dark:text-white leading-tight">
+                  {itemsSate[showCompletionPrompt.itemId]?.nombre} Finalizado
+                </h3>
+                <p className="text-xs font-bold text-slate-400 uppercase">
+                  Has completado el 100% en el Bloque {showCompletionPrompt.bloque}.
+                </p>
+              </div>
+              <div className="space-y-3 pt-2">
+                <button 
+                  onClick={handleCloseAndNext}
+                  className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  Cerrar y cambiar de bloque
+                </button>
+                <button 
+                  onClick={() => setShowCompletionPrompt(null)}
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-400 font-black py-3 rounded-2xl text-[10px] uppercase"
+                >
+                  Mantener en Bloque {showCompletionPrompt.bloque}
+                </button>
+              </div>
+           </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <button onClick={onCancel} className="p-3 bg-white dark:bg-slate-900 rounded-2xl text-slate-400 active:scale-90 transition-transform shadow-sm">
           <ChevronLeft size={24} />
@@ -293,19 +438,68 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
               <option key={id} value={id}>{(item as any).nombre} ({(item as any).precio}€)</option>
             ))}
           </select>
-          <div className="flex gap-2">
-            <input 
-              type="number" 
-              placeholder="M2 producidos" 
-              value={m2}
-              onChange={(e) => setM2(e.target.value)}
-              className="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-slate-800 dark:text-white outline-none"
-            />
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <label className="text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block">Porcentaje %</label>
+                <input 
+                  type="number" 
+                  placeholder="%" 
+                  value={porcentaje}
+                  onChange={(e) => handlePorcentajeChange(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-blue-600 dark:text-blue-400 outline-none"
+                />
+              </div>
+              <div className="flex-1 relative">
+                <label className="text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block">Metros Reales</label>
+                <input 
+                  type="number" 
+                  placeholder="M2 / ML / M" 
+                  value={m2}
+                  onChange={(e) => handleM2Change(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-slate-800 dark:text-white outline-none"
+                />
+                <button 
+                  onClick={autofillM2}
+                  className="absolute right-2 top-[34px] bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase border border-blue-100 dark:border-blue-800/50 active:scale-90 transition-transform"
+                >
+                  100%
+                </button>
+              </div>
+            </div>
+
+            {m2 && !isNaN(Number(m2)) && (
+              <div className="space-y-2">
+                {isOverBudget && (
+                  <div className="px-4 py-2 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-200 dark:border-rose-800 flex items-center gap-2 animate-pulse">
+                    <AlertTriangle size={14} className="text-rose-600" />
+                    <span className="text-[10px] font-black text-rose-600 uppercase">
+                      ¡Atención! Bloque {bloque} - {itemsSate[selectedItemId]?.nombre} excedido
+                    </span>
+                  </div>
+                )}
+                <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex justify-between items-center border border-blue-100 dark:border-blue-800/30">
+                  <span className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1">
+                    <Sun size={12} /> Cálculo por Rendimiento ({operarios.length} Op.):
+                  </span>
+                  <span className="text-[10px] font-black text-blue-600">
+                    {porcentaje}%
+                  </span>
+                </div>
+                <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex justify-between items-center border border-emerald-100 dark:border-emerald-800/30">
+                  <span className="text-[10px] font-black text-emerald-600 uppercase">Valor Económico Estimado:</span>
+                  <span className="text-sm font-black text-emerald-600">
+                    {((Number(m2) || 0) * (itemsSate[selectedItemId]?.precio || 0)).toFixed(2)}€
+                  </span>
+                </div>
+              </div>
+            )}
+
             <button 
               onClick={handleAddProd}
-              className={`${editingProdIndex !== null ? 'bg-emerald-500' : 'bg-blue-600'} text-white p-4 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center`}
+              className={`w-full ${editingProdIndex !== null ? 'bg-emerald-500' : 'bg-blue-600'} text-white p-4 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest`}
             >
-              {editingProdIndex !== null ? <Save size={24} /> : <PlusCircle size={24} />}
+              {editingProdIndex !== null ? <><Save size={20} /> Actualizar Partida</> : <><PlusCircle size={20} /> Añadir a este parte</>}
             </button>
           </div>
           {editingProdIndex !== null && (

@@ -1,11 +1,12 @@
 import React, { useMemo, useCallback, useState } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Receipt, Activity, ChevronDown, ChevronUp, MessageCircle, BarChart3 } from "lucide-react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Receipt, Activity, ChevronDown, ChevronUp, MessageCircle, BarChart3, Zap, AlertTriangle } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
 import { Avance } from "../types";
 import { formatAmount } from "../lib/utils";
 import { shareService } from "../services/shareService";
+import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
 
 export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => void, showInstall: boolean }> = ({ onNavigate, onInstall, showInstall }) => {
   const { 
@@ -101,8 +102,100 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     return (avances || []).find(a => a.fecha === todayStr && a.obraId === selectedObraId);
   }, [avances, selectedObraId]);
 
+  const activeMonitoring = useMemo(() => {
+    if (!selectedObraId || !avances) return [];
+    
+    const items = ["fase1", "fase2", "anti", "malla", "cajeado"];
+    const results: any[] = [];
+
+    items.forEach(itemId => {
+      const productionMap: Record<string, { m2: number, days: number }> = {};
+      const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId);
+      
+      obraAvances.forEach(a => {
+        const itemsInThisAvance = new Set<string>();
+        (a.produccion || []).forEach(p => {
+          if (p.itemId !== itemId) return;
+          const b = (p.bloque || a.bloque || "S/B").trim();
+          if (!productionMap[b]) productionMap[b] = { m2: 0, days: 0 };
+          productionMap[b].m2 += p.m2;
+          
+          if (!itemsInThisAvance.has(itemId)) {
+            productionMap[b].days += 1;
+            itemsInThisAvance.add(itemId);
+          }
+        });
+      });
+
+      const targetM2 = BLOQUE_DIMENSIONS["DEFAULT"][itemId];
+      const activeBlockEntry = Object.entries(productionMap)
+        .filter(([_, stats]) => stats.m2 > 0 && stats.m2 < (targetM2 * 0.98))
+        .sort((a, b) => b[0].localeCompare(a[0]))[0];
+
+      if (activeBlockEntry) {
+        const [bloqueId, stats] = activeBlockEntry;
+        const planned = RENDIMIENTOS_EQUIPO[itemId];
+        const team = itemId === "fase1" ? "Equipo A (Corcho)" : "Equipo B";
+        results.push({
+          itemId,
+          nombre: (itemsSate[itemId] as any)?.nombre || itemId,
+          team,
+          bloqueId,
+          spent: stats.days,
+          total: planned,
+          remaining: Math.max(0, planned - stats.days),
+          isOver: stats.days > planned
+        });
+      }
+    });
+
+    return results;
+  }, [avances, selectedObraId, itemsSate]);
+
   return (
     <div className="space-y-4">
+      {/* MONITOREO DE EFICIENCIA */}
+      {activeMonitoring.length > 0 && (
+        <section className="space-y-2 p-1">
+          <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-3 flex items-center gap-2">
+            <Zap size={14} className="text-amber-500" /> Rendimiento en Vivo
+          </h3>
+          <div className="grid grid-cols-1 gap-2">
+            {activeMonitoring.map(item => (
+              <div 
+                key={item.itemId} 
+                className={`p-4 rounded-[2rem] border transition-all ${item.isOver ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800/30' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <div>
+                    <p className={`text-[10px] font-black uppercase ${item.isOver ? 'text-rose-600' : 'text-blue-600'}`}>{item.team}</p>
+                    <h4 className="text-sm font-black text-slate-800 dark:text-white">Bloque {item.bloqueId} - {item.nombre}</h4>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-lg font-black leading-none ${item.isOver ? 'text-rose-600' : 'text-slate-800 dark:text-slate-200'}`}>
+                      {item.spent}<span className="text-xs opacity-40">/{item.total}</span>
+                    </p>
+                    <p className="text-[8px] font-black uppercase text-slate-400">Jornadas</p>
+                  </div>
+                </div>
+                {item.isOver && (
+                  <div className="flex items-center gap-1 text-[8px] font-black text-rose-600 uppercase bg-rose-100 dark:bg-rose-900/40 px-2 py-1 rounded-lg w-fit">
+                    <AlertTriangle size={10} /> ¡ATENCIÓN! Excedido en {item.spent - item.total} jornadas
+                  </div>
+                )}
+                {!item.isOver && (
+                  <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 rounded-full" 
+                      style={{ width: `${(item.spent / item.total) * 100}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       {showInstall && (
         <button 
           onClick={onInstall}
