@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, Calendar, ChevronDown, ChevronUp, FileText, Download, Share2, Plus, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, Calendar, ChevronDown, ChevronUp, FileText, Download, Share2, Plus, Image as ImageIcon, Check } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Certificacion, Avance } from "../types";
 import { formatAmount, formatDate } from "../lib/utils";
@@ -15,18 +15,14 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void }> = 
     .sort((a, b) => (b.fechaFin || "").localeCompare(a.fechaFin || ""));
 
   const handleShare = (c: Certificacion) => {
-    const text = shareService.formatCertificacionForWhatsApp(c, obra!, { items: [] }, itemsSate);
+    if (!obra) return;
+    const text = shareService.formatCertificacionForWhatsApp(c, obra);
     shareService.shareViaWhatsApp(text);
   };
 
   const handlePDF = (c: Certificacion) => {
     if (!obra) return;
-    const fakeAnticipos = (c.anticiposDetalle || []).map(an => ({
-      id: "fake",
-      obraId: selectedObraId,
-      ...an
-    })) as any;
-    shareService.generateCertificacionPDF(c, obra, fakeAnticipos, { items: [] }, itemsSate);
+    shareService.generateCertificacionPDF(c, obra, [], itemsSate);
   };
 
   return (
@@ -86,22 +82,37 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void }> = 
                 {isExpanded && (
                   <div className="px-6 pb-6 space-y-6 animate-in fade-in slide-in-from-top-2">
                     <div className="grid grid-cols-2 gap-3">
-                      <button onClick={() => handleShare(c)} className="flex items-center justify-center gap-2 p-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase">
+                      <button onClick={() => handleShare(c)} className="flex items-center justify-center gap-2 p-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-md shadow-emerald-500/10 transition-all active:scale-95">
                         <Share2 size={16} /> WhatsApp
                       </button>
-                      <button onClick={() => handlePDF(c)} className="flex items-center justify-center gap-2 p-4 bg-blue-50 text-blue-600 rounded-2xl font-black text-[10px] uppercase">
-                        <Download size={16} /> Descargar PDF
+                      <button onClick={() => handlePDF(c)} className="flex items-center justify-center gap-2 p-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase shadow-md shadow-slate-500/10 transition-all active:scale-95">
+                        <FileText size={16} /> Generar PDF
                       </button>
                     </div>
 
                     <div className="space-y-4">
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Producción Certificada</label>
-                        <div className="space-y-2">
-                          {(c.items || []).map(it => (
-                            <div key={it.itemId} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                              <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase">{it.nombre}</span>
-                              <span className="text-xs font-black text-slate-800 dark:text-white">{formatAmount(it.m2)} m²</span>
+                        <div className="space-y-4">
+                          {Object.entries((c.items || []).reduce((acc, it) => {
+                            const b = it.bloque || "Sin Bloque";
+                            if (!acc[b]) acc[b] = [];
+                            acc[b].push(it);
+                            return acc;
+                          }, {} as Record<string, any[]>)).map(([bloque, items]) => (
+                            <div key={bloque} className="bg-slate-50 dark:bg-slate-800/30 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800/50">
+                              <h5 className="text-[10px] font-black text-blue-600 uppercase mb-3 px-1">Bloque {bloque}</h5>
+                              <div className="space-y-2">
+                                {(items as any[]).map((it: any, itIdx: number) => (
+                                  <div key={itIdx} className="flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">{it.nombre}</span>
+                                      <span className="text-[8px] font-medium text-slate-400 uppercase">{formatAmount(it.precio || 0)}€/m²</span>
+                                    </div>
+                                    <span className="text-xs font-black text-slate-800 dark:text-white">{formatAmount(it.m2)} m²</span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -121,16 +132,30 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void }> = 
                       )}
 
                       <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Resumen Económico</label>
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
-                              <p className="text-[8px] font-black text-slate-400 uppercase">Bruto</p>
-                              <p className="text-sm font-black text-slate-800 dark:text-white">{formatAmount(c.ejecutado)}€</p>
-                           </div>
-                           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
-                              <p className="text-[8px] font-black text-slate-400 uppercase">Anticipos</p>
-                              <p className="text-sm font-black text-red-500">-{formatAmount(c.anticipos)}€</p>
-                           </div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Liquidación Económica</label>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/50">
+                                <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Total Bruto</p>
+                                <p className="text-sm font-black text-slate-800 dark:text-white">{formatAmount(c.ejecutado)}€</p>
+                             </div>
+                             <div className="p-4 bg-rose-50 dark:bg-rose-900/10 rounded-3xl border border-rose-100 dark:border-rose-900/30">
+                                <p className="text-[8px] font-black text-rose-600 uppercase mb-1">Pagos a Cuenta</p>
+                                <p className="text-sm font-black text-rose-600">-{formatAmount(c.anticipos)}€</p>
+                             </div>
+                          </div>
+                          
+                          <div className="p-5 bg-emerald-500 rounded-[2rem] shadow-lg shadow-emerald-500/20">
+                            <div className="flex justify-between items-center text-white">
+                              <div>
+                                <p className="text-[9px] font-black uppercase opacity-80 mb-0.5">Saldo Pendiente de Cobro</p>
+                                <p className="text-xl font-black">{formatAmount(c.ejecutado - c.anticipos)}€</p>
+                              </div>
+                              <div className="bg-white/20 p-2.5 rounded-2xl">
+                                <Check size={20} className="text-white" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

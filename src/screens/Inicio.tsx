@@ -185,7 +185,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
               itemId,
               nombre: (itemsSate[itemId] as any)?.nombre || itemId,
               percentage,
-              isFinished
+              isFinished,
+              amount: stats.m2 * ((itemsSate[itemId] as any)?.precio || 0)
             });
           }
         });
@@ -243,7 +244,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                         <div className="flex justify-between items-end">
                           <span className="text-[8px] font-black text-slate-400 uppercase">Progreso Ejecutado</span>
                           <span className={`text-[10px] font-black ${item.isFinished ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-300'}`}>
-                            {Math.round(item.percentage)}%
+                            {formatAmount(item.amount)}€
                           </span>
                         </div>
                         <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">

@@ -495,7 +495,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       certificado: stats.bruto - stats.anticipos,
       estado: "pendiente"
     };
-    shareService.generateCertificacionPDF(cert, obra, stats.listAnticipos, { items: detailedItems }, itemsSate);
+    shareService.generateCertificacionPDF(cert, obra, stats.listAnticipos, itemsSate);
     notify("Generando PDF...", "info");
   };
 

@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Avance, Certificacion, Anticipo, Obra } from "../types";
-import { formatAmount } from "../lib/utils";
+import { formatAmount, formatDate } from "../lib/utils";
 
 export const shareService = {
   /**
@@ -57,97 +57,87 @@ export const shareService = {
   /**
    * Genera un PDF con el resumen de una certificación mensual
    */
-  generateCertificacionPDF(cert: Certificacion, obra: Obra, anticipos: Anticipo[], totalesMensuales: any, itemsSate: Record<string, any>) {
+  generateCertificacionPDF(cert: Certificacion, obra: Obra, anticipos: Anticipo[], itemsSate: Record<string, any>) {
     const doc = new jsPDF();
-    const title = `Certificación Mensual - ${obra.nombre}`;
+    const title = `Certificación de Obra - ${obra.nombre}`;
     
-    doc.setFontSize(18);
-    doc.text(title, 14, 22);
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(30, 41, 59); // Slate 800
+    doc.text("Resumen de Certificación", 14, 25);
     
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(100);
-    const [y, m] = cert.mes.split("-");
-    doc.text(`Mes: ${m}/${y}`, 14, 30);
-    doc.text(`Estado: ${cert.estado.toUpperCase()}`, 14, 35);
+    doc.text(`Obra: ${obra.nombre}`, 14, 32);
+    doc.text(`Identificador de Cierre: ${cert.mes}`, 14, 37);
+    doc.text(`Fecha de Liquidación: ${formatDate(cert.fechaFin || cert.mes)}`, 14, 42);
     
-    // Resumen General
-    const summaryBody = [
-      ['Total Bruto a Certificar', `${formatAmount(cert.ejecutado)}€`],
-      ['Total Anticipos', `${formatAmount(cert.anticipos)}€`]
-    ];
-
-    if (cert.incentivoExtra) {
-      summaryBody.push(['Bonus/Incentivo Extra', `${formatAmount(cert.incentivoExtra)}€`]);
-    }
-
-    summaryBody.push(['Neto a Certificar', `${formatAmount(cert.certificado + (cert.incentivoExtra || 0))}€`]);
-
-    autoTable(doc, {
-      startY: 45,
-      head: [['Concepto', 'Cantidad']],
-      body: summaryBody,
-      theme: 'grid',
-      headStyles: { fillColor: [0, 114, 255] }
-    });
-    
-    // Detalle de Producción (Partidas)
-    const finalYResumen = (doc as any).lastAutoTable.finalY + 10;
+    // Detalle de Producción (Partidas por Bloque)
     doc.setFontSize(14);
     doc.setTextColor(0);
-    doc.text("Detalle de Producción (Partidas)", 14, finalYResumen);
+    doc.text("Detalle de Ejecución por Bloques", 14, 55);
 
     const partidasData: any[] = [];
-    
-    // Items Dinámicos
-    if (totalesMensuales.items) {
-      if (Array.isArray(totalesMensuales.items)) {
-        // New detailed format
-        totalesMensuales.items.forEach((row: any) => partidasData.push(row));
-      } else {
-        // Fallback for legacy format (just in case)
-        Object.entries(totalesMensuales.items).forEach(([id, m2]) => {
-          if ((m2 as number) > 0) {
-            const item = itemsSate[id];
-            partidasData.push([item ? item.nombre : id, '-', `${formatAmount(m2 as number)} m2`, '-', '-']);
-          }
-        });
-      }
-    }
+    (cert.items || []).forEach(it => {
+      partidasData.push([
+        it.bloque || "-",
+        it.nombre || it.itemId,
+        `${formatAmount(it.m2)}`,
+        `${formatAmount(it.precio || 0)} €`,
+        `${formatAmount(it.m2 * (it.precio || 0))} €`
+      ]);
+    });
 
     autoTable(doc, {
-      startY: finalYResumen + 5,
-      head: [['Bloque', 'Ítem', 'Cant.', 'Precio', 'Total']],
+      startY: 60,
+      head: [['Bloque', 'Partida', 'Cant. (m2/ml)', 'Precio Unit.', 'Subtotal']],
       body: partidasData,
-      theme: 'striped',
-      headStyles: { fillColor: [100, 100, 100] },
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, // Blue 500
       columnStyles: {
         2: { halign: 'right' },
         3: { halign: 'right' },
         4: { halign: 'right' }
-      }
+      },
+      styles: { fontSize: 9 }
     });
     
-    // Detalle de Anticipos si existen
-    if (anticipos.length > 0) {
-      const finalYPartidas = (doc as any).lastAutoTable.finalY + 10;
-      doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text("Detalle de Anticipos", 14, finalYPartidas);
-      
-      const anticiposData = anticipos.map(a => [
-        new Date(a.fecha).toLocaleDateString(),
-        a.operario,
-        `${formatAmount(a.cantidad)}€`
-      ]);
-      
-      autoTable(doc, {
-        startY: finalYPartidas + 5,
-        head: [['Fecha', 'Operario', 'Cantidad']],
-        body: anticiposData,
-        theme: 'striped',
-        headStyles: { fillColor: [255, 100, 0] }
-      });
-    }
+    const finalYPartidas = (doc as any).lastAutoTable.finalY + 15;
+    
+    // Resumen Económico (Liquidación)
+    doc.setFontSize(14);
+    doc.text("Liquidación Económica Final", 14, finalYPartidas);
+    
+    const summaryBody = [
+      ['Total Producción Bruta', `${formatAmount(cert.ejecutado)} €`],
+      ['Total Anticipos / Pagos a Cuenta', `-${formatAmount(cert.anticipos)} €`],
+      ['SALDO NETO PENDIENTE', `${formatAmount(cert.ejecutado - cert.anticipos)} €`]
+    ];
+
+    autoTable(doc, {
+      startY: finalYPartidas + 5,
+      head: [['Concepto', 'Importe']],
+      body: summaryBody,
+      theme: 'plain',
+      styles: { fontSize: 11, cellPadding: 3 },
+      columnStyles: {
+        1: { halign: 'right', fontStyle: 'bold' }
+      },
+      didDrawCell: (data) => {
+        if (data.row.index === 2) {
+          doc.setFillColor(16, 185, 129); // Emerald 500
+          doc.setTextColor(255);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+          doc.text(data.cell.text, data.cell.x + 2, data.cell.y + data.cell.height / 2 + 2);
+        }
+      }
+    });
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`Generado profesionalmente por SATE Control App - ${new Date().toLocaleDateString()}`, 14, pageHeight - 10);
     
     doc.save(`Certificacion_${cert.mes}_${obra.nombre}.pdf`);
   },
@@ -184,29 +174,23 @@ export const shareService = {
   /**
    * Formatea una certificación para compartir por WhatsApp
    */
-  formatCertificacionForWhatsApp(cert: Certificacion, obra: Obra, totalesMensuales: any, itemsSate: Record<string, any>) {
-    let text = `*CERTIFICACIÓN MENSUAL - ${obra.nombre}*\n`;
-    text += `*Mes:* ${cert.mes}\n`;
-    text += `*Estado:* ${cert.estado.toUpperCase()}\n\n`;
+  formatCertificacionForWhatsApp(cert: Certificacion, obra: Obra) {
+    let text = `*CERTIFICACIÓN PROFESIONAL - ${obra.nombre}*\n`;
+    text += `*Periodo:* ${cert.mes}\n`;
+    text += `*Identificador:* ${cert.id.split('-').pop()}\n`;
+    text += `*Fecha de cierre:* ${formatDate(cert.fechaFin || cert.mes)}\n\n`;
     
-    text += `*PARTIDAS EJECUTADAS:*\n`;
-    if (totalesMensuales.items) {
-      Object.entries(totalesMensuales.items).forEach(([id, m2]) => {
-        if ((m2 as number) > 0) {
-          const item = itemsSate[id];
-          text += `- ${item ? item.nombre : id}: ${Math.round(m2 as number)} m2\n`;
-        }
-      });
-    }
+    text += `*DETALLE POR BLOQUES:*\n`;
+    const items = cert.items || [];
+    items.forEach(it => {
+      text += `- Bloque ${it.bloque}: ${it.nombre} (${formatAmount(it.m2)} m²)\n`;
+    });
 
-    text += `\n*RESUMEN:*\n`;
-    text += `*TOTAL BRUTO A CERTIFICAR: ${cert.ejecutado.toLocaleString()}€*\n`;
-    text += `- Anticipos Aplicados: ${cert.anticipos.toLocaleString()}€\n`;
-    if (cert.incentivoExtra) {
-      text += `- Bonus Extra: ${cert.incentivoExtra.toLocaleString()}€\n`;
-    }
-    const totalNeto = cert.certificado + (cert.incentivoExtra || 0);
-    text += `*NETO A PERCIBIR: ${totalNeto.toLocaleString()}€*`;
+    text += `\n*LIQUIDACIÓN ECONÓMICA:*\n`;
+    text += `*Total Producción Bruta: ${formatAmount(cert.ejecutado)}€*\n`;
+    text += `*Anticipos Pagados: ${formatAmount(cert.anticipos)}€*\n`;
+    text += `--------------------------\n`;
+    text += `*SALDO PENDIENTE: ${formatAmount(cert.ejecutado - cert.anticipos)}€*\n`;
     
     return text;
   }
