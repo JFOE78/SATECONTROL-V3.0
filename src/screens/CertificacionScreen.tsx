@@ -26,6 +26,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const [periodoFin, setPeriodoFin] = useState("");
   const [expandedCert, setExpandedCert] = useState<string | null>(null);
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
+  const [editingAnticipoId, setEditingAnticipoId] = useState<string | null>(null);
   const [incentivoExtra, setIncentivoExtra] = useState(0);
   const [showAnticiposList, setShowAnticiposList] = useState(false);
 
@@ -56,12 +57,19 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   // Sync dates with filtered advances if empty
   useEffect(() => {
     if (!periodoInicio || !periodoFin) {
+      // Nueva fecha de corte solicitada por el usuario
+      const CUTOFF_DATE = "2026-05-06";
+      
       const lastCert = [...certificaciones].filter(c => c.id !== editingCertId && c.obraId === selectedObraId).sort((a,b) => (b.fechaFin || '').localeCompare(a.fechaFin || ''))[0];
       
       if (lastCert && lastCert.fechaFin) {
         const lastDate = new Date(lastCert.fechaFin);
         lastDate.setDate(lastDate.getDate() + 1);
-        const nextStart = lastDate.toISOString().split('T')[0];
+        let nextStart = lastDate.toISOString().split('T')[0];
+        
+        // Si la última certificación es anterior al corte, forzamos el inicio al corte
+        if (nextStart < CUTOFF_DATE) nextStart = CUTOFF_DATE;
+        
         setPeriodoInicio(nextStart);
         
         // Find last available avance date for the end
@@ -72,11 +80,14 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
           setPeriodoFin(nextStart);
         }
       } else {
-        const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId);
+        // Por defecto, empezamos en la fecha de corte para el nuevo ciclo
+        setPeriodoInicio(CUTOFF_DATE);
+        const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE);
         if (obraAvances.length > 0) {
           const sorted = [...obraAvances].sort((a,b) => a.fecha.localeCompare(b.fecha));
-          if (!periodoInicio) setPeriodoInicio(sorted[0].fecha);
-          if (!periodoFin) setPeriodoFin(sorted[sorted.length - 1].fecha);
+          setPeriodoFin(sorted[sorted.length - 1].fecha);
+        } else {
+          setPeriodoFin(CUTOFF_DATE);
         }
       }
     }
@@ -204,32 +215,61 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     );
     if (activeOps.length === 0) return notify("No hay operarios activos en el periodo", "info");
     
-    const today = new Date().toISOString().split('T')[0];
+    // Lógica para encontrar el viernes anterior o actual (si hoy es viernes, usa hoy)
+    const now = new Date();
+    const d = now.getDay();
+    const diffToFriday = (d + 2) % 7; 
+    const targetDate = new Date(now);
+    targetDate.setDate(now.getDate() - diffToFriday);
+    const fechaViernes = targetDate.toISOString().split('T')[0];
+
+    const confirmGen = window.confirm(`¿Generar anticipos automáticos (400€) para el VIERNES ${fechaViernes}?`);
+    if (!confirmGen) return;
+
     const newAnticipos: Anticipo[] = activeOps.map(op => ({
       id: crypto.randomUUID(),
-      fecha: today,
+      fecha: fechaViernes,
       obraId: selectedObraId,
       operario: op.nombre,
       cantidad: 400
     }));
 
     setAnticipos(prev => [...prev, ...newAnticipos]);
-    notify("Anticipos de 400€ generados", "success");
+    notify(`Anticipos generados para el ${fechaViernes}`, "success");
   };
 
   const addManualAnticipo = () => {
     if (!manualAnticipoOp || !manualAnticipoAmount) return;
-    const newAn: Anticipo = {
-      id: crypto.randomUUID(),
-      fecha: periodoFin || new Date().toISOString().split('T')[0],
-      obraId: selectedObraId,
-      operario: manualAnticipoOp,
-      cantidad: manualAnticipoAmount
-    };
-    setAnticipos(prev => [...prev, newAn]);
+    
+    if (editingAnticipoId) {
+      setAnticipos(prev => prev.map(an => an.id === editingAnticipoId ? {
+        ...an,
+        operario: manualAnticipoOp,
+        cantidad: manualAnticipoAmount
+      } : an));
+      setEditingAnticipoId(null);
+      notify("Anticipo actualizado", "success");
+    } else {
+      const newAn: Anticipo = {
+        id: crypto.randomUUID(),
+        fecha: periodoFin || new Date().toISOString().split('T')[0],
+        obraId: selectedObraId,
+        operario: manualAnticipoOp,
+        cantidad: manualAnticipoAmount
+      };
+      setAnticipos(prev => [...prev, newAn]);
+      notify("Anticipo añadido", "success");
+    }
+    
     setManualAnticipoOp("");
     setShowManualAnticipo(false);
-    notify("Anticipo añadido", "success");
+  };
+
+  const startEditAnticipo = (an: Anticipo) => {
+    setEditingAnticipoId(an.id);
+    setManualAnticipoOp(an.operario);
+    setManualAnticipoAmount(an.cantidad);
+    setShowManualAnticipo(true);
   };
 
   const deleteAnticipo = (id: string) => {
@@ -270,7 +310,8 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     });
 
     const differenceDays = totalPlannedDays - totalWorkedDays;
-    const profitVsPlanned = differenceDays * 510; // 510 is approx daily crew cost
+    const dailyTeamCost = operariosList.reduce((acc, op) => acc + (op.coste || 0), 0);
+    const profitVsPlanned = differenceDays * dailyTeamCost; 
 
     return {
       totalWorkedDays,
@@ -824,7 +865,10 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-black text-red-500">-{an.cantidad}€</span>
-                    <button onClick={() => deleteAnticipo(an.id)} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+                    <div className="flex gap-2">
+                      <button onClick={() => startEditAnticipo(an)} className="text-slate-300 hover:text-blue-500 transition-colors"><Edit2 size={16} /></button>
+                      <button onClick={() => deleteAnticipo(an.id)} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+                    </div>
                   </div>
                 </div>
               ))

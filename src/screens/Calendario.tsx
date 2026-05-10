@@ -1,13 +1,17 @@
 import React, { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus, Sun, Cloud, CloudRain } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus, Sun, Cloud, CloudRain, Check, X } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance } from "../types";
 import { formatDate, formatAmount } from "../lib/utils";
 
 export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => void, onNew: (date: string) => void }> = ({ onEdit, onBack, onNew }) => {
-  const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, itemsSate, certificaciones } = useApp();
+  const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, setAnticipos, itemsSate, certificaciones, operariosList } = useApp();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(new Date().toISOString().split('T')[0]);
+  const [editingAnticipoId, setEditingAnticipoId] = useState<string | null>(null);
+  const [editAnticipoOp, setEditAnticipoOp] = useState("");
+  const [editAnticipoAmount, setEditAnticipoAmount] = useState<number>(0);
+  const [editAnticipoFecha, setEditAnticipoFecha] = useState("");
 
   const filteredAvances = useMemo(() => 
     avances.filter(a => a.obraId === selectedObraId)
@@ -66,6 +70,44 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
       setTimeout(() => setConfirmDeleteId(null), 3000);
       notify("Pulsa otra vez para confirmar el borrado", "info");
     }
+  };
+
+  const deleteAnticipo = (id: string) => {
+    const nextAn = anticipos.filter(an => an.id !== id);
+    setAnticipos(nextAn);
+    notify("Anticipo eliminado", "info");
+  };
+
+  const startEditAnticipo = (an: any) => {
+    setEditingAnticipoId(an.id);
+    setEditAnticipoOp(an.operario);
+    setEditAnticipoAmount(an.cantidad);
+    setEditAnticipoFecha(an.fecha);
+  };
+
+  const saveEditAnticipo = () => {
+    if (!editAnticipoOp || editAnticipoAmount <= 0) return;
+    
+    if (editingAnticipoId === "NEW") {
+      const newAn = {
+        id: crypto.randomUUID(),
+        fecha: editAnticipoFecha,
+        obraId: selectedObraId,
+        operario: editAnticipoOp,
+        cantidad: editAnticipoAmount
+      };
+      setAnticipos(prev => [...prev, newAn]);
+      notify("Anticipo registrado", "success");
+    } else {
+      setAnticipos(prev => prev.map(an => an.id === editingAnticipoId ? {
+        ...an,
+        operario: editAnticipoOp,
+        cantidad: editAnticipoAmount,
+        fecha: editAnticipoFecha
+      } : an));
+      notify("Anticipo actualizado", "success");
+    }
+    setEditingAnticipoId(null);
   };
 
   const selectedDayData = useMemo(() => {
@@ -147,12 +189,25 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
             {selectedDay ? formatDate(selectedDay) : "Selecciona un día"}
           </label>
           {selectedDay && (
-            <button 
-              onClick={() => onNew(selectedDay)}
-              className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all"
-            >
-              <Plus size={14} /> Registrar
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  setEditingAnticipoId("NEW");
+                  setEditAnticipoOp("");
+                  setEditAnticipoAmount(0);
+                  setEditAnticipoFecha(selectedDay);
+                }}
+                className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all border border-red-100 dark:border-red-900/20"
+              >
+                <Plus size={14} /> Anticipo
+              </button>
+              <button 
+                onClick={() => onNew(selectedDay)}
+                className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all border border-blue-100 dark:border-blue-900/20"
+              >
+                <Plus size={14} /> Registrar
+              </button>
+            </div>
           )}
         </div>
 
@@ -169,7 +224,11 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
                       <div>
-                        <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase leading-none">{a.bloque}</h3>
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase leading-none">
+                          {Array.from(new Set(a.produccion.map(p => p.bloque || a.bloque))).length > 1 
+                            ? "Día con Varios Bloques" 
+                            : (a.bloque || "Bloque General")}
+                        </h3>
                         <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">
                           {a.produccion.length > 0 
                             ? `${a.produccion.length} Partidas registradas` 
@@ -199,19 +258,23 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                     </div>
                   </div>
 
-                  <div className="space-y-2 border-t border-slate-50 dark:border-slate-800 pt-4">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Partidas Ejecutadas</label>
-                    <div className="space-y-1">
-                      {a.produccion.map((p, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">
-                            {itemsSate[p.itemId]?.nombre || p.itemId}
-                          </span>
-                          <span className="font-black text-slate-800 dark:text-white">{p.m2} m²</span>
+                    <div className="space-y-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+                      {Array.from(new Set(a.produccion.map(p => p.bloque || a.bloque || "General"))).map(blockName => (
+                        <div key={blockName} className="space-y-2">
+                          <label className="text-[9px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md">Bloque {blockName}</label>
+                          <div className="space-y-1">
+                            {a.produccion.filter(p => (p.bloque || a.bloque || "General") === blockName).map((p, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-xs ml-1">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">
+                                  {itemsSate[p.itemId]?.nombre || p.itemId}
+                                </span>
+                                <span className="font-black text-slate-800 dark:text-white">{p.m2} m²</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
 
                   {a.fotos && a.fotos.length > 0 && (
                     <div className="pt-2">
@@ -253,7 +316,7 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
     })}
 
             {selectedDayAnticipos.map(an => (
-              <div key={an.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-red-50 dark:border-red-900/10 flex justify-between items-center">
+              <div key={an.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-red-50 dark:border-red-900/10 flex justify-between items-center group">
                 <div className="flex items-center gap-3">
                   <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded-xl text-red-600"><DollarSign size={18} /></div>
                   <div>
@@ -261,7 +324,13 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                     <p className="text-sm font-black text-slate-800 dark:text-white uppercase">{an.operario} ({formatDate(an.fecha)})</p>
                   </div>
                 </div>
-                <span className="text-lg font-black text-red-600">-{formatAmount(an.cantidad)}€</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-lg font-black text-red-600">-{formatAmount(an.cantidad)}€</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => startEditAnticipo(an)} className="p-2 text-slate-300 hover:text-blue-500 transition-colors"><Edit2 size={16} /></button>
+                    <button onClick={() => deleteAnticipo(an.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -286,6 +355,65 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
           </div>
         </div>
       </div>
+
+      {/* Modal Editar Anticipo */}
+      {editingAnticipoId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-in fade-in slide-in-from-bottom-10">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">
+                {editingAnticipoId === "NEW" ? "Nuevo Anticipo" : "Editar Anticipo"}
+              </h3>
+              <button onClick={() => setEditingAnticipoId(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Operario</label>
+                <select 
+                  value={editAnticipoOp} 
+                  onChange={e => setEditAnticipoOp(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-xs font-black outline-none"
+                >
+                  <option value="">Seleccionar Operario</option>
+                  {operariosList.map(op => (
+                    <option key={op.nombre} value={op.nombre}>{op.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Fecha</label>
+                 <input 
+                   type="date" 
+                   value={editAnticipoFecha} 
+                   onChange={e => setEditAnticipoFecha(e.target.value)} 
+                   className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-xs font-black outline-none" 
+                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Cantidad (€)</label>
+                <input 
+                  type="number" 
+                  value={editAnticipoAmount} 
+                  onChange={e => setEditAnticipoAmount(Number(e.target.value))} 
+                  className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-xl font-black outline-none" 
+                />
+              </div>
+
+              <div className="pt-4">
+                <button 
+                  onClick={saveEditAnticipo}
+                  className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase tracking-widest text-xs"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

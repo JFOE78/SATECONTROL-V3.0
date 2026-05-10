@@ -101,7 +101,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     _setAvances(cleanAvances);
     _setAnticipos(cleanAnticipos);
     _setGastos(loadedGastos);
-    _setCertificaciones(loadedCertificaciones);
+
+    const targetObraId = activeObraId || (loadedObras[0]?.id) || "e41a4d8c-623c-4f89-bfe9-f9565c2d318b";
+    const hasHistorical = loadedCertificaciones.some(c => c.id === "cert-historical-1");
+    
+    if (!hasHistorical) {
+      const cert1: Certificacion = {
+        id: "cert-historical-1",
+        obraId: targetObraId,
+        mes: "2026-04",
+        fechaInicio: "2026-03-01",
+        fechaFin: "2026-04-08",
+        ejecutado: 11724.54,
+        anticipos: 8000,
+        certificado: 11724.54,
+        estado: "cobrado",
+        items: [
+          { itemId: "cajeado", nombre: "Cajeados", precio: 16, m2: 25, bloque: "13" },
+          { itemId: "malla", nombre: "Doble Malla", precio: 3, m2: 101.29, bloque: "13" },
+          { itemId: "anti", nombre: "Antifisuras", precio: 8, m2: 109, bloque: "13" },
+          { itemId: "fase1", nombre: "Corcho + Tacos", precio: 8, m2: 634.77, bloque: "13" },
+          { itemId: "fase2", nombre: "Malla + Fino", precio: 8, m2: 634.77, bloque: "13" },
+        ]
+      };
+
+      const cert2: Certificacion = {
+        id: "cert-historical-2",
+        obraId: targetObraId,
+        mes: "2026-05",
+        fechaInicio: "2026-04-09",
+        fechaFin: "2026-05-05",
+        ejecutado: 16147.84,
+        anticipos: 8000,
+        certificado: 16147.84,
+        estado: "cobrado",
+        items: [
+          { itemId: "fase1", nombre: "Corcho", precio: 8, m2: 324.84, bloque: "5" },
+          { itemId: "fase2", nombre: "Malla + Fino", precio: 8, m2: 324.84, bloque: "5" },
+          { itemId: "malla", nombre: "Doble Malla", precio: 3, m2: 118.92, bloque: "5" },
+          { itemId: "cajeado", nombre: "Cajeados", precio: 16, m2: 33.04, bloque: "5" },
+          { itemId: "fase1", nombre: "Corcho (Total)", precio: 8, m2: 519.46, bloque: "6" },
+          { itemId: "fase2", nombre: "Malla + Fino", precio: 8, m2: 161.84, bloque: "6" }
+        ]
+      };
+
+      const nextCerts = [...loadedCertificaciones.filter(c => c.id !== "historical-bloque-6"), cert1, cert2];
+      storage.saveCertificaciones(nextCerts);
+      _setCertificaciones(nextCerts);
+    } else {
+      _setCertificaciones(loadedCertificaciones);
+    }
+
     _setManualAdjustments(loadedAdjustments);
     _setTheme(loadedTheme);
 
@@ -252,12 +302,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return acc + (p.m2 * (item?.precio || 0));
     }, 0);
 
+    const totalDailyCost = operariosList.reduce((acc, op) => acc + (op.coste || 0), 0);
+
     const costeManoObra = (a.produccion.length === 0 && a.motivoSinProduccion) 
       ? 0 
-      : uniqueOpsNormalized.reduce((acc, nameToFind) => {
-          const op = operariosList.find(o => normalize(o.nombre) === nameToFind);
-          return acc + (op?.coste || 0);
-        }, 0);
+      : totalDailyCost;
 
     const beneficio = ingresos - costeManoObra;
     const beneficioPorOperario = uniqueOpsNormalized.length > 0 ? beneficio / uniqueOpsNormalized.length : 0;

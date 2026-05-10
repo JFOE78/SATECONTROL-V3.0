@@ -16,21 +16,37 @@ export const BLOQUE_DIMENSIONS: Record<string, Record<string, number>> = {
     anti: 145,
     cajeado: 33.04,
     malla: 136
+  },
+  "6": {
+    fase1: 519.46, // 357.62 + 161.84
+    fase2: 161.84,
+    anti: 145,
+    cajeado: 33.04,
+    malla: 136
+  },
+  "13": {
+    fase1: 634.77,
+    fase2: 634.77,
+    anti: 109,
+    cajeado: 25,
+    malla: 101.29 // 50.57 + 50.72
+  },
+  "5": {
+    fase1: 324.84,
+    fase2: 324.84,
+    anti: 145,
+    cajeado: 33.04,
+    malla: 118.92
   }
 };
 
-// Rendimientos: Días previstos por EQUIPO para completar cada partida de un bloque maestro
+// Rendimientos: Días previstos para completar cada partida de un bloque maestro
 export const RENDIMIENTOS_EQUIPO: Record<string, number> = {
-  fase1: 8,      // Corcho + Tacos (Equipo A) -> 12.5% diario
-  fase2: 8,      // Esquineros + Malla + Fino (Equipo B) -> 12.5% diario
-  anti: 3,       // Antifisuras (Equipo B) -> 33.3% diario
-  malla: 1,      // Doble Malla (Equipo B) -> 100% diario
-  cajeado: 2     // Cajeados (Equipo B) -> 50% diario
-};
-
-export const EQUIPOS = {
-  A: ["Mosquito", "David"],
-  B: ["Juan", "Antonio", "Jesules"]
+  fase1: 8,      // Corcho + Tacos
+  fase2: 8,      // Esquineros + Malla + Fino
+  anti: 3,       // Antifisuras
+  malla: 1,      // Doble Malla
+  cajeado: 2     // Cajeados
 };
 
 export const OPERARIOS = [

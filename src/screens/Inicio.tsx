@@ -6,7 +6,7 @@ import { ActionButton } from "../components/ActionButton";
 import { Avance } from "../types";
 import { formatAmount } from "../lib/utils";
 import { shareService } from "../services/shareService";
-import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
+import { BLOQUE_DIMENSIONS } from "../constants";
 
 export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => void, showInstall: boolean }> = ({ onNavigate, onInstall, showInstall }) => {
   const { 
@@ -35,10 +35,12 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     );
   }, [certificaciones, selectedObraId]);
 
+  const CUTOFF_DATE = "2026-05-06";
+
   const totalAcumulado = useMemo(() => {
-    // 1. Producción NO certificada (en curso)
+    // 1. Producción NO certificada (en curso) desde el corte
     const advancesEcon = (avances || [])
-      .filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha))
+      .filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a.fecha))
       .reduce((acc, curr) => {
         const econ = calculateAvanceEconomics(curr);
         return {
@@ -48,20 +50,26 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       }, { costeMO: 0, beneficio: 0 });
       
     const totalG = (gastos || [])
-      .filter(g => g.obraId === selectedObraId && !isDataCertified(g.fecha))
+      .filter(g => g.obraId === selectedObraId && g.fecha >= CUTOFF_DATE && !isDataCertified(g.fecha))
       .reduce((sum, g) => sum + g.monto, 0);
 
-    // 2. Certificaciones pendientes de cobro
+    // 2. Certificaciones pendientes de cobro (desde el corte o históricas pendientes)
+    // Nota: Las certificaciones anteriores al corte ya se asumen liquidadas o descartadas si el usuario quiere "limpieza"
     const montoCertsPendientes = (certificaciones || [])
-      .filter(c => c.obraId === selectedObraId && c.estado !== 'cobrado')
+      .filter(c => c.obraId === selectedObraId && (c.fechaFin || '') >= CUTOFF_DATE && c.estado !== 'cobrado')
       .reduce((sum, c) => sum + c.certificado, 0);
 
     const produccionEnCurso = advancesEcon.beneficio - totalG;
 
+    const totalCobrado = (certificaciones || [])
+      .filter(c => c.obraId === selectedObraId && c.estado === 'cobrado')
+      .reduce((sum, c) => sum + c.ejecutado, 0);
+
     return {
       ingresosCurso: advancesEcon.beneficio + advancesEcon.costeMO,
       certPendiente: montoCertsPendientes,
-      totalPendiente: produccionEnCurso + montoCertsPendientes
+      totalPendiente: produccionEnCurso + montoCertsPendientes,
+      totalCobrado
     };
   }, [avances, gastos, calculateAvanceEconomics, isDataCertified, selectedObraId, certificaciones]);
 
@@ -102,55 +110,98 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     return (avances || []).find(a => a.fecha === todayStr && a.obraId === selectedObraId);
   }, [avances, selectedObraId]);
 
-  const activeMonitoring = useMemo(() => {
-    if (!selectedObraId || !avances) return [];
-    
-    const items = ["fase1", "fase2", "anti", "malla", "cajeado"];
-    const results: any[] = [];
-
-    items.forEach(itemId => {
-      const productionMap: Record<string, { m2: number, days: number }> = {};
-      const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId);
+    const activeMonitoring = useMemo(() => {
+      if (!selectedObraId || !avances) return [];
       
-      obraAvances.forEach(a => {
-        const itemsInThisAvance = new Set<string>();
-        (a.produccion || []).forEach(p => {
-          if (p.itemId !== itemId) return;
-          const b = (p.bloque || a.bloque || "S/B").toString().trim();
-          if (!productionMap[b]) productionMap[b] = { m2: 0, days: 0 };
-          productionMap[b].m2 += p.m2;
+      const CUTOFF_DATE = "2026-05-06";
+      const items = ["fase1", "fase2", "anti", "malla", "cajeado"];
+      
+      const normalize = (name: string) => {
+        return name.toUpperCase()
+          .replace("BLOQUE", "")
+          .replace("BLOK", "")
+          .replace("BL", "")
+          .replace("B-", "")
+          .replace("B", "")
+          .trim();
+      };
+
+      // Mapa para agrupar por bloque: Record<bloqueNorm, { displayName, items: [] }>
+      const blocksMap: Record<string, { displayName: string, items: any[] }> = {};
+
+      items.forEach(itemId => {
+        const productionMap: Record<string, { m2: number, days: number, displayName: string }> = {};
+        const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE);
+        
+        obraAvances.forEach(a => {
+          const itemsInThisAvance = new Set<string>();
+          (a.produccion || []).forEach(p => {
+            if (p.itemId !== itemId) return;
+            const bRaw = (p.bloque || a.bloque || "S/B").toString().trim();
+            const bRef = normalize(bRaw);
+            
+            if (!productionMap[bRef]) {
+              productionMap[bRef] = { m2: 0, days: 0, displayName: bRaw };
+            }
+            productionMap[bRef].m2 += p.m2;
+            
+            if (!itemsInThisAvance.has(bRef)) {
+              productionMap[bRef].days += 1;
+              itemsInThisAvance.add(bRef);
+            }
+          });
+        });
+
+        // Sumar producción histórica certificada
+        (certificaciones || []).forEach(c => {
+          if (c.obraId !== selectedObraId) return;
+          (c.items || []).forEach(it => {
+            if (it.itemId !== itemId) return;
+            const bRaw = (it.bloque || "S/B").toString().trim();
+            const bRef = normalize(bRaw);
+            if (!productionMap[bRef]) {
+              productionMap[bRef] = { m2: 0, days: 0, displayName: bRaw };
+            }
+            productionMap[bRef].m2 += it.m2;
+          });
+        });
+
+        Object.entries(productionMap).forEach(([normId, stats]) => {
+          const dimensions = BLOQUE_DIMENSIONS[normId] || BLOQUE_DIMENSIONS["DEFAULT"];
+          const targetM2 = dimensions[itemId] || 1;
           
-          if (!itemsInThisAvance.has(itemId)) {
-            productionMap[b].days += 1;
-            itemsInThisAvance.add(itemId);
+          // Solo incluimos en "Rendimiento en Vivo" si está en curso (<99%) 
+          // O si es un bloque que queremos que el usuario vea como "Recién Certificado"
+          const isFinished = stats.m2 >= (targetM2 * 0.99);
+          
+          if (stats.m2 > 0) {
+            const percentage = (stats.m2 / targetM2) * 100;
+
+            if (!blocksMap[normId]) {
+              blocksMap[normId] = { displayName: stats.displayName, items: [] };
+            }
+
+            blocksMap[normId].items.push({
+              itemId,
+              nombre: (itemsSate[itemId] as any)?.nombre || itemId,
+              percentage,
+              isFinished
+            });
           }
         });
       });
 
-      const targetM2 = BLOQUE_DIMENSIONS["DEFAULT"][itemId];
-      const activeBlockEntry = Object.entries(productionMap)
-        .filter(([_, stats]) => stats.m2 > 0 && stats.m2 < (targetM2 * 0.98))
-        .sort((a, b) => b[0].localeCompare(a[0]))[0];
-
-      if (activeBlockEntry) {
-        const [bloqueId, stats] = activeBlockEntry;
-        const planned = RENDIMIENTOS_EQUIPO[itemId];
-        const team = itemId === "fase1" ? "Equipo A (Corcho)" : "Equipo B";
-        results.push({
-          itemId,
-          nombre: (itemsSate[itemId] as any)?.nombre || itemId,
-          team,
-          bloqueId,
-          spent: stats.days,
-          total: planned,
-          remaining: Math.max(0, planned - stats.days),
-          isOver: stats.days > planned
-        });
-      }
-    });
-
-    return results;
-  }, [avances, selectedObraId, itemsSate]);
+      // Convertir el mapa en un array ordenado por bloque
+      // Priorizar bloques "En curso" sobre "Terminados" en el orden
+      return Object.entries(blocksMap)
+        .sort((a, b) => {
+          const aFinished = a[1].items.every(it => it.isFinished);
+          const bFinished = b[1].items.every(it => it.isFinished);
+          if (aFinished !== bFinished) return aFinished ? 1 : -1;
+          return a[0].localeCompare(b[0], undefined, { numeric: true });
+        })
+        .map(([_, data]) => data);
+    }, [avances, selectedObraId, itemsSate]);
 
   return (
     <div className="space-y-4">
@@ -160,37 +211,51 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-3 flex items-center gap-2">
             <Zap size={14} className="text-amber-500" /> Rendimiento en Vivo
           </h3>
-          <div className="grid grid-cols-1 gap-2">
-            {activeMonitoring.map(item => (
+          <div className="grid grid-cols-1 gap-3">
+            {activeMonitoring.map((block) => (
               <div 
-                key={item.itemId} 
-                className={`p-4 rounded-[2rem] border transition-all ${item.isOver ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800/30' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}
+                key={block.displayName} 
+                className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-6"
               >
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <p className={`text-[10px] font-black uppercase ${item.isOver ? 'text-rose-600' : 'text-blue-600'}`}>{item.team}</p>
-                    <h4 className="text-sm font-black text-slate-800 dark:text-white">Bloque {item.bloqueId} - {item.nombre}</h4>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-lg font-black leading-none ${item.isOver ? 'text-rose-600' : 'text-slate-800 dark:text-slate-200'}`}>
-                      {item.spent}<span className="text-xs opacity-40">/{item.total}</span>
-                    </p>
-                    <p className="text-[8px] font-black uppercase text-slate-400">Jornadas</p>
-                  </div>
+                <div className="border-b border-slate-50 dark:border-slate-800 pb-3">
+                  <h4 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque {block.displayName}</h4>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">{block.items.length} partidas en ejecución</p>
                 </div>
-                {item.isOver && (
-                  <div className="flex items-center gap-1 text-[8px] font-black text-rose-600 uppercase bg-rose-100 dark:bg-rose-900/40 px-2 py-1 rounded-lg w-fit">
-                    <AlertTriangle size={10} /> ¡ATENCIÓN! Excedido en {item.spent - item.total} jornadas
-                  </div>
-                )}
-                {!item.isOver && (
-                  <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 rounded-full" 
-                      style={{ width: `${(item.spent / item.total) * 100}%` }}
-                    />
-                  </div>
-                )}
+
+                <div className="space-y-8">
+                  {block.items.map((item) => (
+                    <div key={item.itemId} className={`space-y-3 p-4 rounded-[2rem] border transition-all ${item.isFinished ? 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800' : 'bg-white dark:bg-slate-900 border-transparent shadow-sm'}`}>
+                      <div className="flex justify-between items-start">
+                        <div className="max-w-[70%] text-left">
+                          <h5 className={`text-xs font-black uppercase leading-tight ${item.isFinished ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            {item.nombre}
+                            {item.isFinished && <span className="ml-2 text-[8px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 px-1.5 py-0.5 rounded-lg">Cerrado</span>}
+                          </h5>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-xl font-black leading-none ${item.isFinished ? 'text-emerald-500' : (item.isOver ? 'text-rose-600' : 'text-blue-600')}`}>
+                            {Math.round(item.percentage)}%
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                          <span className="text-[8px] font-black text-slate-400 uppercase">Progreso Ejecutado</span>
+                          <span className={`text-[10px] font-black ${item.isFinished ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-300'}`}>
+                            {Math.round(item.percentage)}%
+                          </span>
+                        </div>
+                        <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                          <div 
+                            className={`h-full transition-all duration-700 ${item.isFinished ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -294,6 +359,10 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                <span className="text-[10px] font-black text-slate-400 uppercase">2. Certificaciones por Cobrar</span>
                <span className="text-sm font-black text-slate-700 dark:text-slate-300">{formatAmount(totalAcumulado.certPendiente)}€</span>
              </div>
+             <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-700/50 pt-2 mt-2">
+               <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tighter">3. Cobrado (Histórico)</span>
+               <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatAmount(totalAcumulado.totalCobrado)}€</span>
+             </div>
           </div>
 
              <div className="flex justify-between items-end px-4 gap-4">
@@ -338,7 +407,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           <ActionButton 
             onClick={() => onNavigate("historial")} 
             icon={<FileText className="text-amber-500" size={24} />} 
-            title="HISTORIAL DE AVANCES" 
+            title="CERTIFICACIONES Y COBROS" 
             compact
             className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
           />

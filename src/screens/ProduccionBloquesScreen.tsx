@@ -2,11 +2,24 @@ import React, { useMemo, useCallback } from "react";
 import { ChevronLeft, BarChart3, LayoutGrid, Calendar, ArrowRight, Check } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { formatAmount, formatDate } from "../lib/utils";
-import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
+import { BLOQUE_DIMENSIONS } from "../constants";
 import { AlertTriangle, Info } from "lucide-react";
 
 export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate: (screen: any) => void }> = ({ onBack, onNavigate }) => {
   const { avances, selectedObraId, itemsSate, certificaciones } = useApp();
+
+  const CUTOFF_DATE = "2026-05-06";
+
+  const normalize = useCallback((name: string) => {
+    const n = name.toUpperCase()
+      .replace("BLOQUE", "")
+      .replace("BLOK", "")
+      .replace("BL", "")
+      .replace("B-", "")
+      .replace("B", "")
+      .trim();
+    return n || "Sin asignar";
+  }, []);
 
   const isDataCertified = useCallback((avance: any) => {
     return (certificaciones || []).some(c => {
@@ -28,29 +41,20 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
 
   // Agrupar producción por bloque e item, capturando también las fechas y días consumidos
   const productionByBlock = useMemo(() => {
-    const map: Record<string, { items: Record<string, { m2: number, days: number }>, dates: Set<string> }> = {};
+    const map: Record<string, { items: Record<string, { m2: number, days: number }>, dates: Set<string>, displayName: string }> = {};
 
     const obraAvances = (avances || [])
-      .filter(a => a.id && a.obraId === selectedObraId);
+      .filter(a => a.id && a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a));
 
     obraAvances.forEach(avance => {
-      // Necesitamos evitar contar doble el mismo día para la misma partida si hay varias entradas de producción (un poco raro pero posible)
       const itemsInThisAvance = new Set<string>();
 
       (avance.produccion || []).forEach(prod => {
-        let rawBloque = (prod.bloque || avance.bloque || "").toString().trim();
-        
-        let normalizedBloque = rawBloque;
-        const upper = normalizedBloque.toUpperCase();
-        
-        if (!normalizedBloque || upper === "BLOQUE") {
-          normalizedBloque = "Sin asignar";
-        } else if (upper.startsWith("BLOQUE ")) {
-          normalizedBloque = normalizedBloque.substring(7).toString().trim();
-        }
+        const rawBloque = (prod.bloque || avance.bloque || "Sin asignar").toString().trim();
+        const normalizedBloque = normalize(rawBloque);
 
         if (!map[normalizedBloque]) {
-          map[normalizedBloque] = { items: {}, dates: new Set() };
+          map[normalizedBloque] = { items: {}, dates: new Set(), displayName: rawBloque };
         }
 
         const itemId = prod.itemId;
@@ -60,24 +64,46 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
         
         map[normalizedBloque].items[itemId].m2 += prod.m2;
         
-        if (!itemsInThisAvance.has(itemId)) {
+        if (!itemsInThisAvance.has(`${normalizedBloque}-${itemId}`)) {
           map[normalizedBloque].items[itemId].days += 1;
-          itemsInThisAvance.add(itemId);
+          itemsInThisAvance.add(`${normalizedBloque}-${itemId}`);
         }
 
         map[normalizedBloque].dates.add(avance.fecha);
       });
     });
 
-    // Convertir a array ordenado por nombre de bloque (con "Sin asignar" al final)
+    // Añadir producción certificada (Histórico)
+    (certificaciones || []).forEach(c => {
+      if (c.obraId !== selectedObraId) return;
+      (c.items || []).forEach(it => {
+        const rawBloque = (it.bloque || "Sin asignar").toString().trim();
+        const normalizedBloque = normalize(rawBloque);
+        
+        if (!map[normalizedBloque]) {
+          map[normalizedBloque] = { items: {}, dates: new Set(), displayName: rawBloque };
+        }
+
+        if (!map[normalizedBloque].items[it.itemId]) {
+          map[normalizedBloque].items[it.itemId] = { m2: 0, days: 0 };
+        }
+        map[normalizedBloque].items[it.itemId].m2 += it.m2;
+        
+        // Añadimos una marca especial en dates para saber que tiene contenido certificado
+        map[normalizedBloque].dates.add("CERTIFIED");
+      });
+    });
+
+    // Convertir a array ordenado
     return Object.entries(map)
       .sort((a, b) => {
         if (a[0] === "Sin asignar") return 1;
         if (b[0] === "Sin asignar") return -1;
         return a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' });
       })
-      .map(([bloque, data]) => ({
-        bloque,
+      .map(([normKey, data]) => ({
+        bloque: data.displayName,
+        normKey,
         dates: Array.from(data.dates).sort((a, b) => b.localeCompare(a)),
         items: Object.entries(data.items).map(([itemId, stats]) => ({
           itemId,
@@ -168,6 +194,13 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                       {/* Fechas asociadas */}
                       <div className="flex flex-wrap gap-1 mt-1">
                         {bloqueData.dates.map(d => {
+                          if (d === "CERTIFIED") {
+                            return (
+                              <span key={d} className="text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border border-emerald-200 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20">
+                                Certificado Histórico
+                              </span>
+                            );
+                          }
                           const certified = (certificaciones || []).some(c => 
                             c.obraId === selectedObraId && 
                             c.fechaInicio && c.fechaFin && 
@@ -177,9 +210,9 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                             <span 
                               key={d} 
                               className={`text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase border ${
-                                certified 
-                                  ? "text-slate-300 border-slate-50 dark:border-slate-800/30" 
-                                  : "text-slate-400 border-slate-100 dark:border-slate-800"
+                                d >= CUTOFF_DATE 
+                                  ? (certified ? "text-slate-300 border-slate-50 dark:border-slate-800/30" : "text-slate-400 border-slate-100 dark:border-slate-800")
+                                  : "hidden" 
                               }`}
                             >
                               {formatDate(d)}
@@ -187,6 +220,32 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                           );
                         })}
                       </div>
+                      {/* Mostrar histórico heredado si existe */}
+                      {(() => {
+                        const inherited = (certificaciones || []).filter(c => 
+                          c.obraId === selectedObraId && 
+                          c.estado === 'cobrado' && 
+                          c.items?.some(it => normalize(it.bloque || "") === bloqueData.normKey)
+                        ).reduce((acc, c) => acc + c.ejecutado, 0); // Simplificación: sumamos ejecutado si el bloque está en los items
+                        
+                        // Mejor: sumamos solo los items específicos de este bloque en la certificación
+                        const specificInherited = (certificaciones || []).reduce((acc, c) => {
+                          if (c.obraId !== selectedObraId) return acc;
+                          const blockItems = (c.items || []).filter(it => normalize(it.bloque || "") === bloqueData.normKey);
+                          return acc + blockItems.reduce((s, it) => s + (it.m2 * it.precio), 0);
+                        }, 0);
+
+                        if (specificInherited > 0) {
+                          return (
+                            <div className="mt-2 flex items-center gap-1.5">
+                              <div className="bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded-lg">
+                                <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tight">Heredado: {formatAmount(specificInherited)}€</p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-full">
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{bloqueData.items.length} Partidas</span>
@@ -195,24 +254,25 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                   
                   <div className="space-y-4">
                     {bloqueData.items.map(item => {
-                      const normalizedNum = (bloqueData.bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
-                      const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+                      const dimensions = BLOQUE_DIMENSIONS[bloqueData.normKey] || BLOQUE_DIMENSIONS["DEFAULT"];
                       const target = dimensions[item.itemId];
                       const percentage = target ? Math.min((item.m2 / target) * 100, 100) : null;
                       
-                      const estimatedDays = RENDIMIENTOS_EQUIPO[item.itemId];
                       const isCompleted = percentage !== null && percentage > 99;
-                      const isOverBudget = estimatedDays && item.daysSpent > estimatedDays;
-                      const diff = estimatedDays ? item.daysSpent - estimatedDays : 0;
+                      
+                      // Buscar si hay producción certificada para este item en este bloque
+                      const certifiedM2 = (certificaciones || []).reduce((acc, c) => {
+                        if (c.obraId !== selectedObraId) return acc;
+                        return acc + (c.items || []).filter(it => it.itemId === item.itemId && normalize(it.bloque || "") === bloqueData.normKey).reduce((s, it) => s + it.m2, 0);
+                      }, 0);
 
                       return (
                         <div key={item.itemId} className="space-y-1.5">
-                          <div className={`p-3 rounded-2xl border transition-colors ${isOverBudget ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/30' : (isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100/50 dark:border-slate-800/50')}`}>
+                          <div className={`p-3 rounded-2xl border transition-colors ${(isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100/50 dark:border-slate-800/50')}`}>
                             <div className="flex justify-between items-center mb-1">
-                              <span className={`text-[10px] font-black uppercase tracking-tight flex items-center gap-1 ${isOverBudget ? 'text-rose-600' : (isCompleted ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400')}`}>
+                              <span className={`text-[10px] font-black uppercase tracking-tight flex items-center gap-1 ${(isCompleted ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400')}`}>
                                 {item.nombre}
-                                {isOverBudget && <AlertTriangle size={10} className="animate-pulse" />}
-                                {isCompleted && !isOverBudget && <Check size={10} />}
+                                {isCompleted && <Check size={10} />}
                               </span>
                               <span className="text-sm font-black text-slate-800 dark:text-white">
                                 {formatAmount(item.m2)} {target && <span className="text-[9px] text-slate-400">/ {target}</span>} <span className="text-[9px] opacity-60">m²</span>
@@ -220,18 +280,14 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                             </div>
                             
                             <div className="flex justify-between items-center">
-                              <span className="text-[9px] font-bold text-slate-400 uppercase">
-                                <span className={isOverBudget ? 'text-rose-600' : (isCompleted ? 'text-emerald-600' : '')}>
-                                  {item.daysSpent} jornadas
+                              <div className="flex flex-col">
+                                <span className={`text-[9px] font-black uppercase ${isCompleted ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                  {isCompleted ? 'Ejecución Finalizada' : 'En Proceso'}
                                 </span>
-                                {estimatedDays && <span className="opacity-50"> de {estimatedDays} prev.</span>}
-                              </span>
-                              
-                              {estimatedDays && (
-                                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${isOverBudget ? 'text-rose-600 bg-rose-100 dark:bg-rose-900/40' : (isCompleted ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/40' : 'text-slate-400 bg-slate-100 dark:bg-slate-800')}`}>
-                                  {isOverBudget ? `Pérdida: ${diff}d` : (isCompleted ? 'Optimizado (OK)' : 'En curso')}
-                                </span>
-                              )}
+                                {certifiedM2 > 0 && (
+                                  <span className="text-[8px] font-black text-blue-500 uppercase">Incluye {formatAmount(certifiedM2)} m² certificados</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           {percentage !== null && (
@@ -243,7 +299,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                                 />
                               </div>
                               <p className="text-[8px] font-black text-right mt-1 uppercase text-slate-400">
-                                {Math.round(percentage)}% Completado
+                                {percentage >= 100 ? 'Cerrado' : `${Math.round(percentage)}% Completado`}
                               </p>
                             </div>
                           )}

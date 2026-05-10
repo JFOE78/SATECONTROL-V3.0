@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ChevronLeft, PlusCircle, Trash2, Check, X, Camera, Image as ImageIcon, Pencil, Save, Sun, Cloud, CloudRain, Thermometer, AlertTriangle } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Produccion, Avance } from "../types";
-import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO, OPERARIOS, EQUIPOS } from "../constants";
+import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO, OPERARIOS } from "../constants";
 
 export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel: () => void }> = ({ initialAvance, onCancel }) => {
   const { 
@@ -16,8 +16,11 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     calculateAvanceEconomics 
   } = useApp();
   
-  const obra = obras.find(o => o.id === selectedObraId);
-  const [fecha, setFecha] = useState(initialAvance?.fecha || new Date().toISOString().split('T')[0]);
+  const CUTOFF_DATE = "2026-05-06";
+  const [fecha, setFecha] = useState(initialAvance?.fecha || (() => {
+    const today = new Date().toISOString().split('T')[0];
+    return today < CUTOFF_DATE ? CUTOFF_DATE : today;
+  })());
   const [bloque, setBloque] = useState(initialAvance?.bloque || "");
   const [operarios, setOperarios] = useState<string[]>(initialAvance?.operariosPresentes || operariosList.map(o => o.nombre));
   const [producciones, setProducciones] = useState<Produccion[]>(initialAvance?.produccion || []);
@@ -31,6 +34,8 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
   const [porcentaje, setPorcentaje] = useState<string>("");
   const [editingProdIndex, setEditingProdIndex] = useState<number | null>(null);
   const [showCompletionPrompt, setShowCompletionPrompt] = useState<{itemId: string, bloque: string} | null>(null);
+  const [showBlockPrompt, setShowBlockPrompt] = useState<boolean>(false);
+  const [tempBlock, setTempBlock] = useState("");
 
   // Calcular jornadas consumidas para el bloque/partida actual
   const statsLocal = useMemo(() => {
@@ -56,28 +61,9 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     return planned && statsLocal.days >= planned;
   }, [selectedItemId, statsLocal.days]);
 
-  // Auto-propuesta de % basada en especialización de equipos
+  // Auto-propuesta de % basada en especialización de equipos (ELIMINADO por petición de usuario)
   useEffect(() => {
-    if (editingProdIndex !== null) return;
-
-    const isEquipoA = operarios.length === 2 && EQUIPOS.A.every(name => operarios.includes(name));
-    const isEquipoB = operarios.length === 3 && EQUIPOS.B.every(name => operarios.includes(name));
-
-    if (isEquipoA) {
-      setSelectedItemId("fase1");
-      const prop = (1 / RENDIMIENTOS_EQUIPO["fase1"]) * 100;
-      handlePorcentajeChange(prop.toFixed(2));
-      return;
-    }
-
-    if (isEquipoB) {
-      // Para Equipo B, el usuario elige la partida, pero el % es automático para 1 día
-      const targetRendimiento = RENDIMIENTOS_EQUIPO[selectedItemId];
-      if (targetRendimiento && selectedItemId !== "fase1") {
-        const prop = (1 / targetRendimiento) * 100;
-        handlePorcentajeChange(prop.toFixed(2));
-      }
-    }
+    // No hacemos nada automático para evitar confusiones con equipos
   }, [operarios, selectedItemId]);
 
   const handlePorcentajeChange = (val: string) => {
@@ -97,7 +83,18 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
 
   const handleM2Change = (val: string) => {
     setM2(val);
-    setPorcentaje(""); // Clear percentage if manual m2 is entered
+    // Calcular porcentaje inverso para mostrar feedback
+    if (val && !isNaN(Number(val))) {
+      const normalizedNum = (tempBlock || bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
+      const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+      const target = dimensions[selectedItemId];
+      if (target) {
+        const perc = (Number(val) / target) * 100;
+        setPorcentaje(perc.toFixed(2));
+      }
+    } else {
+      setPorcentaje("");
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,14 +117,22 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
   const handleAddProd = () => {
     if (!m2 || isNaN(Number(m2))) return;
     
+    // Antes de añadir, preguntamos el bloque
+    setTempBlock(bloque || ""); 
+    setShowBlockPrompt(true);
+  };
+
+  const confirmAddProd = () => {
+    const finalBlock = tempBlock.trim() || "General";
+    
     // Calcular si con esto llegamos al 100% para el aviso de cierre
-    const normalizedNum = (bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
+    const normalizedNum = finalBlock.toUpperCase().replace("BLOQUE", "").trim();
     const targetM2 = BLOQUE_DIMENSIONS[normalizedNum]?. [selectedItemId] || BLOQUE_DIMENSIONS["DEFAULT"][selectedItemId] || 0;
     const currentM2InBlock = (avances || [])
       .filter(a => a.obraId === selectedObraId)
       .reduce((sum, a) => {
         return sum + (a.produccion || [])
-          .filter(p => (p.bloque || a.bloque || "").toString().trim() === (bloque || "General").toString().trim() && p.itemId === selectedItemId)
+          .filter(p => (p.bloque || a.bloque || "").toString().trim() === finalBlock.toString().trim() && p.itemId === selectedItemId)
           .reduce((s, p) => s + p.m2, 0);
       }, 0);
 
@@ -136,7 +141,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     const newProd: Produccion = {
       itemId: selectedItemId,
       m2: Number(m2),
-      bloque: bloque || "General"
+      bloque: finalBlock
     };
     
     if (editingProdIndex !== null) {
@@ -149,12 +154,16 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
       
       // Si llegamos al 99%+, mostrar aviso de cierre
       if (totalAfterAdd >= (targetM2 * 0.99) && targetM2 > 0) {
-        setShowCompletionPrompt({ itemId: selectedItemId, bloque: bloque || "General" });
+        setShowCompletionPrompt({ itemId: selectedItemId, bloque: finalBlock });
       }
     }
     
+    // Actualizamos el bloque global si estaba vacío para agilizar futuros registros
+    if (!bloque) setBloque(finalBlock);
+    
     setM2("");
     setPorcentaje("");
+    setShowBlockPrompt(false);
   };
 
   const handleCloseAndNext = () => {
@@ -213,12 +222,20 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     }
 
     const isNew = !initialAvance || !initialAvance.id;
+    if (fecha < "2026-05-06") {
+      notify("No se permiten registros anteriores al cierre de ciclo (05/05/2026)", "error");
+      return;
+    }
+
+    const finalGlobalBlock = isSinProduccion 
+      ? "Sin actividad" 
+      : (Array.from(new Set(producciones.map(p => p.bloque))).length > 1 ? "Varios" : bloque);
 
     const newAvance: Avance = {
       id: isNew ? crypto.randomUUID() : initialAvance!.id,
       fecha,
       obraId: selectedObraId,
-      bloque: isSinProduccion ? "Sin actividad" : bloque,
+      bloque: finalGlobalBlock,
       operariosPresentes: operarios,
       produccion: producciones,
       fotos,
@@ -263,6 +280,62 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
 
   return (
     <div className="space-y-6 pb-24">
+      {/* MODAL PREGUNTAR BLOQUE */}
+      {showBlockPrompt && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 border border-slate-100 dark:border-slate-800">
+              <div className="bg-blue-100 dark:bg-blue-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                <AlertTriangle size={32} className="text-blue-600" />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">¿A qué bloque pertenece?</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Es obligatorio asignar un bloque para cada partida</p>
+              </div>
+              
+              <div className="space-y-4">
+                <input 
+                  type="text"
+                  autoFocus
+                  placeholder="Ej: B-13 o General"
+                  value={tempBlock}
+                  onChange={(e) => setTempBlock(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-center font-black text-slate-800 dark:text-white outline-none border-2 border-transparent focus:border-blue-500 uppercase"
+                />
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => { setTempBlock("General"); }}
+                    className="py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-500"
+                  >
+                    Usar General
+                  </button>
+                  <button 
+                    onClick={() => { setTempBlock(bloque); }}
+                    className="py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-500"
+                  >
+                    Usar "{bloque || '...'}"
+                  </button>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button 
+                    onClick={() => setShowBlockPrompt(false)}
+                    className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-400 font-black py-4 rounded-2xl uppercase text-[10px]"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={confirmAddProd}
+                    className="flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase text-[10px] tracking-widest"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+           </div>
+        </div>
+      )}
+
       {/* MODAL CIERRE PARTIDA */}
       {showCompletionPrompt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -439,8 +512,8 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
             ))}
           </select>
           <div className="space-y-3">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="relative">
                 <label className="text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block">Porcentaje %</label>
                 <input 
                   type="number" 
@@ -450,18 +523,18 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
                   className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-blue-600 dark:text-blue-400 outline-none"
                 />
               </div>
-              <div className="flex-1 relative">
+              <div className="relative">
                 <label className="text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block">Metros Reales</label>
                 <input 
                   type="number" 
-                  placeholder="M2 / ML / M" 
+                  placeholder="M2 / ML" 
                   value={m2}
                   onChange={(e) => handleM2Change(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 font-black text-slate-800 dark:text-white outline-none"
                 />
                 <button 
                   onClick={autofillM2}
-                  className="absolute right-2 top-[34px] bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase border border-blue-100 dark:border-blue-800/50 active:scale-90 transition-transform"
+                  className="absolute right-2 top-[34px] bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-lg text-[7px] font-black uppercase border border-blue-100 dark:border-blue-800/50 active:scale-90 transition-transform"
                 >
                   100%
                 </button>
@@ -483,7 +556,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
                     <Sun size={12} /> Cálculo por Rendimiento ({operarios.length} Op.):
                   </span>
                   <span className="text-[10px] font-black text-blue-600">
-                    {porcentaje}%
+                    {porcentaje}% ({ (Number(porcentaje)/100 * (RENDIMIENTOS_EQUIPO[selectedItemId] || 0)).toFixed(2) } jorn.)
                   </span>
                 </div>
                 <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex justify-between items-center border border-emerald-100 dark:border-emerald-800/30">
@@ -516,23 +589,33 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
         </div>
 
         <div className="space-y-2 mt-4">
-          {producciones.map((p, idx) => (
-            <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent">
-              <div>
-                <p className="text-xs font-black text-slate-800 dark:text-white uppercase leading-none">{itemsSate[p.itemId]?.nombre || 'Desconocido'}</p>
-                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{p.m2} m² en {p.bloque}</p>
+          {producciones.map((p, idx) => {
+            const normalizedNum = (p.bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
+            const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+            const target = dimensions[p.itemId] || 1;
+            const percentage = (p.m2 / target) * 100;
+            const progressJornadas = (percentage / 100) * (RENDIMIENTOS_EQUIPO[p.itemId] || 0);
+
+            return (
+              <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent">
+                <div>
+                  <p className="text-xs font-black text-slate-800 dark:text-white uppercase leading-none">{itemsSate[p.itemId]?.nombre || 'Desconocido'}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">
+                    {p.m2} m² <span className="mx-1 text-slate-300">|</span> {progressJornadas.toFixed(2)} jorn. <span className="mx-1 text-slate-300">|</span> Bloque {p.bloque}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => startEditProd(idx)} 
+                    className={`p-2 transition-colors ${editingProdIndex === idx ? 'text-emerald-500' : 'text-blue-500'}`}
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button onClick={() => removeProd(idx)} className="text-red-500 p-2"><Trash2 size={18} /></button>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => startEditProd(idx)} 
-                  className={`p-2 transition-colors ${editingProdIndex === idx ? 'text-emerald-500' : 'text-blue-500'}`}
-                >
-                  <Pencil size={18} />
-                </button>
-                <button onClick={() => removeProd(idx)} className="text-red-500 p-2"><Trash2 size={18} /></button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

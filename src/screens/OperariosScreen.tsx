@@ -24,6 +24,8 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   const [activeTab, setActiveTab] = useState<'curso' | 'simulacion'>('curso');
   const [incentivoExtra, setIncentivoExtra] = useState(0);
 
+  const CUTOFF_DATE = "2026-05-06";
+
   const selectedObra = obras.find(o => o.id === selectedObraId);
 
   const isDataCertified = useCallback((date: string) => {
@@ -35,17 +37,17 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   }, [certificaciones, selectedObraId]);
 
   const totalManDays = useMemo(() => {
-    const listAv = (avances || []).filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha));
+    const listAv = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a.fecha));
     return listAv.reduce((sum, a) => {
       const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
       return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
     }, 0);
-  }, [avances, selectedObraId, isDataCertified]);
+  }, [avances, selectedObraId, isDataCertified, CUTOFF_DATE]);
 
   const statsCurrent = useMemo(() => {
-    const listAv = (avances || []).filter(a => a.obraId === selectedObraId && !isDataCertified(a.fecha));
-    const listGa = (gastos || []).filter(g => g.obraId === selectedObraId && !isDataCertified(g.fecha));
-    const listAn = (anticipos || []).filter(an => an.obraId === selectedObraId && !isDataCertified(an.fecha));
+    const listAv = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a.fecha));
+    const listGa = (gastos || []).filter(g => g.obraId === selectedObraId && g.fecha >= CUTOFF_DATE && !isDataCertified(g.fecha));
+    const listAn = (anticipos || []).filter(an => an.obraId === selectedObraId && an.fecha >= CUTOFF_DATE && !isDataCertified(an.fecha));
     
     const adjustmentTotal = Object.entries(manualAdjustments).reduce((sum, [_, m2]) => {
       const itemId = _ as string;
