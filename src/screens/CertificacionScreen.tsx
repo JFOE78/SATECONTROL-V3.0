@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { Certificacion, Anticipo } from "../types";
 import { shareService } from "../services/shareService";
 import { formatDate, formatAmount } from "../lib/utils";
+import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
 
 export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick: (n: string) => void }> = ({ onBack, onOperarioClick }) => {
   const { 
@@ -236,6 +237,50 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     notify("Anticipo borrado", "info");
   };
 
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+  const efficiencyStats = useMemo(() => {
+    if (dataFiltered.length === 0) return null;
+
+    const workedDaysByItem: Record<string, number> = {};
+    const executedM2ByItem: Record<string, number> = {};
+    const blockList = new Set<string>();
+
+    dataFiltered.forEach(a => {
+      blockList.add(a.bloque || "General");
+      const itemsInAvance = new Set<string>();
+      (a.produccion || []).forEach(p => {
+        executedM2ByItem[p.itemId] = (executedM2ByItem[p.itemId] || 0) + p.m2;
+        if (!itemsInAvance.has(p.itemId)) {
+          workedDaysByItem[p.itemId] = (workedDaysByItem[p.itemId] || 0) + 1;
+          itemsInAvance.add(p.itemId);
+        }
+      });
+    });
+
+    let totalPlannedDays = 0;
+    let totalWorkedDays = 0;
+
+    Object.entries(executedM2ByItem).forEach(([itemId, m2]) => {
+      const targetM2 = BLOQUE_DIMENSIONS["DEFAULT"][itemId] || 1;
+      const plannedDaysTotal = RENDIMIENTOS_EQUIPO[itemId] || 0;
+      const portion = m2 / targetM2;
+      totalPlannedDays += plannedDaysTotal * portion;
+      totalWorkedDays += workedDaysByItem[itemId] || 0;
+    });
+
+    const differenceDays = totalPlannedDays - totalWorkedDays;
+    const profitVsPlanned = differenceDays * 510; // 510 is approx daily crew cost
+
+    return {
+      totalWorkedDays,
+      totalPlannedDays,
+      differenceDays,
+      profitVsPlanned,
+      blocks: Array.from(blockList).sort()
+    };
+  }, [dataFiltered]);
+
   const handleSaveCert = () => {
     if (dataFiltered.length === 0) return;
     
@@ -282,6 +327,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     setExcludedAvanceIds([]);
     setIncentivoExtra(0);
     setManualAdjustments({});
+    setShowSummaryModal(false);
   };
 
   const startEdit = (c: Certificacion) => {
@@ -415,50 +461,117 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const handleWhatsApp = () => {
     if (!obra) return;
     
-    // Group production by Item for the Jefe de Obra report
-    const globalItems: Record<string, { m2: number, name: string, price: number }> = {};
-    Object.entries(stats.items).forEach(([id, m2]) => {
-      const item = itemsSate[id];
-      globalItems[id] = { m2: m2 as number, name: item?.nombre || id, price: item?.precio || 0 };
+    // Group production by Item and Block for the Site Manager report
+    const blockProduction: Record<string, Record<string, number>> = {};
+    dataFiltered.forEach(a => {
+      const b = (a.bloque || "General").trim();
+      if (!blockProduction[b]) blockProduction[b] = {};
+      (a.produccion || []).forEach(p => {
+        blockProduction[b][p.itemId] = (blockProduction[b][p.itemId] || 0) + p.m2;
+      });
     });
 
-    const breakdownText = Object.values(globalItems)
-      .filter(d => d.m2 > 0)
-      .map(data => {
-        return `• ${data.name}: ${formatAmount(data.m2)} m² @ ${formatAmount(data.price)}€ = *${formatAmount(data.m2 * data.price)}€*`;
-      }).join('\n');
+    // Add manual adjustments to "Varios / Ajustes" if present
+    Object.entries(manualAdjustments).forEach(([id, m2]) => {
+      if (!blockProduction["Ajustes"]) blockProduction["Ajustes"] = {};
+      blockProduction["Ajustes"][id] = (blockProduction["Ajustes"][id] || 0) + (m2 as number);
+    });
 
-    const opsSettlement = operarioBreakdown.filter(o => o.jornadas > 0).map(o => {
-      const activeOpsCount = operarioBreakdown.filter(x => x.jornadas > 0).length;
-      const opIncentive = (incentivoExtra || 0) / (activeOpsCount || 1);
+    const reportContent = Object.entries(blockProduction).map(([bloque, items]) => {
+      const entries = Object.entries(items)
+        .filter(([_, m2]) => Math.abs(m2) > 0.01)
+        .map(([id, m2]) => {
+          const item = itemsSate[id];
+          const price = item?.precio || 0;
+          return `  - ${item?.nombre || id}: ${formatAmount(m2)} m² (*${formatAmount(m2 * price)}€*)`;
+        }).join('\n');
       
-      return `*${o.nombre}* (${o.jornadas}j):\n` +
-        `  • Jornales: ${formatAmount(o.totalJornales)}€\n` +
-        `  • Reparto: +${formatAmount(o.sharedProfit)}€\n` +
-        (opIncentive > 0 ? `  • Bonus/Inc: +${formatAmount(opIncentive)}€\n` : '') +
-        (o.opReembolsos > 0 ? `  • Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
-        (o.opAnticipos > 0 ? `  • Anticipos: -${formatAmount(o.opAnticipos)}€\n` : '') +
-        `  *TOTAL A COBRAR: ${formatAmount(o.cobrar + opIncentive)}€*`;
+      const subtotal = Object.entries(items).reduce((s, [id, m2]) => s + (m2 * (itemsSate[id]?.precio || 0)), 0);
+      
+      return `*BLOQUE ${bloque}*\n${entries}\n_Subtotal Bloque: ${formatAmount(subtotal)}€_`;
     }).join('\n\n');
 
-    const text = `*CERTIFICACIÓN Y PRODUCCIÓN - ${obra.nombre}*\n` +
+    const text = `*RESUMEN DE CERTIFICACIÓN - ${obra.nombre}*\n` +
+      `*Fecha:* ${formatDate(new Date().toISOString())}\n` +
       `*Periodo:* ${formatDate(periodoInicio)} al ${formatDate(periodoFin)}\n\n` +
-      `*1. DESGLOSE PARA JEFE DE OBRA:*\n` +
-      breakdownText + `\n\n` +
-      `*TOTAL BRUTO EJECUTADO: ${formatAmount(stats.bruto)}€*\n\n` +
-      `*2. RESUMEN DE LIQUIDACIÓN:*\n` +
-      `*Ingresos:* ${formatAmount(stats.bruto)}€\n` +
-      `*Coste Mano Obra:* -${formatAmount(stats.laborCost)}€\n` +
-      `*Beneficio Real:* ${formatAmount(stats.realProfit)}€\n\n` +
-      `*3. REPARTO POR OPERARIO:*\n` +
-      opsSettlement + `\n\n` +
-      `_SATE CONTROL Maestro - Reporte Automático_`;
+      `*DESGLOSE POR PARTIDAS:*\n` +
+      reportContent + `\n\n` +
+      `*TOTAL A CERTIFICAR: ${formatAmount(stats.bruto)}€*\n\n` +
+      `*RESUMEN RENTABILIDAD:*\n` +
+      `• Producción: ${formatAmount(stats.bruto)}€\n` +
+      `• Gastos Mano Obra: -${formatAmount(stats.laborCost)}€\n` +
+      `• Beneficio: *${formatAmount(stats.realProfit)}€*\n\n` +
+      `_SATE CONTROL Maestro - Reporte Oficial_`;
     
     shareService.shareViaWhatsApp(text);
   };
 
   return (
     <div className="space-y-6 pb-24">
+      {/* MODAL RESUMEN ANTES DE CERRAR */}
+      {showSummaryModal && efficiencyStats && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 border border-slate-100 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase leading-tight">
+                  Resumen de Cierre
+                </h3>
+                <button onClick={() => setShowSummaryModal(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30">
+                  <p className="text-[10px] font-black text-blue-600 uppercase mb-1">Producción Total</p>
+                  <p className="text-2xl font-black text-blue-700">{formatAmount(stats.bruto)}€</p>
+                  <p className="text-[8px] text-blue-400 font-bold uppercase mt-1">Bloques: {efficiencyStats.blocks.join(", ")}</p>
+                </div>
+
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-800/30">
+                  <p className="text-[10px] font-black text-amber-600 uppercase mb-1">Gastos Mano de Obra</p>
+                  <div className="flex justify-between items-end">
+                    <p className="text-2xl font-black text-amber-700">{formatAmount(stats.laborCost)}€</p>
+                    <p className="text-[10px] font-black text-amber-600">{efficiencyStats.totalWorkedDays} jornadas</p>
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border ${efficiencyStats.differenceDays >= 0 ? 'bg-emerald-50 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800/30' : 'bg-rose-50 border-rose-100 dark:bg-rose-900/20 dark:border-rose-800/30'}`}>
+                  <p className={`text-[10px] font-black uppercase mb-1 ${efficiencyStats.differenceDays >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>Comparativa Eficiencia</p>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className={`text-lg font-black ${efficiencyStats.differenceDays >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        {efficiencyStats.differenceDays > 0 ? '+' : ''}{efficiencyStats.differenceDays.toFixed(1)} días
+                      </p>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase">vs jornadas estimadas</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-black ${efficiencyStats.profitVsPlanned >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        {efficiencyStats.profitVsPlanned > 0 ? '+' : ''}{formatAmount(efficiencyStats.profitVsPlanned)}€
+                      </p>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase">Rentabilidad Real</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <p className="text-[9px] font-bold text-slate-400 uppercase leading-relaxed italic">
+                  * Este cierre marcará {dataFiltered.length} partes como certificados. El bloque permanecerá abierto si no se han completado todos los m².
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button 
+                  onClick={handleSaveCert}
+                  className="w-full bg-slate-900 dark:bg-blue-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform uppercase tracking-widest"
+                >
+                  Confirmar y Certificar
+                </button>
+              </div>
+           </div>
+        </div>
+      )}
       <header className="flex items-center justify-between">
         <button onClick={onBack} className="p-3 bg-white dark:bg-slate-900 rounded-2xl text-slate-400 active:scale-90 transition-transform shadow-sm">
           <ChevronLeft size={24} />
@@ -756,11 +869,11 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
 
       <div className="px-4">
         <button 
-          onClick={handleSaveCert}
+          onClick={() => setShowSummaryModal(true)}
           disabled={dataFiltered.length === 0}
           className="w-full bg-slate-900 dark:bg-black text-white font-black py-6 rounded-[2.5rem] shadow-2xl active:scale-95 transition-all uppercase tracking-widest text-lg disabled:opacity-30 flex items-center justify-center gap-3"
         >
-          {editingCertId ? 'Actualizar Certificación' : 'Guardar Certificación'}
+          {editingCertId ? 'Actualizar Certificación' : 'Certificar'}
         </button>
       </div>
 
