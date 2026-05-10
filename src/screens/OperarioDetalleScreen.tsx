@@ -6,7 +6,7 @@ export const OperarioDetalleScreen: React.FC<{ operarioName: string, onBack: () 
   const { avances, anticipos, gastos, selectedObraId } = useApp();
 
   const stats = useMemo(() => {
-    const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const opClean = normalize(operarioName);
     const obAvances = avances.filter(a => a.obraId === selectedObraId);
     

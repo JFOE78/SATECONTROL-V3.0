@@ -70,7 +70,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const cleanOperarios = (loadedOperarios && loadedOperarios.length > 0 ? loadedOperarios : OPERARIOS).map((op: any) => ({
       ...op,
-      nombre: op.nombre.trim()
+      nombre: (op.nombre || "").toString().trim()
     }));
     
     const configOpsUnique = cleanOperarios.filter((op: any, index: number, self: any[]) =>
@@ -79,12 +79,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const cleanAvances = loadedAvances.map((a: Avance) => ({
       ...a,
-      operariosPresentes: Array.from(new Set((a.operariosPresentes || []).map(o => o.trim()))).filter(Boolean)
+      operariosPresentes: Array.from(new Set((a.operariosPresentes || []).map(o => (o || "").toString().trim()))).filter(Boolean)
     }));
 
     const cleanAnticipos = loadedAnticipos.map((an: Anticipo) => ({
       ...an,
-      operario: an.operario.trim()
+      operario: (an.operario || "").toString().trim()
     }));
 
     const syncedItems = { ...(loadedItems && Object.keys(loadedItems).length > 0 ? loadedItems : ITEMS_SATE) };
@@ -241,8 +241,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const calculateAvanceEconomics = useCallback((a: Avance) => {
-    const normalize = (s: string) => 
-      s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalize = (s: any) => 
+      (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
     const uniqueOpsNormalized = Array.from(new Set(uniqueOpsRaw.map(n => normalize(n as string))));

@@ -139,8 +139,8 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     const currentAnticipos = (anticipos || [])
       .filter(an => {
         let ok = an.obraId === selectedObraId;
-        const cleanInicio = periodoInicio.trim();
-        const cleanFin = periodoFin.trim();
+        const cleanInicio = (periodoInicio || "").toString().trim();
+        const cleanFin = (periodoFin || "").toString().trim();
         if (cleanInicio) ok = ok && an.fecha >= cleanInicio;
         if (cleanFin) ok = ok && an.fecha <= cleanFin;
         return ok;
@@ -164,7 +164,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     );
   };
 
-  const operarioBreakdown = useMemo(() => {
+    const operarioBreakdown = useMemo(() => {
     const totalManDays = dataFiltered.reduce((sum, a) => {
       const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
       return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
@@ -173,7 +173,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
 
     return operariosList.map(op => {
-      const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
       const opAvances = dataFiltered.filter(a => {
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;

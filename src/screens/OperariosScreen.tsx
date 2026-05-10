@@ -67,7 +67,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
 
     return operariosList.map(op => {
-      const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
       const opAvances = statsCurrent.listAv.filter(a => {
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
@@ -106,7 +106,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
 
     return operariosList.map(op => {
-      const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
       const opAvances = statsCurrent.listAv.filter(a => {
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;

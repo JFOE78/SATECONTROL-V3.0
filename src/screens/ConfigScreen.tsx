@@ -70,7 +70,7 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const duplicates: string[] = []; // ids to remove
 
     obras.forEach(o => {
-      const cleanName = o.nombre.trim().toLowerCase();
+      const cleanName = (o.nombre || "").toString().trim().toLowerCase();
       if (!nameMap[cleanName]) {
         nameMap[cleanName] = o.id;
       } else {
@@ -94,7 +94,7 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       const next = [];
       for (let i = prev.length - 1; i >= 0; i--) {
         const a = prev[i];
-        const key = `${a.obraId}-${a.fecha}-${a.bloque.trim().toLowerCase()}`;
+        const key = `${a.obraId}-${a.fecha}-${(a.bloque || "").toString().trim().toLowerCase()}`;
         if (!seen.has(key)) {
           seen.add(key);
           next.push(a);

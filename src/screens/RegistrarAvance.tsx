@@ -40,8 +40,8 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
       .reduce((map, a) => {
         const itemSet = new Set<string>();
         (a.produccion || []).forEach(p => {
-          const b = (p.bloque || a.bloque || "").trim();
-          if (b === bloque.trim() && p.itemId === selectedItemId) {
+          const b = (p.bloque || a.bloque || "").toString().trim();
+          if (b === (bloque || "").toString().trim() && p.itemId === selectedItemId) {
             itemSet.add(p.itemId);
           }
         });
@@ -86,7 +86,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
       setM2("");
       return;
     }
-    const normalizedNum = bloque.toUpperCase().replace("BLOQUE", "").trim();
+    const normalizedNum = (bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
     const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
     const target = dimensions[selectedItemId];
     if (target) {
@@ -121,13 +121,13 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     if (!m2 || isNaN(Number(m2))) return;
     
     // Calcular si con esto llegamos al 100% para el aviso de cierre
-    const normalizedNum = bloque.toUpperCase().replace("BLOQUE", "").trim();
+    const normalizedNum = (bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
     const targetM2 = BLOQUE_DIMENSIONS[normalizedNum]?. [selectedItemId] || BLOQUE_DIMENSIONS["DEFAULT"][selectedItemId] || 0;
     const currentM2InBlock = (avances || [])
       .filter(a => a.obraId === selectedObraId)
       .reduce((sum, a) => {
         return sum + (a.produccion || [])
-          .filter(p => (p.bloque || a.bloque || "").trim() === (bloque || "General").trim() && p.itemId === selectedItemId)
+          .filter(p => (p.bloque || a.bloque || "").toString().trim() === (bloque || "General").toString().trim() && p.itemId === selectedItemId)
           .reduce((s, p) => s + p.m2, 0);
       }, 0);
 
@@ -168,7 +168,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
   };
 
   const autofillM2 = () => {
-    const normalizedNum = bloque.toUpperCase().replace("BLOQUE", "").trim();
+    const normalizedNum = (bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
     const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
     const target = dimensions[selectedItemId];
     if (target) {
@@ -243,7 +243,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
         const existingIdx = prev.findIndex(a => 
           a.obraId === selectedObraId && 
           a.fecha === fecha && 
-          a.bloque.trim().toLowerCase() === bloque.trim().toLowerCase()
+          (a.bloque || "").trim().toLowerCase() === (bloque || "").trim().toLowerCase()
         );
 
         if (existingIdx !== -1) {

@@ -116,7 +116,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         const itemsInThisAvance = new Set<string>();
         (a.produccion || []).forEach(p => {
           if (p.itemId !== itemId) return;
-          const b = (p.bloque || a.bloque || "S/B").trim();
+          const b = (p.bloque || a.bloque || "S/B").toString().trim();
           if (!productionMap[b]) productionMap[b] = { m2: 0, days: 0 };
           productionMap[b].m2 += p.m2;
           
@@ -235,8 +235,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       {/* Gráfica de Tendencia */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Mensual (Beneficio)</label>
-        <div className="h-40 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-40 w-full" style={{ minHeight: '160px', minWidth: '0px' }}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={monthlyTrend}>
               <defs>
                 <linearGradient id="colorB" x1="0" y1="0" x2="0" y2="1">

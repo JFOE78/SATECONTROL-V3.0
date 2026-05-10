@@ -38,7 +38,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
       const itemsInThisAvance = new Set<string>();
 
       (avance.produccion || []).forEach(prod => {
-        let rawBloque = (prod.bloque || avance.bloque || "").trim();
+        let rawBloque = (prod.bloque || avance.bloque || "").toString().trim();
         
         let normalizedBloque = rawBloque;
         const upper = normalizedBloque.toUpperCase();
@@ -46,7 +46,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
         if (!normalizedBloque || upper === "BLOQUE") {
           normalizedBloque = "Sin asignar";
         } else if (upper.startsWith("BLOQUE ")) {
-          normalizedBloque = normalizedBloque.substring(7).trim();
+          normalizedBloque = normalizedBloque.substring(7).toString().trim();
         }
 
         if (!map[normalizedBloque]) {
@@ -195,7 +195,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                   
                   <div className="space-y-4">
                     {bloqueData.items.map(item => {
-                      const normalizedNum = bloqueData.bloque.toUpperCase().replace("BLOQUE", "").trim();
+                      const normalizedNum = (bloqueData.bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
                       const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
                       const target = dimensions[item.itemId];
                       const percentage = target ? Math.min((item.m2 / target) * 100, 100) : null;
