@@ -80,7 +80,7 @@ export const shareService = {
     const partidasData: any[] = [];
     const itemsByBlock: Record<string, any[]> = {};
     
-    (cert.items || []).forEach(it => {
+    (cert.partidas || []).forEach(it => {
       const b = it.bloque || "Sin Bloque";
       if (!itemsByBlock[b]) itemsByBlock[b] = [];
       itemsByBlock[b].push(it);
@@ -211,7 +211,7 @@ export const shareService = {
     text += `*Fecha de cierre:* ${formatDate(cert.fechaFin || cert.mes)}\n\n`;
     
     text += `*DETALLE POR BLOQUES:*\n`;
-    const items = cert.items || [];
+    const items = cert.partidas || [];
     items.forEach(it => {
       text += `- Bloque ${it.bloque}: ${it.nombre} (${formatAmount(it.m2)} m²)\n`;
     });

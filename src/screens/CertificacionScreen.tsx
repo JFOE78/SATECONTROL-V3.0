@@ -351,7 +351,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       certificado: stats.bruto - stats.anticipos + incentivoExtra,
       estado: "pendiente",
       avanceIds: dataFiltered.map(a => a.id),
-      items: itemsSnapshot,
+      partidas: itemsSnapshot,
       anticiposDetalle: anticiposSnapshot
     };
 
@@ -391,9 +391,9 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
     setExcludedAvanceIds(excluded);
 
     // RESTORE MANUAL ADJUSTMENTS
-    // manual adjustments = (c.items m2) - (sum m2 in advances)
+    // manual adjustments = (c.partidas m2) - (sum m2 in advances)
     const adjMap: Record<string, number> = {};
-    if (c.items && certIds.length > 0) {
+    if (c.partidas && certIds.length > 0) {
       const includedAvances = obraAvances.filter(a => certIds.includes(a.id));
       const advanceItemStats: Record<string, number> = {};
       includedAvances.forEach(a => {
@@ -402,7 +402,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
          });
       });
 
-      c.items.forEach(it => {
+      c.partidas.forEach(it => {
          const diff = it.m2 - (advanceItemStats[it.itemId] || 0);
          if (Math.abs(diff) > 0.01) {
             adjMap[it.itemId] = diff;
@@ -495,7 +495,7 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
       anticipos: stats.anticipos,
       certificado: stats.bruto - stats.anticipos,
       estado: "pendiente",
-      items: detailedCertifiedItems
+      partidas: detailedCertifiedItems
     };
     shareService.generateCertificacionPDF(cert, obra, stats.listAnticipos, itemsSate);
     notify("Generando PDF...", "info");

@@ -130,10 +130,14 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         fechaInicio: "2026-03-01",
         fechaFin: "2026-04-08",
         ejecutado: 11724.54,
-        anticipos: 0,
-        certificado: 11724.54,
+        anticipos: 8000,
+        certificado: 3724.54,
         estado: "cobrado",
-        fechaCobro: "2026-04-10"
+        fechaCobro: "2026-04-10",
+        partidas: [
+          { itemId: "bl13_comp", nombre: "Mortero-Malla-Fino (7 líneas)", precio: 1, m2: 8800.30, bloque: "13" },
+          { itemId: "bl5_comp", nombre: "Corcho y Tacos (5 líneas)", precio: 1, m2: 2924.24, bloque: "5" },
+        ]
       };
 
       // Cert 2: Cierre 05/05 - 16.147,84€
@@ -144,10 +148,15 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         fechaInicio: "2026-04-09",
         fechaFin: "2026-05-05",
         ejecutado: 16147.84,
-        anticipos: 0,
-        certificado: 16147.84,
+        anticipos: 8000,
+        certificado: 8147.84,
         estado: "cobrado",
-        fechaCobro: "2026-05-07"
+        fechaCobro: "2026-05-07",
+        partidas: [
+          { itemId: "bl13_comp2", nombre: "Antifisuras y Doble Malla", precio: 1, m2: 1277.76, bloque: "13" },
+          { itemId: "bl5_comp2", nombre: "Malla, Fino, Corcho, Cajeados", precio: 1, m2: 9419.68, bloque: "5" },
+          { itemId: "bl6_comp2", nombre: "Corcho + Malla", precio: 1, m2: 5450.40, bloque: "6" }
+        ]
       };
 
       const ops = operariosList.length > 0 ? operariosList.map(o => o.nombre) : ["Juan", "Mosquito", "Antonio", "Jesules", "David"];

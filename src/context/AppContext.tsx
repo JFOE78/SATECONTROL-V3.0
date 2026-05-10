@@ -115,22 +115,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       anticipos: 8000,
       certificado: 3724.54,
       estado: "cobrado",
-      items: [
-        { itemId: "bl13_l1", nombre: "Línea 1 (BL-13)", precio: 16, m2: 88.89, bloque: "13" },
-        { itemId: "bl13_l2", nombre: "Línea 2 (BL-13)", precio: 16, m2: 73.406, bloque: "13" },
-        { itemId: "bl13_l3", nombre: "Línea 3 (BL-13)", precio: 16, m2: 28.557, bloque: "13" },
-        { itemId: "bl13_l4", nombre: "Línea 4 (BL-13)", precio: 16, m2: 73.984, bloque: "13" },
-        { itemId: "bl13_l5", nombre: "Línea 5 (BL-13)", precio: 16, m2: 89.936, bloque: "13" },
-        { itemId: "bl13_l6", nombre: "Línea 6 (BL-13)", precio: 16, m2: 89.59, bloque: "13" },
-        { itemId: "bl13_l7", nombre: "Línea 7 (BL-13)", precio: 16, m2: 72.25, bloque: "13" },
-        { itemId: "bl13_caj", nombre: "Cajeado Metro (BL-13)", precio: 16, m2: 25, bloque: "13" },
-        { itemId: "bl13_malla", nombre: "Doble Malla (BL-13)", precio: 2.66, m2: 50.57, bloque: "13" },
-        { itemId: "bl5_l1", nombre: "Línea 1 (BL-5)", precio: 8, m2: 89.24, bloque: "5" },
-        { itemId: "bl5_l2", nombre: "Línea 2 (BL-5)", precio: 8, m2: 72.82, bloque: "5" },
-        { itemId: "bl5_l3", nombre: "Línea 3 (BL-5)", precio: 8, m2: 73.52, bloque: "5" },
-        { itemId: "bl5_l4", nombre: "Línea 4 (BL-5)", precio: 8, m2: 89.24, bloque: "5" },
-        { itemId: "bl5_l5", nombre: "Línea 5 (BL-5)", precio: 8, m2: 24.45, bloque: "5" },
-        { itemId: "bl5_caj", nombre: "Cajeado Metro (BL-5)", precio: 8, m2: 16.26, bloque: "5" },
+      partidas: [
+        { itemId: "bl13_comp", nombre: "Mortero-Malla-Fino (7 líneas)", precio: 1, m2: 8800.30, bloque: "13" },
+        { itemId: "bl5_comp", nombre: "Corcho y Tacos (5 líneas)", precio: 1, m2: 2924.24, bloque: "5" },
       ]
     };
 
@@ -144,22 +131,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       anticipos: 8000,
       certificado: 8147.84,
       estado: "cobrado",
-      items: [
-        { itemId: "bl13_anti", nombre: "Antifisuras cornisas (BL-13)", precio: 8, m2: 109, bloque: "13" },
-        { itemId: "bl13_malla", nombre: "Doble Malla (BL-13)", precio: 8, m2: 50.72, bloque: "13" },
-        { itemId: "bl5_mf", nombre: "Malla + Fino (BL-5)", precio: 8, m2: 324.84, bloque: "5" },
-        { itemId: "bl5_ca", nombre: "Cornisas antifisura (BL-5)", precio: 8, m2: 113.96, bloque: "5" },
-        { itemId: "bl5_cm", nombre: "Corcho + Malla (BL-5)", precio: 16, m2: 285.48, bloque: "5" },
-        { itemId: "bl5_caj_m", nombre: "Cajeado Malla (BL-5)", precio: 8, m2: 16.26, bloque: "5" },
-        { itemId: "bl5_caj_cm", nombre: "Cajeado Corcho + Malla (BL-5)", precio: 16, m2: 16.26, bloque: "5" },
-        { itemId: "bl5_dm", nombre: "Doble Malla (BL-5)", precio: 8, m2: 118.92, bloque: "5" },
-        { itemId: "bl6_cm", nombre: "Corcho + Malla (BL-6)", precio: 16, m2: 161.84, bloque: "6" },
-        { itemId: "bl6_c", nombre: "Corcho (BL-6)", precio: 8, m2: 357.62, bloque: "6" }
+      partidas: [
+        { itemId: "bl13_comp2", nombre: "Antifisuras y Doble Malla", precio: 1, m2: 1277.76, bloque: "13" },
+        { itemId: "bl5_comp2", nombre: "Malla, Fino, Corcho, Cajeados", precio: 1, m2: 9419.68, bloque: "5" },
+        { itemId: "bl6_comp2", nombre: "Corcho + Malla", precio: 1, m2: 5450.40, bloque: "6" }
       ]
     };
 
-    const isMissingItems1 = !loadedCertificaciones.find(c => c.id === "cert-historical-1")?.items?.length;
-    const isMissingItems2 = !loadedCertificaciones.find(c => c.id === "cert-historical-2")?.items?.length;
+    const isMissingItems1 = !loadedCertificaciones.find(c => c.id === "cert-historical-1")?.partidas?.length;
+    const isMissingItems2 = !loadedCertificaciones.find(c => c.id === "cert-historical-2")?.partidas?.length;
     const hasHistorical = loadedCertificaciones.some(c => c.id === "cert-historical-1");
     
     if (!hasHistorical || isMissingItems1 || isMissingItems2) {

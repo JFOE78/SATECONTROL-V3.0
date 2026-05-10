@@ -76,7 +76,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
     // Añadir producción certificada (Histórico)
     (certificaciones || []).forEach(c => {
       if (c.obraId !== selectedObraId) return;
-      (c.items || []).forEach(it => {
+      (c.partidas || []).forEach(it => {
         const rawBloque = (it.bloque || "Sin asignar").toString().trim();
         const normalizedBloque = normalize(rawBloque);
         
@@ -148,7 +148,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
       // Sumar producción histórica certificada
       (certificaciones || []).forEach(c => {
         if (c.obraId !== selectedObraId) return;
-        (c.items || []).forEach(it => {
+        (c.partidas || []).forEach(it => {
           if (it.itemId !== itemId) return;
           const bRaw = (it.bloque || "S/B").toString().trim();
           const bRef = normalize(bRaw);
@@ -351,13 +351,13 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                         const inherited = (certificaciones || []).filter(c => 
                           c.obraId === selectedObraId && 
                           c.estado === 'cobrado' && 
-                          c.items?.some(it => normalize(it.bloque || "") === bloqueData.normKey)
+                          c.partidas?.some(it => normalize(it.bloque || "") === bloqueData.normKey)
                         ).reduce((acc, c) => acc + c.ejecutado, 0); // Simplificación: sumamos ejecutado si el bloque está en los items
                         
                         // Mejor: sumamos solo los items específicos de este bloque en la certificación
                         const specificInherited = (certificaciones || []).reduce((acc, c) => {
                           if (c.obraId !== selectedObraId) return acc;
-                          const blockItems = (c.items || []).filter(it => normalize(it.bloque || "") === bloqueData.normKey);
+                          const blockItems = (c.partidas || []).filter(it => normalize(it.bloque || "") === bloqueData.normKey);
                           return acc + blockItems.reduce((s, it) => s + (it.m2 * it.precio), 0);
                         }, 0);
 
@@ -389,7 +389,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                       // Buscar si hay producción certificada para este item en este bloque
                       const certifiedM2 = (certificaciones || []).reduce((acc, c) => {
                         if (c.obraId !== selectedObraId) return acc;
-                        return acc + (c.items || []).filter(it => it.itemId === item.itemId && normalize(it.bloque || "") === bloqueData.normKey).reduce((s, it) => s + it.m2, 0);
+                        return acc + (c.partidas || []).filter(it => it.itemId === item.itemId && normalize(it.bloque || "") === bloqueData.normKey).reduce((s, it) => s + it.m2, 0);
                       }, 0);
 
                       return (

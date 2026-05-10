@@ -94,7 +94,7 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void }> = 
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Producción Certificada</label>
                         <div className="space-y-4">
-                          {Object.entries((c.items || []).reduce((acc, it) => {
+                          {Object.entries((c.partidas || []).reduce((acc, it) => {
                             const b = it.bloque || "Sin Bloque";
                             if (!acc[b]) acc[b] = [];
                             acc[b].push(it);
