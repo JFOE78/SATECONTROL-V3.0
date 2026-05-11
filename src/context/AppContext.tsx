@@ -141,8 +141,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const isMissingItems1 = !loadedCertificaciones.find(c => c.id === "cert-historical-1")?.partidas?.length;
     const isMissingItems2 = !loadedCertificaciones.find(c => c.id === "cert-historical-2")?.partidas?.length;
     const hasHistorical = loadedCertificaciones.some(c => c.id === "cert-historical-1");
+    const wasHistoricalExplicitlyDeleted = localStorage.getItem("sate_historical_deleted") === "true";
     
-    if (!hasHistorical || isMissingItems1 || isMissingItems2) {
+    if ((!hasHistorical || isMissingItems1 || isMissingItems2) && !wasHistoricalExplicitlyDeleted) {
       // Reemplazar o añadir los certificados históricos con los datos completos
       const filteredCerts = loadedCertificaciones.filter(c => c.id !== "cert-historical-1" && c.id !== "cert-historical-2" && c.id !== "historical-bloque-6");
       const nextCerts = [...filteredCerts, cert1, cert2];
@@ -217,11 +218,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       _setCertificaciones(prev => {
         const next = c(prev);
         storage.saveCertificaciones(next);
+        // Si borramos los históricos manuales, marcamos para no reinyectar
+        if (prev.length > next.length && !next.some(x => x.id.startsWith("cert-historical"))) {
+          localStorage.setItem("sate_historical_deleted", "true");
+        }
         return next;
       });
     } else {
       _setCertificaciones(c);
       storage.saveCertificaciones(c);
+      if (!c.some(x => x.id.startsWith("cert-historical"))) {
+        localStorage.setItem("sate_historical_deleted", "true");
+      }
     }
   };
 

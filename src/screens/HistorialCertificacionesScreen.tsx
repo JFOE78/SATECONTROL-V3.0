@@ -14,12 +14,19 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void, onEd
     .filter(c => c.obraId === selectedObraId)
     .sort((a, b) => (b.fechaFin || "").localeCompare(a.fechaFin || ""));
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm("¿Estás seguro de eliminar este cierre histórico?")) {
+    if (confirmDeleteId === id) {
       const next = certificaciones.filter(c => c.id !== id);
       setCertificaciones(next);
-      notify("Cierre eliminado", "success");
+      notify("Cierre eliminado con éxito", "success");
+      setConfirmDeleteId(null);
+    } else {
+      setConfirmDeleteId(id);
+      setTimeout(() => setConfirmDeleteId(null), 3000);
+      notify("Pulsa de nuevo para confirmar el borrado", "info");
     }
   };
 
@@ -67,9 +74,9 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void, onEd
 
             return (
               <div key={c.id} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                <button 
+                <div 
                   onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                  className="w-full p-6 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  className="w-full p-6 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
                     <div className="bg-blue-600 p-3 rounded-2xl text-white">
@@ -99,14 +106,18 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void, onEd
                       </button>
                       <button 
                         onClick={(e) => handleDelete(c.id, e)}
-                        className="p-1.5 bg-rose-50 dark:bg-rose-900/20 rounded-lg text-rose-400 hover:text-rose-600 transition-colors"
+                        className={`p-1.5 rounded-lg transition-all ${
+                          confirmDeleteId === c.id 
+                          ? "bg-rose-600 text-white animate-pulse" 
+                          : "bg-rose-50 dark:bg-rose-900/20 text-rose-400 hover:text-rose-600"
+                        }`}
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
                     {isExpanded ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
                   </div>
-                </button>
+                </div>
 
                 {isExpanded && (
                   <div className="px-6 pb-6 space-y-6 animate-in fade-in slide-in-from-top-2">

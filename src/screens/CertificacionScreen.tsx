@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, ChevronUp, Plus, Wand2, Check, X, Calendar as CalIcon, Pencil } from "lucide-react";
+import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, ChevronUp, Plus, Wand2, Check, X, Calendar as CalIcon, Pencil, FileText } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Certificacion, Anticipo } from "../types";
 import { shareService } from "../services/shareService";
@@ -452,7 +452,7 @@ export const CertificacionScreen: React.FC<{
     } else {
       setConfirmDeleteId(id);
       setTimeout(() => setConfirmDeleteId(null), 3000);
-      notify("Pulsa otra vez para confirmar el borrado", "info");
+      notify("Pulsa de nuevo para confirmar el borrado", "info");
     }
   };
 
