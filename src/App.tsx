@@ -31,6 +31,7 @@ type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("inicio");
   const [editingAvance, setEditingAvance] = useState<Avance | null>(null);
+  const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [selectedOperarioName, setSelectedOperarioName] = useState<string | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   
@@ -58,6 +59,9 @@ function AppContent() {
   const navigateTo = (screen: Screen) => {
     if (screen !== "registrar") {
       setEditingAvance(null);
+    }
+    if (screen !== "certificacion") {
+      setEditingCertId(null);
     }
     setCurrentScreen(screen);
   };
@@ -88,7 +92,13 @@ function AppContent() {
           />
         );
       case "certificacion":
-        return <CertificacionScreen onBack={() => navigateTo("inicio")} onOperarioClick={(n) => { setSelectedOperarioName(n); setCurrentScreen("operario_detalle"); }} />;
+        return (
+          <CertificacionScreen 
+            onBack={() => navigateTo("inicio")} 
+            onOperarioClick={(n) => { setSelectedOperarioName(n); setCurrentScreen("operario_detalle"); }} 
+            editingCertId={editingCertId}
+          />
+        );
       case "config":
         return <ConfigScreen onBack={() => navigateTo("inicio")} />;
       case "obras":
@@ -102,7 +112,15 @@ function AppContent() {
       case "produccion_bloques":
         return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} onNavigate={navigateTo} />;
       case "historial":
-        return <HistorialCertificacionesScreen onBack={() => navigateTo("inicio")} />;
+        return (
+          <HistorialCertificacionesScreen 
+            onBack={() => navigateTo("inicio")} 
+            onEdit={(id) => {
+              setEditingCertId(id);
+              setCurrentScreen("certificacion");
+            }}
+          />
+        );
       default:
         return <Inicio onNavigate={navigateTo} onInstall={handleInstallClick} showInstall={!!deferredPrompt} />;
     }

@@ -1,18 +1,32 @@
 import React, { useState } from "react";
-import { ChevronLeft, Calendar, ChevronDown, ChevronUp, FileText, Download, Share2, Plus, Image as ImageIcon, Check } from "lucide-react";
+import { ChevronLeft, Calendar, ChevronDown, ChevronUp, FileText, Download, Share2, Plus, Image as ImageIcon, Check, Pencil, Trash2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Certificacion, Avance } from "../types";
 import { formatAmount, formatDate } from "../lib/utils";
 import { shareService } from "../services/shareService";
 
-export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const { certificaciones, selectedObraId, obras, avances, itemsSate } = useApp();
+export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void, onEdit: (id: string) => void }> = ({ onBack, onEdit }) => {
+  const { certificaciones, selectedObraId, obras, avances, itemsSate, setCertificaciones, notify } = useApp();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const obra = obras.find(o => o.id === selectedObraId);
 
   const obraCerts = (certificaciones || [])
     .filter(c => c.obraId === selectedObraId)
     .sort((a, b) => (b.fechaFin || "").localeCompare(a.fechaFin || ""));
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("¿Estás seguro de eliminar este cierre histórico?")) {
+      const next = certificaciones.filter(c => c.id !== id);
+      setCertificaciones(next);
+      notify("Cierre eliminado", "success");
+    }
+  };
+
+  const handleEdit = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(id);
+  };
 
   const handleShare = (c: Certificacion) => {
     if (!obra) return;
@@ -62,18 +76,33 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void }> = 
                       <FileText size={20} />
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-black text-slate-800 dark:text-white uppercase">Cierre {c.mes}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">
+                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase leading-none mb-1">Cierre {c.mes}</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white uppercase">
                         {formatDate(c.fechaInicio!)} - {formatDate(c.fechaFin!)}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-sm font-black text-blue-600">{formatAmount(c.certificado)}€</p>
+                      <p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Total Neto</p>
+                      <p className="text-lg font-black text-blue-600">{formatAmount(c.certificado)}€</p>
                       <p className={`text-[8px] font-black uppercase ${c.estado === 'cobrado' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                        {c.estado}
+                        {c.estado === 'cobrado' ? 'COBRADA Y LIQUIDADA' : 'PENDIENTE'}
                       </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <button 
+                        onClick={(e) => handleEdit(c.id, e)}
+                        className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 hover:text-blue-600 transition-colors"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button 
+                        onClick={(e) => handleDelete(c.id, e)}
+                        className="p-1.5 bg-rose-50 dark:bg-rose-900/20 rounded-lg text-rose-400 hover:text-rose-600 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                     {isExpanded ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
                   </div>

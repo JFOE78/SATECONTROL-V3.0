@@ -1,12 +1,16 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, ChevronUp, Plus, Wand2, Check, X, Calendar as CalIcon } from "lucide-react";
+import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, ChevronUp, Plus, Wand2, Check, X, Calendar as CalIcon, Pencil } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Certificacion, Anticipo } from "../types";
 import { shareService } from "../services/shareService";
 import { formatDate, formatAmount } from "../lib/utils";
 import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
 
-export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick: (n: string) => void }> = ({ onBack, onOperarioClick }) => {
+export const CertificacionScreen: React.FC<{ 
+  onBack: () => void, 
+  onOperarioClick: (n: string) => void,
+  editingCertId?: string | null
+}> = ({ onBack, onOperarioClick, editingCertId: propEditingCertId }) => {
   const { 
     avances, 
     selectedObraId, 
@@ -26,6 +30,14 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
   const [periodoFin, setPeriodoFin] = useState("");
   const [expandedCert, setExpandedCert] = useState<string | null>(null);
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
+
+  // Sync prop editing status
+  useEffect(() => {
+    if (propEditingCertId) {
+       const c = certificaciones.find(x => x.id === propEditingCertId);
+       if (c) startEdit(c);
+    }
+  }, [propEditingCertId, certificaciones]);
   const [editingAnticipoId, setEditingAnticipoId] = useState<string | null>(null);
   const [incentivoExtra, setIncentivoExtra] = useState(0);
   const [showAnticiposList, setShowAnticiposList] = useState(false);
@@ -932,34 +944,63 @@ export const CertificacionScreen: React.FC<{ onBack: () => void, onOperarioClick
                <div key={c.id} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div 
                       onClick={() => setExpandedCert(isExpanded ? null : c.id)}
-                      className="p-6 flex justify-between items-center cursor-pointer"
+                      className="p-6 cursor-pointer"
                     >
-                      <div className="flex gap-4 items-center">
-                        <button 
-                          onClick={(e) => toggleEstado(c.id, e)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                            c.estado === 'cobrado' 
-                            ? "bg-emerald-500 border-emerald-500 text-white" 
-                            : "border-slate-300 dark:border-slate-700"
-                          }`}
-                        >
-                          {c.estado === 'cobrado' && <Check size={14} />}
-                        </button>
-                        <div>
-                          <h4 className={`font-black uppercase text-sm leading-none ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-slate-800 dark:text-white'}`}>
-                            {c.estado === 'cobrado' ? 'COBRADA Y LIQUIDADA' : 'PENDIENTE DE PAGO'}
-                          </h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Periodo: {c.fechaInicio ? formatDate(c.fechaInicio) : '??'} / {c.fechaFin ? formatDate(c.fechaFin) : '??'}</p>
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex gap-4 items-center">
+                          <div className="bg-blue-600 p-2.5 rounded-xl text-white">
+                            <FileText size={16} />
+                          </div>
+                          <div>
+                            <div className="flex gap-2 items-center">
+                              <div className={`w-3 h-3 rounded-full border flex items-center justify-center transition-all ${
+                                c.estado === 'cobrado' 
+                                ? "bg-emerald-500 border-emerald-500 text-white" 
+                                : "border-slate-300 dark:border-slate-700"
+                              }`}
+                              >
+                                {c.estado === 'cobrado' && <Check size={8} />}
+                              </div>
+                              <h4 className={`font-black uppercase text-[10px] tracking-tight ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-slate-800 dark:text-white'}`}>
+                                {c.estado === 'cobrado' ? 'COBRADA Y LIQUIDADA' : 'PENDIENTE DE PAGO'}
+                              </h4>
+                            </div>
+                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase leading-none mt-1">Cierre {c.mes}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); startEdit(c); }}
+                            className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-blue-600 transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button 
+                            onClick={(e) => deleteCert(c.id, e)}
+                            className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-xl text-rose-400 hover:text-rose-600 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-[8px] font-black text-slate-300 uppercase leading-none">Total Neto</p>
-                          <p className={`text-lg font-black leading-none ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-blue-600'}`}>
-                            {c.certificado.toLocaleString()}€
+
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Periodo:</p>
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            {c.fechaInicio ? formatDate(c.fechaInicio) : '??'} / {c.fechaFin ? formatDate(c.fechaFin) : '??'}
                           </p>
                         </div>
-                        {isExpanded ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
+
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Total Neto</p>
+                            <p className={`text-2xl font-black ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-blue-600'}`}>
+                              {formatAmount(c.certificado)}€
+                            </p>
+                          </div>
+                          {isExpanded ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
+                        </div>
                       </div>
                     </div>
 
