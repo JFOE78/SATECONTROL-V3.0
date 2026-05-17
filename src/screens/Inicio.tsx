@@ -95,11 +95,17 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         return d.getMonth() === m && d.getFullYear() === y && a.obraId === selectedObraId;
       });
 
-      const beneficio = monthAvances.reduce((sum, a) => sum + calculateAvanceEconomics(a).beneficio, 0);
+      const monthGastos = (gastos || []).filter(g => {
+        const d = new Date(g.fecha);
+        return d.getMonth() === m && d.getFullYear() === y && g.obraId === selectedObraId;
+      });
+
+      const totalIngresosMO = monthAvances.reduce((sum, a) => sum + calculateAvanceEconomics(a).beneficio, 0);
+      const totalGastosMes = monthGastos.reduce((sum, g) => sum + g.monto, 0);
       
       data.push({
         name: monthNames[m],
-        beneficio: Math.round(beneficio),
+        beneficio: Math.round(totalIngresosMO - totalGastosMes),
       });
     }
     return data;

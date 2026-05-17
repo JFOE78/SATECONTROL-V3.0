@@ -305,18 +305,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
     const uniqueOpsNormalized = Array.from(new Set(uniqueOpsRaw.map(n => normalize(n as string))));
     
+    // 1. Ingresos generados por la producción del parte
     const ingresos = (a.produccion || []).reduce((acc, p) => {
       const item = itemsSate[p.itemId];
       return acc + (p.m2 * (item?.precio || 0));
     }, 0);
 
-    const totalDailyCost = operariosList.reduce((acc, op) => acc + (op.coste || 0), 0);
-
+    // 2. Coste real de los operarios que SI asistieron
+    // Solo sumamos el coste de los que están en a.operariosPresentes
     const costeManoObra = (a.produccion.length === 0 && a.motivoSinProduccion) 
       ? 0 
-      : totalDailyCost;
+      : operariosList.reduce((acc, op) => {
+          const opName = normalize(op.nombre);
+          if (uniqueOpsNormalized.includes(opName)) {
+            return acc + (op.coste || 0);
+          }
+          return acc;
+        }, 0);
 
     const beneficio = ingresos - costeManoObra;
+    
+    // Reparato solo entre los que asistieron
     const beneficioPorOperario = uniqueOpsNormalized.length > 0 ? beneficio / uniqueOpsNormalized.length : 0;
     
     return { 
