@@ -38,11 +38,18 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
 
   const totalManDays = useMemo(() => {
     const listAv = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a.fecha));
-    return listAv.reduce((sum, a) => {
-      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
-    }, 0);
-  }, [avances, selectedObraId, isDataCertified, CUTOFF_DATE]);
+    const opJornadas = operariosList.map(op => {
+      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const opClean = normalize(op.nombre);
+      const opAvances = listAv.filter(a => {
+        const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+        return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
+      });
+      const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
+      return uniqueDates.length;
+    });
+    return opJornadas.reduce((sum, j) => sum + j, 0);
+  }, [avances, selectedObraId, isDataCertified, CUTOFF_DATE, operariosList]);
 
   const statsCurrent = useMemo(() => {
     const listAv = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a.fecha));
@@ -75,7 +82,8 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
         return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
       });
-      const jornadas = opAvances.length;
+      const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
+      const jornadas = uniqueDates.length;
       const totalJornales = jornadas * op.coste;
       const sharedProfit = sharePerJornada * jornadas;
       
@@ -100,12 +108,19 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
 
   // CÁLCULO PARA VISTA SIMULACIÓN (CON INCENTIVO)
   const operarioSettlementSimulacion = useMemo(() => {
-    const totalManDays = statsCurrent.listAv.reduce((sum, a) => {
-      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
-    }, 0);
+    const opJornadas = operariosList.map(op => {
+      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const opClean = normalize(op.nombre);
+      const opAvances = statsCurrent.listAv.filter(a => {
+        const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
+        return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
+      });
+      const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
+      return uniqueDates.length;
+    });
+    const totalManDaysSim = opJornadas.reduce((sum, j) => sum + j, 0);
     const pool = statsCurrent.profit + (incentivoExtra || 0);
-    const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
+    const sharePerJornada = totalManDaysSim > 0 ? pool / totalManDaysSim : 0;
 
     return operariosList.map(op => {
       const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -114,7 +129,8 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
         return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
       });
-      const jornadas = opAvances.length;
+      const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
+      const jornadas = uniqueDates.length;
       const totalJornales = jornadas * op.coste;
       const sharedProfitAndBonus = sharePerJornada * jornadas;
       
@@ -132,10 +148,10 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
         bruto: brutoTotal,
         cobrar: brutoTotal - opAnticipos,
         mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfitAndBonus) / jornadas : 0,
-        beneficioAportado: (statsCurrent.brutoPorJornada + (incentivoExtra / (totalManDays || 1))) - op.coste
+        beneficioAportado: (statsCurrent.brutoPorJornada + (incentivoExtra / (totalManDaysSim || 1))) - op.coste
       };
     });
-  }, [operariosList, statsCurrent, incentivoExtra, totalManDays]);
+  }, [operariosList, statsCurrent, incentivoExtra]);
 
   const currentSettlement = activeTab === 'simulacion' ? operarioSettlementSimulacion : operarioSettlementCurso;
 

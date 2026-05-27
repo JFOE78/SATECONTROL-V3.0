@@ -188,21 +188,27 @@ export const CertificacionScreen: React.FC<{
   };
 
     const operarioBreakdown = useMemo(() => {
-    const totalManDays = dataFiltered.reduce((sum, a) => {
-      const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-      return sum + (isSinActividad ? 0 : (a.operariosPresentes?.length || 0));
-    }, 0);
-    const pool = stats.realProfit + incentivoExtra;
-    const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
-
-    return operariosList.map(op => {
+    // Calcular jornadas para cada operario basadas en fechas únicas
+    const opJornadasMap = new Map<string, number>();
+    operariosList.forEach(op => {
       const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
       const opAvances = dataFiltered.filter(a => {
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
         return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
       });
-      const jornadas = opAvances.length;
+      const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
+      opJornadasMap.set(opClean, uniqueDates.length);
+    });
+
+    const totalManDays = Array.from(opJornadasMap.values()).reduce((sum, j) => sum + j, 0);
+    const pool = stats.realProfit + incentivoExtra;
+    const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
+
+    return operariosList.map(op => {
+      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const opClean = normalize(op.nombre);
+      const jornadas = opJornadasMap.get(opClean) || 0;
       const totalJornales = jornadas * op.coste;
       const sharedProfit = sharePerJornada * jornadas;
       
