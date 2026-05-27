@@ -17,6 +17,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     itemsSate, 
     manualAdjustments, 
     calculateAvanceEconomics,
+    vacaciones,
     notify 
   } = useApp();
 
@@ -73,7 +74,8 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   // CÁLCULO PARA VISTA EN CURSO
   const operarioSettlementCurso = useMemo(() => {
     const pool = statsCurrent.profit;
-    const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
+    // Cada operario de la cuadrilla recibe una parte idéntica del dividendo total (incluso si no asiste)
+    const sharedProfitValue = operariosList.length > 0 ? pool / operariosList.length : 0;
 
     return operariosList.map(op => {
       const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -84,8 +86,17 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       });
       const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
       const jornadas = uniqueDates.length;
-      const totalJornales = jornadas * op.coste;
-      const sharedProfit = sharePerJornada * jornadas;
+
+      const opVacations = (vacaciones || []).filter(v => {
+        const nameMatch = normalize(v.operario) === opClean;
+        const dateMatch = v.fecha >= CUTOFF_DATE && !isDataCertified(v.fecha);
+        const typeMatch = v.tipo === "Disfrutados y Pagados";
+        return nameMatch && dateMatch && typeMatch;
+      });
+      const vacationJornadas = opVacations.length;
+
+      const totalJornales = (jornadas + vacationJornadas) * op.coste;
+      const sharedProfit = sharedProfitValue;
       
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
@@ -94,33 +105,24 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       return {
         ...op,
         jornadas,
+        vacationJornadas,
         totalJornales,
         sharedProfit,
         opAnticipos,
         opReembolsos,
         bruto: brutoTotal,
         cobrar: brutoTotal - opAnticipos,
-        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0,
+        mediaDiaria: (jornadas + vacationJornadas) > 0 ? (totalJornales + sharedProfit) / (jornadas + vacationJornadas) : 0,
         beneficioAportado: statsCurrent.brutoPorJornada - op.coste
       };
     });
-  }, [operariosList, statsCurrent, totalManDays]);
+  }, [operariosList, statsCurrent, vacaciones, isDataCertified, CUTOFF_DATE]);
 
   // CÁLCULO PARA VISTA SIMULACIÓN (CON INCENTIVO)
   const operarioSettlementSimulacion = useMemo(() => {
-    const opJornadas = operariosList.map(op => {
-      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const opClean = normalize(op.nombre);
-      const opAvances = statsCurrent.listAv.filter(a => {
-        const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
-        return !isSinActividad && (a.operariosPresentes || []).some(o => normalize(o) === opClean);
-      });
-      const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
-      return uniqueDates.length;
-    });
-    const totalManDaysSim = opJornadas.reduce((sum, j) => sum + j, 0);
     const pool = statsCurrent.profit + (incentivoExtra || 0);
-    const sharePerJornada = totalManDaysSim > 0 ? pool / totalManDaysSim : 0;
+    // Cada operario de la cuadrilla recibe una parte idéntica del dividendo + incentivo total (incluso si no asiste)
+    const sharedProfitAndBonusValue = operariosList.length > 0 ? pool / operariosList.length : 0;
 
     return operariosList.map(op => {
       const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -131,8 +133,17 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       });
       const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
       const jornadas = uniqueDates.length;
-      const totalJornales = jornadas * op.coste;
-      const sharedProfitAndBonus = sharePerJornada * jornadas;
+
+      const opVacations = (vacaciones || []).filter(v => {
+        const nameMatch = normalize(v.operario) === opClean;
+        const dateMatch = v.fecha >= CUTOFF_DATE && !isDataCertified(v.fecha);
+        const typeMatch = v.tipo === "Disfrutados y Pagados";
+        return nameMatch && dateMatch && typeMatch;
+      });
+      const vacationJornadas = opVacations.length;
+
+      const totalJornales = (jornadas + vacationJornadas) * op.coste;
+      const sharedProfitAndBonus = sharedProfitAndBonusValue;
       
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
@@ -141,32 +152,37 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       return {
         ...op,
         jornadas,
+        vacationJornadas,
         totalJornales,
         sharedProfit: sharedProfitAndBonus,
         opAnticipos,
         opReembolsos,
         bruto: brutoTotal,
         cobrar: brutoTotal - opAnticipos,
-        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfitAndBonus) / jornadas : 0,
-        beneficioAportado: (statsCurrent.brutoPorJornada + (incentivoExtra / (totalManDaysSim || 1))) - op.coste
+        mediaDiaria: (jornadas + vacationJornadas) > 0 ? (totalJornales + sharedProfitAndBonus) / (jornadas + vacationJornadas) : 0,
+        beneficioAportado: (statsCurrent.brutoPorJornada + (incentivoExtra / (operariosList.length || 1))) - op.coste
       };
     });
-  }, [operariosList, statsCurrent, incentivoExtra]);
+  }, [operariosList, statsCurrent, incentivoExtra, vacaciones, isDataCertified, CUTOFF_DATE]);
 
   const currentSettlement = activeTab === 'simulacion' ? operarioSettlementSimulacion : operarioSettlementCurso;
 
   const filteredOperarios = useMemo(() => {
-    const list = currentSettlement.filter(o => o.jornadas > 0);
+    const list = currentSettlement.filter(o => o.jornadas > 0 || (o.vacationJornadas && o.vacationJornadas > 0));
     if (!searchTerm) return list;
     const clean = searchTerm.toLowerCase();
     return list.filter(o => o.nombre.toLowerCase().includes(clean));
   }, [currentSettlement, searchTerm]);
 
   const shareIndividualSettlement = (o: any) => {
+    const detailJornadasText = o.vacationJornadas > 0 
+      ? `(${o.jornadas}j trab. + ${o.vacationJornadas}j vac.)` 
+      : `(${o.jornadas}j)`;
+    
     const text = `*CUENTAS - ${o.nombre}*\n` +
       `*Obra:* ${selectedObra?.nombre || 'Obra'}\n` +
       `*Estado:* ${activeTab === 'simulacion' ? 'SIMULACIÓN DE CIERRE (+BONUS)' : 'PRODUCCIÓN EN CURSO'}\n\n` +
-      `- Jornales (${o.jornadas}j): ${formatAmount(o.totalJornales)}€\n` +
+      `- Jornales y Vacaciones ${detailJornadasText}: ${formatAmount(o.totalJornales)}€\n` +
       `- Reparto (+Bonus): +${formatAmount(o.sharedProfit)}€\n` +
       (o.opReembolsos > 0 ? `- Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
       `*TOTAL BRUTO: ${formatAmount(o.bruto)}€*\n` +
@@ -303,7 +319,9 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase leading-none">{o.nombre}</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{o.jornadas} jornadas registradas</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                      {o.jornadas} trab. {o.vacationJornadas > 0 ? `+ ${o.vacationJornadas} vac.` : ""}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -326,16 +344,18 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
                     <p className={`text-xs font-black ${activeTab === 'simulacion' ? 'text-indigo-600' : 'text-blue-600'}`}>{formatAmount(o.mediaDiaria)}€/día</p>
                   </div>
                   <div className="bg-emerald-50 dark:bg-emerald-900/10 p-2 rounded-xl col-span-2">
-                    <p className="text-[8px] font-black text-emerald-400 uppercase mb-1 flex items-center gap-1">
-                      <Calculator size={8} /> Beneficio Aportado (Jornada)
+                    <p className="text-[8px] font-black text-emerald-500 dark:text-emerald-400 uppercase mb-1 flex items-center gap-1">
+                      <Calculator size={8} /> Coste Diario (Sueldo Base)
                     </p>
-                    <p className="text-xs font-black text-emerald-600">{formatAmount(o.beneficioAportado)}€/día</p>
+                    <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">{formatAmount(o.coste)}€/día</p>
                   </div>
               </div>
 
               <div className="space-y-1.5 px-1">
                 <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500">
-                   <span>Jornales ({o.jornadas}j):</span>
+                   <span>
+                     Jornales {o.vacationJornadas > 0 ? `y Vac. (${o.jornadas}j + ${o.vacationJornadas}v)` : `(${o.jornadas}j)`}:
+                   </span>
                    <span className="text-slate-800 dark:text-slate-300">{formatAmount(o.totalJornales)}€</span>
                 </div>
                 <div className={`flex justify-between text-[10px] uppercase font-bold ${activeTab === 'simulacion' ? 'text-indigo-500' : 'text-emerald-500'}`}>

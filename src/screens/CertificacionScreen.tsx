@@ -22,7 +22,8 @@ export const CertificacionScreen: React.FC<{
     operariosList,
     itemsSate,
     gastos,
-    manualAdjustments, setManualAdjustments
+    manualAdjustments, setManualAdjustments,
+    vacaciones
   } = useApp();
   
   const obra = obras.find(o => o.id === selectedObraId);
@@ -190,6 +191,8 @@ export const CertificacionScreen: React.FC<{
     const operarioBreakdown = useMemo(() => {
     // Calcular jornadas para cada operario basadas en fechas únicas
     const opJornadasMap = new Map<string, number>();
+    const opVacJornadasMap = new Map<string, number>();
+    
     operariosList.forEach(op => {
       const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
@@ -199,18 +202,27 @@ export const CertificacionScreen: React.FC<{
       });
       const uniqueDates = Array.from(new Set(opAvances.map(a => a.fecha)));
       opJornadasMap.set(opClean, uniqueDates.length);
+
+      const opVacations = (vacaciones || []).filter(v => {
+        const nameMatch = normalize(v.operario) === opClean;
+        const dateMatch = v.fecha >= periodoInicio && v.fecha <= periodoFin;
+        const typeMatch = v.tipo === "Disfrutados y Pagados";
+        return nameMatch && dateMatch && typeMatch;
+      });
+      opVacJornadasMap.set(opClean, opVacations.length);
     });
 
-    const totalManDays = Array.from(opJornadasMap.values()).reduce((sum, j) => sum + j, 0);
     const pool = stats.realProfit + incentivoExtra;
-    const sharePerJornada = totalManDays > 0 ? pool / totalManDays : 0;
+    // Cada operario de la cuadrilla recibe una parte idéntica del dividendo (asistan o no)
+    const sharedProfitValue = operariosList.length > 0 ? pool / operariosList.length : 0;
 
     return operariosList.map(op => {
       const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const opClean = normalize(op.nombre);
       const jornadas = opJornadasMap.get(opClean) || 0;
-      const totalJornales = jornadas * op.coste;
-      const sharedProfit = sharePerJornada * jornadas;
+      const vacationJornadas = opVacJornadasMap.get(opClean) || 0;
+      const totalJornales = (jornadas + vacationJornadas) * op.coste;
+      const sharedProfit = sharedProfitValue;
       
       const opAnticipos = stats.listAnticipos.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = stats.processedGastos.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
@@ -218,6 +230,7 @@ export const CertificacionScreen: React.FC<{
       return {
         ...op,
         jornadas,
+        vacationJornadas,
         totalJornales,
         sharedProfit,
         opAnticipos,
@@ -225,7 +238,7 @@ export const CertificacionScreen: React.FC<{
         cobrar: totalJornales + sharedProfit + opReembolsos - opAnticipos
       };
     });
-  }, [operariosList, dataFiltered, stats, incentivoExtra]);
+  }, [operariosList, dataFiltered, stats, incentivoExtra, vacaciones, periodoInicio, periodoFin]);
 
   const handleAutoAnticipos = () => {
     const activeOps = operariosList.filter(op => 

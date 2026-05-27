@@ -23,11 +23,19 @@ export interface Avance {
   obraId: string;
   bloque: string;
   operariosPresentes: string[];
+  operariosVacaciones?: string[];
   produccion: Produccion[];
   resumen: Resumen;
   fotos?: string[];
   clima?: string;
   motivoSinProduccion?: string;
+}
+
+export interface Vacacion {
+  id: string;
+  operario: string;
+  fecha: string; // YYYY-MM-DD
+  tipo: "Disfrutados y Pagados";
 }
 
 export interface Anticipo {

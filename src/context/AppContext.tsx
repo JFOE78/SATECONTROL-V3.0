@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
-import { Obra, Avance, Certificacion, Anticipo, Gasto } from "../types";
+import { Obra, Avance, Certificacion, Anticipo, Gasto, Vacacion } from "../types";
 import { storage } from "../lib/storage";
 import { OPERARIOS, ITEMS_SATE } from "../constants";
 
@@ -11,7 +11,7 @@ interface AppContextType {
   selectedObraId: string;
   setSelectedObraId: (id: string) => void;
   avances: Avance[];
-  setAvances: (avances: Avance[]) => void;
+  setAvances: (avances: Avance[] | ((prev: Avance[]) => Avance[])) => void;
   certificaciones: Certificacion[];
   setCertificaciones: (certificaciones: Certificacion[]) => void;
   anticipos: Anticipo[];
@@ -22,6 +22,8 @@ interface AppContextType {
   setItemsSate: (items: Record<string, any>) => void;
   operariosList: any[];
   setOperariosList: (operarios: any[]) => void;
+  vacaciones: Vacacion[];
+  setVacaciones: (vacaciones: Vacacion[] | ((prev: Vacacion[]) => Vacacion[])) => void;
   notify: (message: string, type?: "success" | "error" | "info") => void;
   notification: { message: string; type: "success" | "error" | "info" } | null;
   calculateAvanceEconomics: (a: Avance) => { 
@@ -48,6 +50,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [gastos, _setGastos] = useState<Gasto[]>([]);
   const [itemsSate, _setItemsSate] = useState<Record<string, any>>(ITEMS_SATE);
   const [operariosList, _setOperariosList] = useState<any[]>(OPERARIOS);
+  const [vacaciones, _setVacaciones] = useState<Vacacion[]>([]);
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [manualAdjustments, _setManualAdjustments] = useState<Record<string, number>>({});
 
@@ -95,6 +98,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         syncedItems[key].precio = (ITEMS_SATE as any)[key].precio;
       }
     });
+
+    const INITIAL_VACACIONES: Vacacion[] = [
+      { id: "vac-1", operario: "Mosquito", fecha: "2026-05-19", tipo: "Disfrutados y Pagados" },
+      { id: "vac-2", operario: "Mosquito", fecha: "2026-05-20", tipo: "Disfrutados y Pagados" },
+      { id: "vac-3", operario: "Mosquito", fecha: "2026-05-21", tipo: "Disfrutados y Pagados" },
+      { id: "vac-4", operario: "Mosquito", fecha: "2026-05-22", tipo: "Disfrutados y Pagados" },
+      { id: "vac-5", operario: "Mosquito", fecha: "2026-05-25", tipo: "Disfrutados y Pagados" },
+      { id: "vac-6", operario: "David", fecha: "2026-04-15", tipo: "Disfrutados y Pagados" },
+      { id: "vac-7", operario: "Jesules", fecha: "2026-04-13", tipo: "Disfrutados y Pagados" },
+      { id: "vac-8", operario: "Jesules", fecha: "2026-05-25", tipo: "Disfrutados y Pagados" },
+    ];
+    const storedVac = localStorage.getItem("sate_vacaciones");
+    const loadedVac: Vacacion[] = storedVac ? JSON.parse(storedVac) : INITIAL_VACACIONES;
+    if (!storedVac) {
+      localStorage.setItem("sate_vacaciones", JSON.stringify(INITIAL_VACACIONES));
+    }
+    _setVacaciones(loadedVac);
 
     _setItemsSate(syncedItems);
     _setOperariosList(configOpsUnique);
@@ -285,6 +305,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const setVacaciones = (v: Vacacion[] | ((prev: Vacacion[]) => Vacacion[])) => {
+    if (typeof v === "function") {
+      _setVacaciones(prev => {
+        const next = v(prev);
+        localStorage.setItem("sate_vacaciones", JSON.stringify(next));
+        return next;
+      });
+    } else {
+      _setVacaciones(v);
+      localStorage.setItem("sate_vacaciones", JSON.stringify(v));
+    }
+  };
+
   const setManualAdjustments = (adj: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) => {
     if (typeof adj === "function") {
       _setManualAdjustments(prev => {
@@ -305,19 +338,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
     const uniqueOpsNormalized = Array.from(new Set(uniqueOpsRaw.map(n => normalize(n as string))));
     
+    const uniqueVacOpsRaw = Array.from(new Set(a.operariosVacaciones || []));
+    const uniqueVacOpsNormalized = Array.from(new Set(uniqueVacOpsRaw.map(n => normalize(n as string))));
+
     // 1. Ingresos generados por la producción del parte
     const ingresos = (a.produccion || []).reduce((acc, p) => {
       const item = itemsSate[p.itemId];
       return acc + (p.m2 * (item?.precio || 0));
     }, 0);
 
-    // 2. Coste real de los operarios que SI asistieron
-    // Solo sumamos el coste de los que están en a.operariosPresentes
+    // 2. Coste real de los operarios que SI asistieron + los de vacaciones pagadas
+    // Solo sumamos el coste de los que están en a.operariosPresentes o a.operariosVacaciones
     const costeManoObra = (a.produccion.length === 0 && a.motivoSinProduccion) 
       ? 0 
       : operariosList.reduce((acc, op) => {
           const opName = normalize(op.nombre);
-          if (uniqueOpsNormalized.includes(opName)) {
+          if (uniqueOpsNormalized.includes(opName) || uniqueVacOpsNormalized.includes(opName)) {
             return acc + (op.coste || 0);
           }
           return acc;
@@ -325,8 +361,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const beneficio = ingresos - costeManoObra;
     
-    // Reparato solo entre los que asistieron
-    const beneficioPorOperario = uniqueOpsNormalized.length > 0 ? beneficio / uniqueOpsNormalized.length : 0;
+    // El reparto de beneficios diarios derivados de la producción se divide igualmente entre todos los operarios registrados (asistan o no)
+    const beneficioPorOperario = operariosList.length > 0 ? beneficio / operariosList.length : 0;
     
     return { 
       ingresos, 
@@ -361,6 +397,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       gastos, setGastos,
       itemsSate, setItemsSate,
       operariosList, setOperariosList,
+      vacaciones, setVacaciones,
       notify, notification,
       calculateAvanceEconomics,
       pendingProfit,

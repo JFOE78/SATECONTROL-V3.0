@@ -13,7 +13,9 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     avances, 
     setAvances, 
     notify, 
-    calculateAvanceEconomics 
+    calculateAvanceEconomics,
+    vacaciones,
+    setVacaciones
   } = useApp();
   
   const CUTOFF_DATE = "2026-05-06";
@@ -23,6 +25,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
   })());
   const [bloque, setBloque] = useState(initialAvance?.bloque || "");
   const [operarios, setOperarios] = useState<string[]>(initialAvance?.operariosPresentes || operariosList.map(o => o.nombre));
+  const [operariosVacaciones, setOperariosVacaciones] = useState<string[]>(initialAvance?.operariosVacaciones || []);
   const [producciones, setProducciones] = useState<Produccion[]>(initialAvance?.produccion || []);
   const [fotos, setFotos] = useState<string[]>(initialAvance?.fotos || []);
   const [clima, setClima] = useState<string>(initialAvance?.clima || "despejado");
@@ -36,6 +39,26 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
   const [showCompletionPrompt, setShowCompletionPrompt] = useState<{itemId: string, bloque: string} | null>(null);
   const [showBlockPrompt, setShowBlockPrompt] = useState<boolean>(false);
   const [tempBlock, setTempBlock] = useState("");
+
+  // Auto-cargar las vacaciones planificadas del calendario para esta fecha
+  useEffect(() => {
+    if (!fecha) return;
+    const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Buscar si en sate_vacaciones para esta fecha hay operarios de vacaciones
+    const matchingVacaciones = (vacaciones || [])
+      .filter(v => v.fecha === fecha)
+      .map(v => v.operario);
+    
+    if (matchingVacaciones.length > 0) {
+      // Filtrar de los presentes y añadir a operariosVacaciones
+      setOperariosVacaciones(prev => {
+        const next = Array.from(new Set([...prev, ...matchingVacaciones]));
+        return next;
+      });
+      setOperarios(prev => prev.filter(op => !matchingVacaciones.includes(op)));
+    }
+  }, [fecha, vacaciones]);
 
   // Calcular jornadas consumidas para el bloque/partida actual
   const statsLocal = useMemo(() => {
@@ -61,10 +84,47 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
     return planned && statsLocal.days >= planned;
   }, [selectedItemId, statsLocal.days]);
 
-  // Auto-propuesta de % basada en especialización de equipos (ELIMINADO por petición de usuario)
+  // Auto-propuesta reactiva de porcentaje y metros debido a vacaciones o tipo de partida
   useEffect(() => {
-    // No hacemos nada automático para evitar confusiones con equipos
-  }, [operarios, selectedItemId]);
+    if (!selectedItemId) return;
+
+    const baseDays = RENDIMIENTOS_EQUIPO[selectedItemId] || 8;
+    const normalPercentage = 100 / baseDays;
+
+    const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const vacSet = new Set(operariosVacaciones.map(v => normalize(v)));
+
+    let proposed = normalPercentage;
+
+    const isMosquitoVac = vacSet.has(normalize("Mosquito"));
+    const isDavidVac = vacSet.has(normalize("David"));
+    const isJuanVac = vacSet.has(normalize("Juan"));
+    const isAntonioVac = vacSet.has(normalize("Antonio"));
+    const isJesulesVac = vacSet.has(normalize("Jesules"));
+
+    if (selectedItemId === "fase1") {
+      // Corcho Team: Mosquito, David
+      if (isMosquitoVac || isDavidVac) {
+        proposed = normalPercentage * 0.5; // 6.25%
+      }
+    } else {
+      // Rest Team: Juan, Antonio, Jesules
+      if (isJuanVac || isAntonioVac || isJesulesVac) {
+        proposed = normalPercentage * (2/3); // Ej: 8.33% en vez de 12.5%
+      }
+    }
+
+    const proposedString = proposed.toFixed(2);
+    setPorcentaje(proposedString);
+
+    const normalizedNum = (bloque || "").toString().toUpperCase().replace("BLOQUE", "").trim();
+    const dimensions = BLOQUE_DIMENSIONS[normalizedNum] || BLOQUE_DIMENSIONS["DEFAULT"];
+    const target = dimensions[selectedItemId];
+    if (target) {
+      const calculated = (proposed / 100) * target;
+      setM2(calculated.toFixed(2));
+    }
+  }, [selectedItemId, operariosVacaciones, bloque]);
 
   const handlePorcentajeChange = (val: string) => {
     setPorcentaje(val);
@@ -237,6 +297,7 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
       obraId: selectedObraId,
       bloque: finalGlobalBlock,
       operariosPresentes: operarios,
+      operariosVacaciones: operariosVacaciones,
       produccion: producciones,
       fotos,
       clima,
@@ -251,6 +312,16 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
       beneficio: econ.beneficio,
       beneficioPorOperario: econ.beneficioPorOperario
     };
+
+    // Sincronizar el listado general de vacaciones planificadas con lo registrado hoy
+    const otherVacaciones = (vacaciones || []).filter(v => v.fecha !== fecha);
+    const addedVacaciones = operariosVacaciones.map(opName => ({
+      id: `vac-${opName}-${fecha}-${Date.now()}`,
+      operario: opName,
+      fecha: fecha,
+      tipo: "Disfrutados y Pagados" as const
+    }));
+    setVacaciones([...otherVacaciones, ...addedVacaciones]);
 
     setAvances(prev => {
       if (isNew) {
@@ -424,24 +495,95 @@ export const RegistrarAvance: React.FC<{ initialAvance?: Avance | null, onCancel
         </div>
       </section>
 
-      <section className="space-y-3">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Operarios Presentes</label>
-        <div className="flex flex-wrap gap-2 px-2">
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">Control de Asistencia y Cuadrante</label>
+          <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">Bolsa Vacaciones: 10d</span>
+        </div>
+        
+        <div className="divide-y divide-slate-50 dark:divide-slate-800/10">
           {operariosList.map(op => {
             const isPresent = operarios.includes(op.nombre);
+            const isVacation = operariosVacaciones.includes(op.nombre);
+            const isAbsent = !isPresent && !isVacation;
+
+            // Calcular días disfrutados:
+            // Días guardados en sate_vacaciones excluyendo el actual para evitar duplicar si ya se editó
+            const otherDaysCount = (vacaciones || [])
+              .filter(v => v.operario === op.nombre && v.fecha !== fecha)
+              .length;
+            const enjoyedDays = otherDaysCount + (isVacation ? 1 : 0);
+            const remainingDays = Math.max(0, 10 - enjoyedDays);
+
             return (
-              <button 
-                key={op.nombre}
-                onClick={() => toggleOperario(op.nombre)}
-                className={`px-4 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 border-2 ${
-                  isPresent 
-                    ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-none" 
-                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400"
-                }`}
-              >
-                {isPresent ? <Check size={14} /> : <X size={14} />}
-                {op.nombre}
-              </button>
+              <div key={op.nombre} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-slate-800 dark:text-white uppercase">{op.nombre}</span>
+                    <span className="text-[9px] font-bold text-slate-400 font-mono">({op.coste}€/día)</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 animate-in fade-in duration-300">
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      isPresent ? 'bg-blue-500' : isVacation ? 'bg-purple-500' : 'bg-rose-500'
+                    }`} />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">
+                      Bolsa: <strong className="text-slate-600 dark:text-slate-200">{enjoyedDays}</strong>/10d disfrutados
+                      <span className="mx-1 text-slate-300">|</span>
+                      <strong className="text-slate-500 dark:text-slate-300">{remainingDays}d</strong> restantes
+                    </span>
+                  </div>
+                </div>
+
+                {/* Segment Selector */}
+                <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-2xl border border-slate-100 dark:border-slate-800 w-full sm:w-auto max-w-xs self-start sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOperarios(prev => Array.from(new Set([...prev, op.nombre])));
+                      setOperariosVacaciones(prev => prev.filter(v => v !== op.nombre));
+                    }}
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1 ${
+                      isPresent 
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-100 dark:shadow-none' 
+                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
+                    }`}
+                  >
+                    Activo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (remainingDays <= 0 && !isVacation) {
+                        notify(`Límite de 10 días superado para ${op.nombre}`, "error");
+                        return;
+                      }
+                      setOperariosVacaciones(prev => Array.from(new Set([...prev, op.nombre])));
+                      setOperarios(prev => prev.filter(v => v !== op.nombre));
+                    }}
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1 ${
+                      isVacation 
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-100 dark:shadow-none' 
+                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
+                    }`}
+                  >
+                    Vacaciones
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOperarios(prev => prev.filter(v => v !== op.nombre));
+                      setOperariosVacaciones(prev => prev.filter(v => v !== op.nombre));
+                    }}
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1 ${
+                      isAbsent 
+                        ? 'bg-rose-600 text-white shadow-md shadow-rose-100 dark:shadow-none' 
+                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'
+                    }`}
+                  >
+                    Ausente
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
