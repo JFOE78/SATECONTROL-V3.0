@@ -425,7 +425,7 @@ export const ProduccionBloquesScreen: React.FC<{ onBack: () => void, onNavigate:
                                 />
                               </div>
                               <p className="text-[8px] font-black text-right mt-1 uppercase text-slate-400">
-                                {percentage >= 100 ? 'Cerrado' : `${Math.round(percentage)}% Completado`}
+                                {percentage >= 100 ? 'Cerrado' : `${Math.round(percentage)}% Completado (${formatAmount(item.m2)} m² ejecutados)`}
                               </p>
                             </div>
                           )}

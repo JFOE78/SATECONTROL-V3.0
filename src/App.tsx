@@ -24,9 +24,10 @@ import { OperarioDetalleScreen } from "./screens/OperarioDetalleScreen";
 import { OperariosScreen } from "./screens/OperariosScreen";
 import { ProduccionBloquesScreen } from "./screens/ProduccionBloquesScreen";
 import { HistorialCertificacionesScreen } from "./screens/HistorialCertificacionesScreen";
+import { AsistenciaScreen } from "./screens/AsistenciaScreen";
 import { Avance } from "./types";
 
-type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operarios" | "operario_detalle" | "produccion_bloques" | "historial";
+type Screen = "inicio" | "registrar" | "calendario" | "certificacion" | "obras" | "config" | "gastos" | "operarios" | "operario_detalle" | "produccion_bloques" | "historial" | "asistencia";
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("inicio");
@@ -119,6 +120,13 @@ function AppContent() {
               setEditingCertId(id);
               setCurrentScreen("certificacion");
             }}
+          />
+        );
+      case "asistencia":
+        return (
+          <AsistenciaScreen 
+            onBack={() => navigateTo("inicio")}
+            onNavigate={navigateTo}
           />
         );
       default:

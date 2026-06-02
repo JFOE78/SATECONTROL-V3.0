@@ -53,6 +53,7 @@ export const CertificacionScreen: React.FC<{
 
   const [adjustmentItem, setAdjustmentItem] = useState<{ id: string; name: string } | null>(null);
   const [adjustmentInput, setAdjustmentInput] = useState("");
+  const [manualAnticiposOverride, setManualAnticiposOverride] = useState<number | null>(null);
 
   const applyAdjustment = () => {
     if (!adjustmentItem) return;
@@ -179,8 +180,10 @@ export const CertificacionScreen: React.FC<{
         return ok;
       });
 
-    return { bruto, laborCost, realProfit, anticipos: totalAnticipos, listAnticipos: currentAnticipos, items: itemStats, processedGastos };
-  }, [dataFiltered, anticipos, selectedObraId, periodoInicio, periodoFin, calculateAvanceEconomics, gastos, manualAdjustments, itemsSate]);
+    const finalAnticipos = manualAnticiposOverride !== null ? manualAnticiposOverride : totalAnticipos;
+
+    return { bruto, laborCost, realProfit, anticipos: finalAnticipos, listAnticipos: currentAnticipos, items: itemStats, processedGastos };
+  }, [dataFiltered, anticipos, selectedObraId, periodoInicio, periodoFin, calculateAvanceEconomics, gastos, manualAdjustments, itemsSate, manualAnticiposOverride]);
 
   const toggleExcludeAvance = (id: string) => {
     setExcludedAvanceIds(prev => 
@@ -354,8 +357,10 @@ export const CertificacionScreen: React.FC<{
   }, [dataFiltered]);
 
   const handleSaveCert = () => {
-    if (dataFiltered.length === 0) return;
+    if (dataFiltered.length === 0 && !editingCertId) return;
     
+    const existingCert = editingCertId ? certificaciones.find(x => x.id === editingCertId) : null;
+
     // Save detailed snapshot
     const itemsSnapshot = Object.entries(stats.items).map(([id, m2]) => ({
       itemId: id,
@@ -366,6 +371,7 @@ export const CertificacionScreen: React.FC<{
 
     const anticiposSnapshot = stats.listAnticipos.map(an => ({
       operario: an.operario,
+      amount: an.cantidad, // fallback compatibility
       cantidad: an.cantidad,
       fecha: an.fecha
     }));
@@ -380,10 +386,10 @@ export const CertificacionScreen: React.FC<{
       anticipos: stats.anticipos,
       incentivoExtra,
       certificado: stats.bruto - stats.anticipos + incentivoExtra,
-      estado: "pendiente",
-      avanceIds: dataFiltered.map(a => a.id),
+      estado: existingCert ? existingCert.estado : "pendiente",
+      avanceIds: existingCert ? (existingCert.avanceIds || []) : dataFiltered.map(a => a.id),
       partidas: itemsSnapshot,
-      anticiposDetalle: anticiposSnapshot
+      anticiposDetalle: existingCert?.anticiposDetalle?.length ? existingCert.anticiposDetalle : anticiposSnapshot
     };
 
     if (editingCertId) {
@@ -399,6 +405,7 @@ export const CertificacionScreen: React.FC<{
     setExcludedAvanceIds([]);
     setIncentivoExtra(0);
     setManualAdjustments({});
+    setManualAnticiposOverride(null);
     setShowSummaryModal(false);
   };
 
@@ -424,23 +431,31 @@ export const CertificacionScreen: React.FC<{
     // RESTORE MANUAL ADJUSTMENTS
     // manual adjustments = (c.partidas m2) - (sum m2 in advances)
     const adjMap: Record<string, number> = {};
-    if (c.partidas && certIds.length > 0) {
-      const includedAvances = obraAvances.filter(a => certIds.includes(a.id));
-      const advanceItemStats: Record<string, number> = {};
-      includedAvances.forEach(a => {
-         (a.produccion || []).forEach(p => {
-            advanceItemStats[p.itemId] = (advanceItemStats[p.itemId] || 0) + p.m2;
-         });
-      });
+    if (c.partidas) {
+      if (certIds.length > 0) {
+        const includedAvances = obraAvances.filter(a => certIds.includes(a.id));
+        const advanceItemStats: Record<string, number> = {};
+        includedAvances.forEach(a => {
+           (a.produccion || []).forEach(p => {
+              advanceItemStats[p.itemId] = (advanceItemStats[p.itemId] || 0) + p.m2;
+           });
+        });
 
-      c.partidas.forEach(it => {
-         const diff = it.m2 - (advanceItemStats[it.itemId] || 0);
-         if (Math.abs(diff) > 0.01) {
-            adjMap[it.itemId] = diff;
-         }
-      });
+        c.partidas.forEach(it => {
+           const diff = it.m2 - (advanceItemStats[it.itemId] || 0);
+           if (Math.abs(diff) > 0.01) {
+              adjMap[it.itemId] = diff;
+           }
+        });
+      } else {
+        // If no real advances are mapped (e.g. historical certification), restore fully as manual adjustments!
+        c.partidas.forEach(it => {
+           adjMap[it.itemId] = it.m2;
+        });
+      }
     }
     setManualAdjustments(adjMap);
+    setManualAnticiposOverride(c.anticipos);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -848,15 +863,47 @@ export const CertificacionScreen: React.FC<{
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-3xl font-black text-red-500">{stats.anticipos.toLocaleString()}€</div>
-          <button 
-            onClick={() => setShowAnticiposList(!showAnticiposList)}
-            className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl"
-          >
-            {showAnticiposList ? "Ocultar" : "Ver Detalle"}
-            {showAnticiposList ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+        <div className="flex flex-col gap-3">
+          {manualAnticiposOverride !== null ? (
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">Valor Deducción Forzado</label>
+              <div className="flex items-center gap-3 bg-red-50/50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-950/50 rounded-2xl">
+                <input 
+                  type="number" 
+                  value={manualAnticiposOverride} 
+                  onChange={e => setManualAnticiposOverride(Number(e.target.value))}
+                  className="w-full bg-transparent font-black text-2xl text-red-600 outline-none"
+                  placeholder="Valor manual de anticipo..."
+                />
+                <span className="text-xl font-black text-red-400">€</span>
+                <button 
+                  onClick={() => setManualAnticiposOverride(null)}
+                  className="text-[9px] font-black uppercase bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg whitespace-nowrap"
+                >
+                  Usar Auto
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl font-black text-red-500">{stats.anticipos.toLocaleString()}€</div>
+                <button 
+                  onClick={() => setManualAnticiposOverride(stats.anticipos)}
+                  className="text-[8px] font-black uppercase text-blue-600 hover:underline px-2 py-1"
+                >
+                  [Forzar Manual]
+                </button>
+              </div>
+              <button 
+                onClick={() => setShowAnticiposList(!showAnticiposList)}
+                className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl"
+              >
+                {showAnticiposList ? "Ocultar" : "Ver Detalle"}
+                {showAnticiposList ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            </div>
+          )}
         </div>
 
         {showManualAnticipo && (
@@ -971,11 +1018,15 @@ export const CertificacionScreen: React.FC<{
                             <FileText size={16} />
                           </div>
                           <div>
-                            <div className="flex gap-2 items-center">
-                              <div className={`w-3 h-3 rounded-full border flex items-center justify-center transition-all ${
+                            <div 
+                              onClick={(e) => toggleEstado(c.id, e)}
+                              className="flex gap-2 items-center cursor-pointer hover:scale-105 active:scale-95 transition-all bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-full border border-slate-100 dark:border-slate-700"
+                              title="Pulsar para cambiar estado"
+                            >
+                              <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all ${
                                 c.estado === 'cobrado' 
                                 ? "bg-emerald-500 border-emerald-500 text-white" 
-                                : "border-slate-300 dark:border-slate-700"
+                                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
                               }`}
                               >
                                 {c.estado === 'cobrado' && <Check size={8} />}
@@ -1011,9 +1062,31 @@ export const CertificacionScreen: React.FC<{
                           </p>
                         </div>
 
+                        {/* Breakdown grid of execution and advances */}
+                        <div className="grid grid-cols-3 gap-2 py-3 px-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
+                          <div>
+                            <p className="text-[8px] font-black text-slate-400 dark:text-slate-550 uppercase leading-none mb-1">Prod. Bruta</p>
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                              {formatAmount(c.ejecutado || 0)}€
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-red-405 uppercase leading-none mb-1">Anticipos</p>
+                            <p className="text-xs font-bold text-red-500">
+                              -{formatAmount(c.anticipos || 0)}€
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-emerald-500 uppercase leading-none mb-1">Total Neto</p>
+                            <p className={`text-xs font-black ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-blue-600'}`}>
+                              {formatAmount((c.ejecutado || 0) - (c.anticipos || 0))}€
+                            </p>
+                          </div>
+                        </div>
+
                         <div className="flex justify-between items-end">
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Total Neto</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">SALDO NETO PENDIENTE</p>
                             <p className={`text-2xl font-black ${c.estado === 'cobrado' ? 'text-emerald-600' : 'text-blue-600'}`}>
                               {formatAmount(c.certificado)}€
                             </p>
@@ -1028,7 +1101,7 @@ export const CertificacionScreen: React.FC<{
                       <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Partidas Ejecutadas</label>
                         <div className="space-y-1">
-                          {c.items?.map(it => (
+                          {(c.partidas || []).map(it => (
                             <div key={it.itemId} className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
                                <span>{it.nombre} ({it.precio}€)</span>
                                <span>{Math.round(it.m2)} m²</span>
