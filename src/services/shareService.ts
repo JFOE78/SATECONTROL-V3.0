@@ -140,7 +140,7 @@ export const shareService = {
 
     const summaryBody = [
       ['Total Producción Bruta', `${formatAmount(cert.ejecutado)} €`],
-      ['Total Anticipos / Pagos a Cuenta', `-${formatAmount(displayAnticipos)} €`],
+      ['Total Anticipos / Pagos a Cuenta', `${displayAnticipos > 0 ? '-' : ''}${formatAmount(displayAnticipos)} €`],
       ['SALDO NETO PENDIENTE', `${formatAmount(cert.ejecutado - displayAnticipos)} €`]
     ];
 

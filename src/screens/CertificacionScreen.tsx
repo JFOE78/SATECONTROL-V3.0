@@ -1043,12 +1043,12 @@ export const CertificacionScreen: React.FC<{
                           {c.anticiposDetalle?.map((an, idx) => (
                               <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
                                 <span>{an.operario} ({formatDate(an.fecha)})</span>
-                                <span className="text-red-500">-{an.cantidad}€</span>
+                                <span className="text-red-500">{an.cantidad > 0 ? "-" : ""}{an.cantidad}€</span>
                               </div>
                             ))}
                           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between font-black text-red-600 text-[11px]">
                              <span>Total Anticipos</span>
-                             <span>-{c.anticipos.toLocaleString()}€</span>
+                             <span>{c.anticipos > 0 ? "-" : ""}{c.anticipos.toLocaleString()}€</span>
                           </div>
                         </div>
                       </div>

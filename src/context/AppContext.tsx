@@ -158,15 +158,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]
     };
 
+    const cert3: Certificacion = {
+      id: "cert-historical-3",
+      obraId: targetObraId,
+      mes: "2026-05", // Tercera Certificación de Obra (Parque Alcosa)
+      fechaInicio: "2026-05-06",
+      fechaFin: "2026-06-02",
+      ejecutado: 17964.60,
+      anticipos: 8000.00,
+      certificado: 9964.60,
+      estado: "pendiente",
+      partidas: [
+        { itemId: "fase1", nombre: "Corcho + Tacos", precio: 8, m2: 950.00, bloque: "1" },
+        { itemId: "fase2", nombre: "Esquineros + Malla + Fino", precio: 8, m2: 1215.575, bloque: "1" },
+        { itemId: "anti", nombre: "Anti-fisuras (ml)", precio: 8, m2: 50.00, bloque: "1" },
+        { itemId: "cajeado", nombre: "Cajeados (m)", precio: 16, m2: 15.00, bloque: "1" }
+      ]
+    };
+
     const isMissingItems1 = !loadedCertificaciones.find(c => c.id === "cert-historical-1")?.partidas?.length;
     const isMissingItems2 = !loadedCertificaciones.find(c => c.id === "cert-historical-2")?.partidas?.length;
-    const hasHistorical = loadedCertificaciones.some(c => c.id === "cert-historical-1");
+    const isMissingItems3 = !loadedCertificaciones.find(c => c.id === "cert-historical-3")?.partidas?.length;
+    const hasHistorical = loadedCertificaciones.some(c => c.id === "cert-historical-3");
     const wasHistoricalExplicitlyDeleted = localStorage.getItem("sate_historical_deleted") === "true";
     
-    if ((!hasHistorical || isMissingItems1 || isMissingItems2) && !wasHistoricalExplicitlyDeleted) {
+    if ((!hasHistorical || isMissingItems1 || isMissingItems2 || isMissingItems3) && !wasHistoricalExplicitlyDeleted) {
       // Reemplazar o añadir los certificados históricos con los datos completos
-      const filteredCerts = loadedCertificaciones.filter(c => c.id !== "cert-historical-1" && c.id !== "cert-historical-2" && c.id !== "historical-bloque-6");
-      const nextCerts = [...filteredCerts, cert1, cert2];
+      const filteredCerts = loadedCertificaciones.filter(c => c.id !== "cert-historical-1" && c.id !== "cert-historical-2" && c.id !== "cert-historical-3" && c.id !== "historical-bloque-6");
+      const nextCerts = [...filteredCerts, cert1, cert2, cert3];
       storage.saveCertificaciones(nextCerts);
       _setCertificaciones(nextCerts);
     } else {

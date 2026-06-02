@@ -181,7 +181,7 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void, onEd
                              </div>
                              <div className="p-4 bg-rose-50 dark:bg-rose-900/10 rounded-3xl border border-rose-100 dark:border-rose-900/30">
                                 <p className="text-[8px] font-black text-rose-600 uppercase mb-1">Pagos a Cuenta</p>
-                                <p className="text-sm font-black text-rose-600">-{formatAmount(c.anticipos)}€</p>
+                                <p className="text-sm font-black text-rose-600">{c.anticipos > 0 ? "-" : ""}{formatAmount(c.anticipos)}€</p>
                              </div>
                           </div>
                           
