@@ -69,7 +69,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
   }, [asistencia]);
 
   const computedM2 = useMemo(() => {
-    return presentUsers.length * 8;
+    return presentUsers.length * 11;
   }, [presentUsers]);
 
   const dailyCost = useMemo(() => {
@@ -168,7 +168,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
         <div className="space-y-1">
           <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">Producción Automatizada</h4>
           <p className="text-[10px] text-blue-700 dark:text-blue-400/80 leading-relaxed uppercase font-semibold">
-            Cada operario presente suma exactamente <strong className="text-blue-900 dark:text-white">8 m² de Corcho+Mortero</strong> al bloque activo seleccionado. Las ausencias restan días de su bolsa de vacaciones.
+            Cada operario presente suma exactamente <strong className="text-blue-900 dark:text-white">11 m² de Corcho+Mortero</strong> al bloque activo seleccionado. Las ausencias restan días de su bolsa de vacaciones.
           </p>
         </div>
       </div>
@@ -255,7 +255,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
                   }`}>
                     {isPresent ? (
                       <>
-                        <Check size={12} strokeWidth={3} /> PRESENTE (+8m²)
+                        <Check size={12} strokeWidth={3} /> PRESENTE (+11m²)
                       </>
                     ) : (
                       <>

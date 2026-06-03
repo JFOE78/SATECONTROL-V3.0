@@ -194,7 +194,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex justify-between items-center px-2">
           <div>
-            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-0.5">Avance Diario del Bloque Activo</span>
+            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-0.5">Avance del Bloque Activo (11 m²/operario)</span>
             <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque {activeBlock}</h3>
           </div>
           <button 
@@ -210,7 +210,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1 shadow-none">PARTIDA: Corcho + Tacos</p>
               <h4 className="text-lg font-black text-slate-700 dark:text-slate-200">
-                {activeBlockProgress.totalM2.toLocaleString()} m² <span className="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md ml-1">EJECUTADOS</span>
+                {activeBlockProgress.totalM2.toLocaleString()} m² <span className="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md ml-1">ejecutados</span>
               </h4>
             </div>
             <div className="text-right">
@@ -233,51 +233,6 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         </div>
       </section>
 
-      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-4 shadow-xl shadow-slate-100/50 dark:shadow-none">
-        <div className="flex justify-between items-center px-2">
-          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado Local de la Obra</label>
-          <Activity size={14} className="text-emerald-500 animate-pulse" />
-        </div>
-        
-        <div className="space-y-4">
-          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-3xl space-y-3">
-             <div className="flex justify-between items-center">
-               <span className="text-[10px] font-black text-slate-400 uppercase">1. Producción Bruta (En Curso)</span>
-               <span className="text-sm font-black text-slate-700 dark:text-slate-300">{formatAmount(totalAcumulado.ingresosCurso)}€</span>
-             </div>
-             <div className="flex justify-between items-center">
-               <span className="text-[10px] font-black text-slate-400 uppercase">2. Certificaciones por Cobrar</span>
-               <span className="text-sm font-black text-slate-700 dark:text-slate-300">{formatAmount(totalAcumulado.certPendiente)}€</span>
-             </div>
-             <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-700/50 pt-2 mt-2">
-               <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tighter">3. Cobrado (Histórico)</span>
-               <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatAmount(totalAcumulado.totalCobrado)}€</span>
-             </div>
-          </div>
-
-             <div className="flex justify-between items-end px-4 gap-4">
-                <div className="flex-1">
-                  <span className="text-[10px] font-black text-cyan-400/60 uppercase block tracking-widest mb-1 leading-tight">Total Bruto<br/>Pendiente</span>
-                  <span className="text-2xl font-black text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)] leading-none">
-                    {formatAmount(totalAcumulado.ingresosCurso + totalAcumulado.certPendiente)}<span className="text-sm ml-0.5 opacity-70">€</span>
-                  </span>
-                </div>
-                <div className="flex-1 text-right">
-                  <span className="text-[10px] font-black text-emerald-400/60 uppercase block tracking-widest mb-1 leading-tight">Ganancia Neta<br/>Estimada</span>
-                  <span className="text-2xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none">
-                    {formatAmount(totalAcumulado.totalPendiente)}<span className="text-sm ml-0.5 opacity-70">€</span>
-                  </span>
-                </div>
-             </div>
-        </div>
-
-        <div className="pt-2 px-2 text-center border-t border-slate-50 dark:border-slate-800/50">
-          <p className="text-[9px] text-slate-400 font-bold uppercase italic leading-relaxed">
-            * El beneficio neto deduce jornales y gastos operativos para mostrar tu ganancia real acumulada.
-          </p>
-        </div>
-      </section>
-
       <div className="space-y-4">
         <ActionButton 
           onClick={() => onNavigate("asistencia")} 
@@ -286,20 +241,13 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           description="Asistencia rápida y avance automático sin teclear" 
           className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30 shadow-sm border-l-4 border-l-blue-500"
         />
-        <ActionButton 
-          onClick={() => onNavigate("registrar")} 
-          icon={<PlusCircle className="text-emerald-500" size={28} />} 
-          title="REGISTRAR PRODUCCIÓN MANUAL" 
-          description="Añadir partidas y metros individualmente" 
-          className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
-        />
         <div className="grid grid-cols-2 gap-4">
           <ActionButton 
-            onClick={() => onNavigate("produccion_bloques")} 
-            icon={<BarChart3 className="text-blue-500" size={24} />} 
-            title="PRODUCCIÓN POR BLOQUES" 
+            onClick={() => onNavigate("registrar")} 
+            icon={<PlusCircle className="text-emerald-500" size={24} />} 
+            title="PRODUCCIÓN MANUAL" 
             compact
-            className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30"
+            className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
           />
           <ActionButton 
             onClick={() => onNavigate("historial")} 
@@ -310,29 +258,6 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           />
         </div>
       </div>
-
-      {/* Gráfica de Tendencia */}
-      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 px-2">Tendencia Mensual (Beneficio)</label>
-        <div className="h-40 w-full" style={{ minHeight: '160px', minWidth: '0px' }}>
-          <ResponsiveContainer width="100%" height={160} minWidth={0} debounce={200}>
-            <AreaChart data={monthlyTrend}>
-              <defs>
-                <linearGradient id="colorB" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" fontSize={10} fontStyle="bold" axisLine={false} tickLine={false} />
-              <Tooltip 
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '12px' }} 
-              />
-              <Area type="monotone" dataKey="beneficio" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorB)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
     </div>
   );
 };
