@@ -1,11 +1,9 @@
-import React, { useMemo, useCallback, useState } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Activity, ChevronRight as ChevronRightIcon, BarChart3, Users, Check } from "lucide-react";
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import React, { useMemo, useCallback, useState, useEffect } from "react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
-import { Avance } from "../types";
+import { Avance, Vacacion } from "../types";
 import { formatAmount } from "../lib/utils";
-import { shareService } from "../services/shareService";
 import { BLOQUE_DIMENSIONS } from "../constants";
 
 export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => void, showInstall: boolean }> = ({ onNavigate, onInstall, showInstall }) => {
@@ -14,39 +12,134 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     selectedObraId, 
     setSelectedObraId, 
     avances, 
+    setAvances,
+    vacaciones,
+    setVacaciones,
     calculateAvanceEconomics, 
-    gastos, 
     certificaciones,
     operariosList,
-    anticipos,
-    itemsSate,
-    manualAdjustments
+    notify
   } = useApp();
 
-  const [expandedLiquidacion, setExpandedLiquidacion] = useState(false);
+  const [fecha, setFecha] = useState("2026-06-03");
+  const [asistencia, setAsistencia] = useState<Record<string, 'presente' | 'ausente'>>({});
 
-  const selectedObra = useMemo(() => obras.find(o => o.id === selectedObraId), [obras, selectedObraId]);
-  
-  const isDataCertified = useCallback((date: string) => {
-    return (certificaciones || []).some(c => 
-      c.obraId === selectedObraId && 
-      c.fechaInicio && c.fechaFin && 
-      date >= c.fechaInicio && date <= c.fechaFin
-    );
-  }, [certificaciones, selectedObraId]);
+  // Initialize attendance for each operario as 'presente' by default
+  useEffect(() => {
+    if (operariosList && operariosList.length > 0) {
+      const initial: Record<string, 'presente' | 'ausente'> = {};
+      operariosList.forEach(op => {
+        initial[op.nombre] = 'presente';
+      });
+      setAsistencia(initial);
+    }
+  }, [operariosList]);
 
-  const CUTOFF_DATE = "2026-05-06";
+  // Safe normalization helper for name matching
+  const normalizeName = useCallback((s: any) =>
+    (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+  []);
 
-  const activeBlock = useMemo(() => {
-    return localStorage.getItem("sate_active_block") || "11";
-  }, [avances]);
+  // Calculate vacation days left (10 initial)
+  const getOperarioBolsa = useCallback((nombre: string) => {
+    const opClean = normalizeName(nombre);
+    const totalEnjoyed = (vacaciones || []).filter(v => normalizeName(v.operario) === opClean).length;
+    return {
+      enjoyed: totalEnjoyed,
+      remaining: Math.max(0, 10 - totalEnjoyed)
+    };
+  }, [vacaciones, normalizeName]);
 
+  const presentUsers = useMemo(() => {
+    return Object.keys(asistencia).filter(nombre => asistencia[nombre] === 'presente');
+  }, [asistencia]);
+
+  const absentUsers = useMemo(() => {
+    return Object.keys(asistencia).filter(nombre => asistencia[nombre] === 'ausente');
+  }, [asistencia]);
+
+  const computedM2 = useMemo(() => {
+    return presentUsers.length * 11;
+  }, [presentUsers]);
+
+  const totalEuro = useMemo(() => {
+    return computedM2 * 20.20;
+  }, [computedM2]);
+
+  const handleToggle = (nombre: string) => {
+    setAsistencia(prev => ({
+      ...prev,
+      [nombre]: prev[nombre] === 'presente' ? 'ausente' : 'presente'
+    }));
+  };
+
+  const handleSaveAsistencia = () => {
+    if (!selectedObraId) {
+      notify("No hay ninguna obra seleccionada", "error");
+      return;
+    }
+
+    if (presentUsers.length === 0 && absentUsers.length === 0) {
+      notify("Debe haber operarios para registrar", "error");
+      return;
+    }
+
+    const m2 = presentUsers.length * 11;
+
+    const newAvance: Avance = {
+      id: `avance-auto-${fecha}-${Date.now()}`,
+      fecha,
+      obraId: selectedObraId,
+      bloque: "11",
+      operariosPresentes: presentUsers,
+      operariosVacaciones: absentUsers,
+      produccion: m2 > 0 ? [
+        {
+          itemId: "fase1", // Under combined price
+          m2,
+          bloque: "11"
+        }
+      ] : [],
+      resumen: { ingresos: m2 * 20.20, costeManoObra: 0, beneficio: 0, beneficioPorOperario: 0 },
+      motivoSinProduccion: m2 === 0 ? "Sin asistencia de la cuadrilla" : undefined
+    };
+
+    const econ = calculateAvanceEconomics(newAvance);
+    newAvance.resumen = {
+      ingresos: econ.ingresos,
+      costeManoObra: econ.costeManoObra,
+      beneficio: econ.beneficio,
+      beneficioPorOperario: econ.beneficioPorOperario
+    };
+
+    // Subtraction logic for vacations
+    const otherVac = (vacaciones || []).filter(v => v.fecha !== fecha);
+    const addedVac: Vacacion[] = absentUsers.map(nombre => ({
+      id: `vac-${nombre}-${fecha}-${Date.now()}`,
+      operario: nombre,
+      fecha: fecha,
+      tipo: "Disfrutados y Pagados"
+    }));
+
+    setVacaciones([...otherVac, ...addedVac]);
+
+    // Save Avance
+    setAvances(prev => {
+      const filtered = prev.filter(a => !(a.obraId === selectedObraId && a.fecha === fecha && (a.bloque || "").trim() === "11"));
+      return [...filtered, newAvance];
+    });
+
+    notify(`Asistencia guardada: +${m2} m² añadidos al Bloque 11 (${formatAmount(totalEuro)})`, "success");
+  };
+
+  // Progression calculation for Bloque 11 (historico starting offset at 205 m²)
   const activeBlockProgress = useMemo(() => {
-    const blockNorm = activeBlock.trim().toUpperCase().replace("BLOQUE", "").trim();
+    const blockNorm = "11";
     
-    // Sum production for the active block
+    // Sum production for Bloque 11, but only for dates strictly after 2026-06-03,
+    // as any progress up to and including June 3, 2026 is already included in the 205 m² baseline.
     const advancesM2 = (avances || [])
-      .filter(a => a.obraId === selectedObraId)
+      .filter(a => a.obraId === selectedObraId && a.fecha > "2026-06-03")
       .reduce((sum, a) => {
         const match = (a.bloque || "").trim().toUpperCase().replace("BLOQUE", "").trim() === blockNorm;
         if (!match) return sum;
@@ -55,17 +148,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           .reduce((s, p) => s + p.m2, 0);
       }, 0);
 
-    const certifiedM2 = (certificaciones || []).reduce((sum, c) => {
-      if (c.obraId !== selectedObraId) return sum;
-      return sum + (c.partidas || [])
-        .filter(it => {
-          const bRaw = (it.bloque || "").trim().toUpperCase().replace("BLOQUE", "").trim();
-          return bRaw === blockNorm && it.itemId === "fase1";
-        })
-        .reduce((s, it) => s + it.m2, 0);
-    }, 0);
-
-    const totalM2 = advancesM2 + certifiedM2;
+    const baseOffset = 205; // Fixed starting baseline for Bloque 11 including up to today (2026-06-03)
+    const totalM2 = baseOffset + advancesM2;
     const dims = BLOQUE_DIMENSIONS[blockNorm] || BLOQUE_DIMENSIONS["DEFAULT"];
     const targetM2 = dims["fase1"] || 634.77;
 
@@ -74,84 +158,10 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       targetM2,
       percentage: Math.min((totalM2 / targetM2) * 100, 100)
     };
-  }, [avances, selectedObraId, certificaciones, activeBlock]);
-
-  const totalAcumulado = useMemo(() => {
-    // 1. Producción NO certificada (en curso) desde el corte
-    const advancesEcon = (avances || [])
-      .filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE && !isDataCertified(a.fecha))
-      .reduce((acc, curr) => {
-        const econ = calculateAvanceEconomics(curr);
-        return {
-          costeMO: acc.costeMO + (econ.costeManoObra || 0),
-          beneficio: acc.beneficio + (econ.beneficio || 0)
-        };
-      }, { costeMO: 0, beneficio: 0 });
-      
-    const totalG = (gastos || [])
-      .filter(g => g.obraId === selectedObraId && g.fecha >= CUTOFF_DATE && !isDataCertified(g.fecha))
-      .reduce((sum, g) => sum + g.monto, 0);
-
-    // 2. Certificaciones pendientes de cobro (desde el corte o históricas pendientes)
-    // Nota: Las certificaciones anteriores al corte ya se asumen liquidadas o descartadas si el usuario quiere "limpieza"
-    const montoCertsPendientes = (certificaciones || [])
-      .filter(c => c.obraId === selectedObraId && (c.fechaFin || '') >= CUTOFF_DATE && c.estado !== 'cobrado')
-      .reduce((sum, c) => sum + c.certificado, 0);
-
-    const produccionEnCurso = advancesEcon.beneficio - totalG;
-
-    const totalCobrado = (certificaciones || [])
-      .filter(c => c.obraId === selectedObraId && c.estado === 'cobrado')
-      .reduce((sum, c) => sum + c.ejecutado, 0);
-
-    return {
-      ingresosCurso: advancesEcon.beneficio + advancesEcon.costeMO,
-      certPendiente: montoCertsPendientes,
-      totalPendiente: produccionEnCurso + montoCertsPendientes,
-      totalCobrado
-    };
-  }, [avances, gastos, calculateAvanceEconomics, isDataCertified, selectedObraId, certificaciones]);
-
-  const lastAvance = useMemo(() => 
-    [...avances]
-      .filter(a => a.obraId === selectedObraId)
-      .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0],
-    [avances, selectedObraId]
-  );
-
-  const monthlyTrend = useMemo(() => {
-    const data: any[] = [];
-    const now = new Date();
-    const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
-
-    for (let i = 5; i >= 0; i--) {
-      const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const m = targetDate.getMonth();
-      const y = targetDate.getFullYear();
-      
-      const monthAvances = (avances || []).filter(a => {
-        const d = new Date(a.fecha);
-        return d.getMonth() === m && d.getFullYear() === y && a.obraId === selectedObraId;
-      });
-
-      const monthGastos = (gastos || []).filter(g => {
-        const d = new Date(g.fecha);
-        return d.getMonth() === m && d.getFullYear() === y && g.obraId === selectedObraId;
-      });
-
-      const totalIngresosMO = monthAvances.reduce((sum, a) => sum + calculateAvanceEconomics(a).beneficio, 0);
-      const totalGastosMes = monthGastos.reduce((sum, g) => sum + g.monto, 0);
-      
-      data.push({
-        name: monthNames[m],
-        beneficio: Math.round(totalIngresosMO - totalGastosMes),
-      });
-    }
-    return data;
-  }, [avances, calculateAvanceEconomics, selectedObraId]);
+  }, [avances, selectedObraId]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-12">
       {showInstall && (
         <button 
           onClick={onInstall}
@@ -168,6 +178,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         </button>
       )}
 
+      {/* OBRA COOPERATIVA */}
       <section className="bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center mb-2 px-2">
           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Obra Activa</label>
@@ -190,25 +201,126 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         </div>
       </section>
 
-      {/* PROGRESO EN TIEMPO REAL - BLOQUE ACTIVO */}
-      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex justify-between items-center px-2">
+      {/* PASO DE LISTA DIARIO DIRECTO */}
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/30 dark:shadow-none space-y-4">
+        <div className="flex justify-between items-center px-1">
           <div>
-            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-0.5">Avance del Bloque Activo (11 m²/operario)</span>
-            <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque {activeBlock}</h3>
+            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-0.5">Control de Cuadrilla & SATE</span>
+            <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Paso de Lista Diario</h3>
           </div>
-          <button 
-            onClick={() => onNavigate("asistencia")}
-            className="text-[9px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-xl border border-blue-100/50 dark:border-blue-800/10 active:scale-95 transition-all font-sans"
-          >
-            Configurar Tajo
-          </button>
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 py-1.5 px-3 rounded-xl">
+            <Calendar size={13} className="text-slate-400" />
+            <input 
+              type="date" 
+              value={fecha} 
+              onChange={e => setFecha(e.target.value)}
+              className="bg-transparent text-[11px] font-black text-slate-600 dark:text-slate-300 outline-none w-24 border-none p-0 focus:ring-0"
+            />
+          </div>
         </div>
 
-        <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-3xl space-y-3 border border-transparent">
+        {/* List of Operarios */}
+        <div className="space-y-2.5">
+          {["Juan", "Mosquito", "Antonio", "Jesules", "David"].map(nombre => {
+            const op = operariosList.find(o => normalizeName(o.nombre) === normalizeName(nombre)) || { nombre, coste: 120 };
+            const isPresent = asistencia[nombre] !== 'ausente';
+            const bolsa = getOperarioBolsa(nombre);
+
+            return (
+              <div 
+                key={nombre}
+                onClick={() => handleToggle(nombre)}
+                className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center justify-between ${
+                  isPresent 
+                    ? 'bg-slate-50/50 dark:bg-slate-800/30 border-emerald-100 dark:border-emerald-900/10' 
+                    : 'bg-red-50/20 dark:bg-red-950/5 border-red-100/30 dark:border-red-900/10'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-colors duration-200 ${
+                    isPresent 
+                      ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500' 
+                      : 'bg-red-50 dark:bg-red-950/20 text-red-500'
+                  }`}>
+                    {nombre.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase leading-none mb-1">{nombre}</h4>
+                    <span className="text-[9px] font-bold text-slate-400 block">
+                      Coste: {op.coste}€/día
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-md ${
+                    bolsa.remaining <= 3 
+                      ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-500' 
+                      : 'bg-purple-50 dark:bg-purple-950/20 text-purple-500'
+                  }`}>
+                    {bolsa.remaining} lib.
+                  </span>
+
+                  <div className={`text-[8px] font-black tracking-widest px-2.5 py-1.5 rounded-xl uppercase flex items-center gap-1 transition-all duration-200 ${
+                    isPresent 
+                      ? 'bg-emerald-500 text-white shadow-sm' 
+                      : 'bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400'
+                  }`}>
+                    {isPresent ? (
+                      <>
+                        <Check size={8} strokeWidth={4} /> PRESENTE (+11m²)
+                      </>
+                    ) : (
+                      <>
+                        <X size={8} strokeWidth={4} /> AUSENTE (-1 día)
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Live Summary Bar */}
+        <div className="bg-slate-900 dark:bg-black p-4 rounded-3xl text-white space-y-3">
+          <div className="flex justify-between items-center text-xs">
+            <div>
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Metros Avanzados (11 m²/op)</p>
+              <h4 className="text-xl font-black text-emerald-400 leading-tight">{computedM2} m²</h4>
+            </div>
+            <div className="text-right">
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Valor Diario (20.20 €/m²)</p>
+              <h4 className="text-xl font-black text-blue-400 leading-tight">{formatAmount(totalEuro)}</h4>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            onClick={handleSaveAsistencia}
+            className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-97 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
+          >
+            <ShieldCheck size={14} /> Guardar Asistencia y Avance
+          </button>
+        </div>
+      </section>
+
+      {/* VISTA ÚNICA DE PROGRESO REAL (BLOQUE 11) */}
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <div>
+            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-0.5">Avance del Bloque Activo (Fijo + Automático)</span>
+            <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque 11 (205 m² base inicial)</h3>
+          </div>
+          <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-xl">
+            SATE LISO
+          </span>
+        </div>
+
+        <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-3xl space-y-3">
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1 shadow-none">PARTIDA: Corcho + Tacos</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">PARTIDA: Corcho + Tacos (Combinado)</p>
               <h4 className="text-lg font-black text-slate-700 dark:text-slate-200">
                 {activeBlockProgress.totalM2.toLocaleString()} m² <span className="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md ml-1">ejecutados</span>
               </h4>
@@ -227,36 +339,28 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           </div>
           
           <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-wider px-1 leading-none">
-            <span>Inicio SATE</span>
+            <span>Arranque en 205 m²</span>
             <span>Completado {Math.round(activeBlockProgress.percentage)}%</span>
           </div>
         </div>
       </section>
 
-      <div className="space-y-4">
+      {/* COMPONENTES DE ENLACE */}
+      <div className="grid grid-cols-2 gap-4">
         <ActionButton 
-          onClick={() => onNavigate("asistencia")} 
-          icon={<Users className="text-blue-500" size={28} />} 
-          title="PASO DE LISTA DIARIO" 
-          description="Asistencia rápida y avance automático sin teclear" 
-          className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30 shadow-sm border-l-4 border-l-blue-500"
+          onClick={() => onNavigate("registrar")} 
+          icon={<PlusCircle className="text-emerald-500" size={24} />} 
+          title="PRODUCCIÓN MANUAL" 
+          compact
+          className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
         />
-        <div className="grid grid-cols-2 gap-4">
-          <ActionButton 
-            onClick={() => onNavigate("registrar")} 
-            icon={<PlusCircle className="text-emerald-500" size={24} />} 
-            title="PRODUCCIÓN MANUAL" 
-            compact
-            className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
-          />
-          <ActionButton 
-            onClick={() => onNavigate("historial")} 
-            icon={<FileText className="text-amber-500" size={24} />} 
-            title="CERTIFICACIONES Y COBROS" 
-            compact
-            className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
-          />
-        </div>
+        <ActionButton 
+          onClick={() => onNavigate("historial")} 
+          icon={<FileText className="text-amber-500" size={24} />} 
+          title="CERTIFICACIONES Y COBROS" 
+          compact
+          className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
+        />
       </div>
     </div>
   );

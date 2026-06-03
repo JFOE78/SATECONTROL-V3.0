@@ -98,6 +98,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         syncedItems[key].precio = (ITEMS_SATE as any)[key].precio;
       }
     });
+    // Force exact pricing and name requested by user
+    if (syncedItems.fase1) {
+      syncedItems.fase1.precio = 20.20;
+      syncedItems.fase1.nombre = "SATE Combinado (Corcho + Fino)";
+    }
 
     const INITIAL_VACACIONES: Vacacion[] = [
       { id: "vac-1", operario: "Mosquito", fecha: "2026-05-19", tipo: "Disfrutados y Pagados" },

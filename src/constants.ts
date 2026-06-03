@@ -1,7 +1,7 @@
 export const TARIFAS = {};
 
 export const ITEMS_SATE: Record<string, { nombre: string, precio: number }> = {
-  fase1: { nombre: "Corcho + Tacos", precio: 8 },
+  fase1: { nombre: "SATE Combinado (Corcho + Fino)", precio: 20.20 },
   fase2: { nombre: "Esquineros + Malla + Fino", precio: 8 },
   anti: { nombre: "Anti-fisuras (ml)", precio: 8 },
   cajeado: { nombre: "Cajeados (m)", precio: 16 },
@@ -11,6 +11,13 @@ export const ITEMS_SATE: Record<string, { nombre: string, precio: number }> = {
 // Medidas reales por bloque (Basado en Escandallo Maestro)
 export const BLOQUE_DIMENSIONS: Record<string, Record<string, number>> = {
   "DEFAULT": {
+    fase1: 634.77,
+    fase2: 634.77,
+    anti: 145,
+    cajeado: 33.04,
+    malla: 136
+  },
+  "11": {
     fase1: 634.77,
     fase2: 634.77,
     anti: 145,
