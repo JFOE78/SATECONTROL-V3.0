@@ -24,16 +24,59 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
   const [fecha, setFecha] = useState("2026-06-03");
   const [asistencia, setAsistencia] = useState<Record<string, 'presente' | 'ausente'>>({});
 
-  // Initialize attendance for each operario as 'presente' by default
+  // Safe normalization helper for name matching
+  const normalizeName = useCallback((s: any) =>
+    (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+  []);
+
+  // Synchronize attendance state from existing database entries (Avances or Vacaciones) or default to all present
   useEffect(() => {
-    if (operariosList && operariosList.length > 0) {
-      const initial: Record<string, 'presente' | 'ausente'> = {};
+    if (!operariosList || operariosList.length === 0) return;
+
+    // Check if there is an existing Avance for this date, obra and Bloque 11
+    const existingAvance = (avances || []).find(a => 
+      a.obraId === selectedObraId && 
+      a.fecha === fecha && 
+      (a.bloque || "").trim() === "11"
+    );
+
+    const nextAsistencia: Record<string, 'presente' | 'ausente'> = {};
+
+    if (existingAvance) {
+      // Initialize based on saved record
+      const presentSet = new Set((existingAvance.operariosPresentes || []).map(normalizeName));
+      const absentSet = new Set((existingAvance.operariosVacaciones || []).map(normalizeName));
+
       operariosList.forEach(op => {
-        initial[op.nombre] = 'presente';
+        const norm = normalizeName(op.nombre);
+        if (presentSet.has(norm)) {
+          nextAsistencia[op.nombre] = 'presente';
+        } else if (absentSet.has(norm)) {
+          nextAsistencia[op.nombre] = 'ausente';
+        } else {
+          nextAsistencia[op.nombre] = 'presente';
+        }
       });
-      setAsistencia(initial);
+    } else {
+      // Default behavior: check if registered in vacaciones on this exact day
+      const dailyVacationSet = new Set(
+        (vacaciones || [])
+          .filter(v => v.fecha === fecha)
+          .map(v => normalizeName(v.operario))
+      );
+
+      operariosList.forEach(op => {
+        const norm = normalizeName(op.nombre);
+        if (dailyVacationSet.has(norm)) {
+          nextAsistencia[op.nombre] = 'ausente';
+        } else {
+          nextAsistencia[op.nombre] = 'presente';
+        }
+      });
     }
-  }, [operariosList]);
+
+    setAsistencia(nextAsistencia);
+  }, [fecha, selectedObraId, avances, vacaciones, operariosList, normalizeName]);
 
   // Jetpack Compose PullRefresh touch and swipe state tracker
   const [startY, setStartY] = useState<number | null>(null);
@@ -135,11 +178,6 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
       setIsMouseDown(false);
     }
   }, [isMouseDown, pullY, triggerRefresh]);
-
-  // Safe normalization helper for name matching
-  const normalizeName = useCallback((s: any) =>
-    (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
-  []);
 
   // Calculate vacation days left (10 initial)
   const getOperarioBolsa = useCallback((nombre: string) => {

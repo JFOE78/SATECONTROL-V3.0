@@ -27,28 +27,66 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
     return localStorage.getItem("sate_active_block") || "11";
   });
 
+  // Safe normalization helper
+  const normalize = (s: any) =>
+    (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
   // State mapping operario name to attendance state: 'presente' or 'ausente'
   const [asistencia, setAsistencia] = useState<Record<string, 'presente' | 'ausente'>>({});
 
-  // Initialize all operarios as 'presente' on first load
+  // Synchronize attendance state from existing database entries (Avances or Vacaciones) or default to all present
   useEffect(() => {
-    if (operariosList && operariosList.length > 0) {
-      const initial: Record<string, 'presente' | 'ausente'> = {};
+    if (!operariosList || operariosList.length === 0) return;
+
+    // Check if there is an existing Avance for this date, obra and block
+    const existingAvance = (avances || []).find(a => 
+      a.obraId === selectedObraId && 
+      a.fecha === fecha && 
+      (a.bloque || "").trim() === activeBlock
+    );
+
+    const nextAsistencia: Record<string, 'presente' | 'ausente'> = {};
+
+    if (existingAvance) {
+      // Initialize based on saved record
+      const presentSet = new Set((existingAvance.operariosPresentes || []).map(normalize));
+      const absentSet = new Set((existingAvance.operariosVacaciones || []).map(normalize));
+
       operariosList.forEach(op => {
-        initial[op.nombre] = 'presente';
+        const norm = normalize(op.nombre);
+        if (presentSet.has(norm)) {
+          nextAsistencia[op.nombre] = 'presente';
+        } else if (absentSet.has(norm)) {
+          nextAsistencia[op.nombre] = 'ausente';
+        } else {
+          nextAsistencia[op.nombre] = 'presente';
+        }
       });
-      setAsistencia(initial);
+    } else {
+      // Default behavior: check if registered in vacaciones on this exact day
+      const dailyVacationSet = new Set(
+        (vacaciones || [])
+          .filter(v => v.fecha === fecha)
+          .map(v => normalize(v.operario))
+      );
+
+      operariosList.forEach(op => {
+        const norm = normalize(op.nombre);
+        if (dailyVacationSet.has(norm)) {
+          nextAsistencia[op.nombre] = 'ausente';
+        } else {
+          nextAsistencia[op.nombre] = 'presente';
+        }
+      });
     }
-  }, [operariosList]);
+
+    setAsistencia(nextAsistencia);
+  }, [fecha, selectedObraId, activeBlock, avances, vacaciones, operariosList]);
 
   // Handle saving the block selection to local storage
   useEffect(() => {
     localStorage.setItem("sate_active_block", activeBlock);
   }, [activeBlock]);
-
-  // Safe normalization helper
-  const normalize = (s: any) =>
-    (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   // Detect vacation count from existing vacation logs (initial 10 days)
   const getOperarioBolsa = (nombre: string) => {
