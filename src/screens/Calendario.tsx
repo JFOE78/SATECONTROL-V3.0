@@ -6,8 +6,38 @@ import { formatDate, formatAmount } from "../lib/utils";
 
 export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => void, onNew: (date: string) => void }> = ({ onEdit, onBack, onNew }) => {
   const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, setAnticipos, itemsSate, certificaciones, operariosList } = useApp();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState<string | null>(new Date().toISOString().split('T')[0]);
+  
+  // Find the latest registered avance's date for this obra, or default to the baseline "2026-06-03" to ensure any saved records are in view.
+  const initialDateStr = useMemo(() => {
+    if (avances && avances.length > 0) {
+      const sorted = [...avances]
+        .filter(a => a.obraId === selectedObraId)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
+      if (sorted.length > 0) return sorted[0].fecha;
+    }
+    return "2026-06-03";
+  }, [avances, selectedObraId]);
+
+  const [currentMonth, setCurrentMonth] = useState<Date>(() => {
+    const parts = initialDateStr.split('-');
+    const year = Number(parts[0]) || 2026;
+    const month = Number(parts[1]) || 6;
+    return new Date(year, month - 1, 1);
+  });
+  
+  const [selectedDay, setSelectedDay] = useState<string | null>(initialDateStr);
+
+  // Synchronize calendar focus whenever the latest target date updates
+  React.useEffect(() => {
+    if (initialDateStr) {
+      setSelectedDay(initialDateStr);
+      const parts = initialDateStr.split('-');
+      const year = Number(parts[0]) || 2026;
+      const month = Number(parts[1]) || 6;
+      setCurrentMonth(new Date(year, month - 1, 1));
+    }
+  }, [initialDateStr]);
+
   const [editingAnticipoId, setEditingAnticipoId] = useState<string | null>(null);
   const [editAnticipoOp, setEditAnticipoOp] = useState("");
   const [editAnticipoAmount, setEditAnticipoAmount] = useState<number>(0);

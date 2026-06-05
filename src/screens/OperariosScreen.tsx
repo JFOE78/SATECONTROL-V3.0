@@ -168,7 +168,8 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   const currentSettlement = activeTab === 'simulacion' ? operarioSettlementSimulacion : operarioSettlementCurso;
 
   const filteredOperarios = useMemo(() => {
-    const list = currentSettlement.filter(o => o.jornadas > 0 || (o.vacationJornadas && o.vacationJornadas > 0));
+    // Show all squad operarios so users can see names, base wages, and benefit shares even if there's no work logged in this segment yet
+    const list = currentSettlement;
     if (!searchTerm) return list;
     const clean = searchTerm.toLowerCase();
     return list.filter(o => o.nombre.toLowerCase().includes(clean));
