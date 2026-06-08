@@ -21,7 +21,9 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     notify
   } = useApp();
 
-  const [fecha, setFecha] = useState("2026-06-03");
+  const [fecha, setFecha] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
   const [asistencia, setAsistencia] = useState<Record<string, 'presente' | 'ausente'>>({});
 
   // Safe normalization helper for name matching
