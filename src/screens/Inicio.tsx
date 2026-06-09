@@ -403,8 +403,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
 
         {/* List of Operarios */}
         <div className="space-y-2.5">
-          {["Juan", "Mosquito", "Antonio", "Jesules", "David"].map(nombre => {
-            const op = operariosList.find(o => normalizeName(o.nombre) === normalizeName(nombre)) || { nombre, coste: 120 };
+          {operariosList.map(op => {
+            const nombre = op.nombre;
             const isPresent = asistencia[nombre] !== 'ausente';
             const bolsa = getOperarioBolsa(nombre);
 

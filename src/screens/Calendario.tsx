@@ -181,6 +181,8 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
             const isSelected = selectedDay === day;
             const dayAvance = filteredAvances.find(a => a.fecha === day);
             const hasAvance = !!dayAvance;
+            const hasWork = hasAvance && dayAvance.produccion && dayAvance.produccion.length > 0 && dayAvance.produccion.some(p => p.m2 > 0);
+            const isUnworked = hasAvance && !hasWork;
             const hasAnticipo = filteredAnticipos.some(a => a.fecha === day);
             const isPaidCert = filteredCerts.some(c => c.fechaFin === day);
             const dateObj = new Date(day);
@@ -203,7 +205,8 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
                 <span className="text-xs font-black">{parseInt(day.split('-')[2])}</span>
                 <div className="flex gap-0.5 mt-0.5">
                   {isPaidCert && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]"}`} />}
-                  {hasAvance && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`} />}
+                  {hasAvance && hasWork && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`} />}
+                  {isUnworked && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-amber-500 shadow-[0_0_3px_rgba(245,158,11,0.8)]"}`} />}
                   {hasAnticipo && <div className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-red-500"}`} />}
                 </div>
               </button>
@@ -376,7 +379,11 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-[10px] font-black text-slate-500 uppercase">Avances de Trabajo (Partes)</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase">Jornadas de Trabajo (Con Producción)</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.8)]" />
+              <span className="text-[10px] font-black text-slate-500 uppercase">Días sin Actividad Laboral (No Trabajados / Sin Producción)</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-red-500" />

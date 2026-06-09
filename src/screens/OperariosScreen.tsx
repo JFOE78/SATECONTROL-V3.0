@@ -74,11 +74,10 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   // CÁLCULO PARA VISTA EN CURSO
   const operarioSettlementCurso = useMemo(() => {
     const pool = statsCurrent.profit;
-    // Cada operario de la cuadrilla recibe una parte idéntica del dividendo total (incluso si no asiste)
-    const sharedProfitValue = operariosList.length > 0 ? pool / operariosList.length : 0;
+    const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    return operariosList.map(op => {
-      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // Pre-calculate active days for each operario
+    const intermediate = operariosList.map(op => {
       const opClean = normalize(op.nombre);
       const opAvances = statsCurrent.listAv.filter(a => {
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
@@ -95,9 +94,26 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       });
       const vacationJornadas = opVacations.length;
 
+      return {
+        op,
+        jornadas,
+        vacationJornadas,
+        activeDays: jornadas + vacationJornadas
+      };
+    });
+
+    const totalGroupDays = intermediate.reduce((sum, item) => sum + item.activeDays, 0);
+
+    return intermediate.map(item => {
+      const { op, jornadas, vacationJornadas, activeDays } = item;
+      const opClean = normalize(op.nombre);
       const totalJornales = (jornadas + vacationJornadas) * op.coste;
-      const sharedProfit = sharedProfitValue;
       
+      // Proportional profit sharing (Regla de tres)
+      const sharedProfit = totalGroupDays > 0 
+        ? (pool * activeDays) / totalGroupDays 
+        : (operariosList.length > 0 ? pool / operariosList.length : 0);
+
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
       const brutoTotal = totalJornales + sharedProfit + opReembolsos;
@@ -121,11 +137,10 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   // CÁLCULO PARA VISTA SIMULACIÓN (CON INCENTIVO)
   const operarioSettlementSimulacion = useMemo(() => {
     const pool = statsCurrent.profit + (incentivoExtra || 0);
-    // Cada operario de la cuadrilla recibe una parte idéntica del dividendo + incentivo total (incluso si no asiste)
-    const sharedProfitAndBonusValue = operariosList.length > 0 ? pool / operariosList.length : 0;
+    const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    return operariosList.map(op => {
-      const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // Pre-calculate active days for each operario
+    const intermediate = operariosList.map(op => {
       const opClean = normalize(op.nombre);
       const opAvances = statsCurrent.listAv.filter(a => {
         const isSinActividad = a.produccion.length === 0 && a.motivoSinProduccion;
@@ -142,9 +157,26 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       });
       const vacationJornadas = opVacations.length;
 
+      return {
+        op,
+        jornadas,
+        vacationJornadas,
+        activeDays: jornadas + vacationJornadas
+      };
+    });
+
+    const totalGroupDays = intermediate.reduce((sum, item) => sum + item.activeDays, 0);
+
+    return intermediate.map(item => {
+      const { op, jornadas, vacationJornadas, activeDays } = item;
+      const opClean = normalize(op.nombre);
       const totalJornales = (jornadas + vacationJornadas) * op.coste;
-      const sharedProfitAndBonus = sharedProfitAndBonusValue;
       
+      // Proportional profit sharing (Regla de tres)
+      const sharedProfitAndBonus = totalGroupDays > 0 
+        ? (pool * activeDays) / totalGroupDays 
+        : (operariosList.length > 0 ? pool / operariosList.length : 0);
+
       const opAnticipos = statsCurrent.listAn.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);
       const opReembolsos = statsCurrent.listGa.filter(g => g.pagadoPor && normalize(g.pagadoPor) === opClean).reduce((sum, g) => sum + g.monto, 0);
       const brutoTotal = totalJornales + sharedProfitAndBonus + opReembolsos;
@@ -296,6 +328,14 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full bg-white dark:bg-slate-900 pl-12 pr-4 p-4 rounded-2xl text-xs font-black uppercase text-slate-800 dark:text-white border border-slate-100 dark:border-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
         />
+      </div>
+
+      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/10 p-4 rounded-2xl flex gap-3 items-start">
+        <Info className="text-blue-500 mt-0.5 shrink-0 animate-pulse" size={16} />
+        <div>
+          <p className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-400">Reparto Proporcional (Regla de 3)</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">El beneficio a repartir se distribuye de manera proporcional según las jornadas totales de participación (días trabajados y vacaciones) acumuladas por cada operario para garantizar una remuneración equitativa.</p>
+        </div>
       </div>
 
       <div className="space-y-4">
