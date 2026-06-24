@@ -57,7 +57,7 @@ function AppContent() {
     }
   };
 
-  const navigateTo = (screen: Screen) => {
+  const navigateTo = (screen: Screen, shouldPushHistory = true) => {
     if (screen !== "registrar") {
       setEditingAvance(null);
     }
@@ -65,7 +65,53 @@ function AppContent() {
       setEditingCertId(null);
     }
     setCurrentScreen(screen);
+    if (shouldPushHistory) {
+      window.history.pushState({ screen }, "");
+    }
   };
+
+  // Synchronize browser history for back button / gesture support
+  useEffect(() => {
+    if (!window.history.state) {
+      window.history.replaceState({ screen: "inicio" }, "");
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      const screen = (state && state.screen) ? state.screen : "inicio";
+      
+      // Navigate to the popped screen without pushing it back into history
+      if (screen !== "registrar") {
+        setEditingAvance(null);
+      }
+      if (screen !== "certificacion") {
+        setEditingCertId(null);
+      }
+      setCurrentScreen(screen);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  // Keyboard shortcut to support going back via Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (currentScreen !== "inicio") {
+          e.preventDefault();
+          navigateTo("inicio");
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentScreen]);
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -76,7 +122,7 @@ function AppContent() {
       case "calendario":
         return (
           <Calendario 
-            onEdit={(a) => { setEditingAvance(a); setCurrentScreen("registrar"); }} 
+            onEdit={(a) => { setEditingAvance(a); navigateTo("registrar"); }} 
             onBack={() => navigateTo("inicio")} 
             onNew={(date) => { 
               setEditingAvance({ 
@@ -88,7 +134,7 @@ function AppContent() {
                 bloque: '', 
                 resumen: { ingresos: 0, costeManoObra: 0, beneficio: 0 } 
               }); 
-              setCurrentScreen("registrar"); 
+              navigateTo("registrar"); 
             }} 
           />
         );
@@ -96,7 +142,7 @@ function AppContent() {
         return (
           <CertificacionScreen 
             onBack={() => navigateTo("inicio")} 
-            onOperarioClick={(n) => { setSelectedOperarioName(n); setCurrentScreen("operario_detalle"); }} 
+            onOperarioClick={(n) => { setSelectedOperarioName(n); navigateTo("operario_detalle"); }} 
             editingCertId={editingCertId}
           />
         );
@@ -107,9 +153,9 @@ function AppContent() {
       case "gastos":
         return <GastosScreen onBack={() => navigateTo("inicio")} />;
       case "operarios":
-        return <OperariosScreen onBack={() => navigateTo("inicio")} onOperarioClick={(n) => { setSelectedOperarioName(n); setCurrentScreen("operario_detalle"); }} />;
+        return <OperariosScreen onBack={() => navigateTo("inicio")} onOperarioClick={(n) => { setSelectedOperarioName(n); navigateTo("operario_detalle"); }} />;
       case "operario_detalle":
-        return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => setCurrentScreen("operarios")} />;
+        return <OperarioDetalleScreen operarioName={selectedOperarioName!} onBack={() => navigateTo("operarios")} />;
       case "produccion_bloques":
         return <ProduccionBloquesScreen onBack={() => navigateTo("inicio")} onNavigate={navigateTo} />;
       case "historial":
@@ -118,7 +164,7 @@ function AppContent() {
             onBack={() => navigateTo("inicio")} 
             onEdit={(id) => {
               setEditingCertId(id);
-              setCurrentScreen("certificacion");
+              navigateTo("certificacion");
             }}
           />
         );
