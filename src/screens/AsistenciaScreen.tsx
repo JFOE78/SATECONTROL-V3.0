@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, Calendar, Check, X, Users, Calculator, AlertTriangle, ShieldCheck } from "lucide-react";
+import { ChevronLeft, Calendar, Check, X, Users, Calculator, AlertTriangle, ShieldCheck, Sun, Cloud, CloudRain } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance, Vacacion } from "../types";
 import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
+import { motion, AnimatePresence } from "motion/react";
 
 export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (screen: string) => void }> = ({ onBack, onNavigate }) => {
   const {
@@ -33,6 +34,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
 
   // State mapping operario name to attendance state: 'presente' or 'ausente'
   const [asistencia, setAsistencia] = useState<Record<string, 'presente' | 'ausente'>>({});
+  const [showClimaModal, setShowClimaModal] = useState(false);
 
   // Synchronize attendance state from existing database entries (Avances or Vacaciones) or default to all present
   useEffect(() => {
@@ -135,11 +137,15 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
       return;
     }
 
+    setShowClimaModal(true);
+  };
+
+  const executeSave = (climaSeleccionado: string) => {
     // 1. Create automatic Avance entity
     const newAvance: Avance = {
       id: `avance-auto-${fecha}-${Date.now()}`,
       fecha,
-      obraId: selectedObraId,
+      obraId: selectedObraId!,
       bloque: activeBlock,
       operariosPresentes: presentUsers,
       operariosVacaciones: absentUsers,
@@ -150,6 +156,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
           bloque: activeBlock
         }
       ] : [],
+      clima: climaSeleccionado,
       resumen: { ingresos: 0, costeManoObra: 0, beneficio: 0, beneficioPorOperario: 0 },
       motivoSinProduccion: computedM2 === 0 ? "Sin asistencia de operarios" : undefined
     };
@@ -181,7 +188,8 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
       return [...filtered, newAvance];
     });
 
-    notify(`Asistencia y ${computedM2}m² registrados para el Bloque ${activeBlock}`, "success");
+    setShowClimaModal(false);
+    notify(`Asistencia, clima (${climaSeleccionado}) y ${computedM2}m² registrados para el Bloque ${activeBlock}`, "success");
     onBack(); // Navigate back to central screen
   };
 
@@ -331,12 +339,79 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
         <div className="pt-2">
           <button
             onClick={handleSave}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4.5 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all text-sm uppercase tracking-wider shadow-lg shadow-blue-500/20"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4.5 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all text-sm uppercase tracking-wider shadow-lg shadow-blue-500/20 cursor-pointer"
           >
             <Check size={18} strokeWidth={3} /> Guardar Asistencia y Avance
           </button>
         </div>
       </section>
+
+      <AnimatePresence>
+        {showClimaModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClimaModal(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            />
+            {/* Modal Body */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-6 shadow-2xl space-y-6 text-slate-800 dark:text-white"
+            >
+              <div className="text-center space-y-2">
+                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">Paso de Lista Diario</span>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">¿Qué clima ha hecho hoy?</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Selecciona el estado meteorológico para guardarlo en la agenda del calendario.</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => executeSave("despejado")}
+                  className="p-5 rounded-3xl border border-amber-100 dark:border-amber-950/50 bg-amber-50/20 hover:bg-amber-50/40 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group active:scale-95 text-slate-800 dark:text-white"
+                >
+                  <Sun size={32} className="text-amber-500 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wide">Despejado</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeSave("nublado")}
+                  className="p-5 rounded-3xl border border-slate-100 dark:border-slate-850 bg-slate-50/50 hover:bg-slate-50 dark:bg-slate-800/30 dark:hover:bg-slate-800/50 flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group active:scale-95 text-slate-800 dark:text-white"
+                >
+                  <Cloud size={32} className="text-slate-400 dark:text-slate-500 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wide">Nublado</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeSave("lluvia")}
+                  className="p-5 rounded-3xl border border-cyan-100 dark:border-cyan-950/50 bg-cyan-50/20 hover:bg-cyan-50/40 dark:bg-cyan-950/10 dark:hover:bg-cyan-950/20 flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group active:scale-95 text-slate-800 dark:text-white"
+                >
+                  <CloudRain size={32} className="text-cyan-500 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-xs font-black text-cyan-700 dark:text-cyan-400 uppercase tracking-wide">Lluvia</span>
+                </button>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowClimaModal(false)}
+                  className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
