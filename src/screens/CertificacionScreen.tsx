@@ -224,7 +224,7 @@ export const CertificacionScreen: React.FC<{
       const opClean = normalize(op.nombre);
       const jornadas = opJornadasMap.get(opClean) || 0;
       const vacationJornadas = opVacJornadasMap.get(opClean) || 0;
-      const totalJornales = (jornadas + vacationJornadas) * op.coste;
+      const totalJornales = jornadas * op.coste;
       const sharedProfit = sharedProfitValue;
       
       const opAnticipos = stats.listAnticipos.filter(an => normalize(an.operario) === opClean).reduce((sum, an) => sum + an.cantidad, 0);

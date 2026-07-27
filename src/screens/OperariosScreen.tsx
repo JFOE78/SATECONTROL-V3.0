@@ -76,7 +76,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     const pool = statsCurrent.profit;
     const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    // Pre-calculate active days for each operario
+    // Pre-calculate active days and absences for each operario
     const intermediate = operariosList.map(op => {
       const opClean = normalize(op.nombre);
       const opAvances = statsCurrent.listAv.filter(a => {
@@ -89,25 +89,31 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       const opVacations = (vacaciones || []).filter(v => {
         const nameMatch = normalize(v.operario) === opClean;
         const dateMatch = v.fecha >= CUTOFF_DATE && !isDataCertified(v.fecha);
-        const typeMatch = v.tipo === "Disfrutados y Pagados";
-        return nameMatch && dateMatch && typeMatch;
+        return nameMatch && dateMatch;
       });
-      const vacationJornadas = opVacations.length;
+      const opAbsentAvances = statsCurrent.listAv.filter(a => {
+        return (a.operariosVacaciones || []).some(o => normalize(o) === opClean);
+      });
+      const uniqueAbsentDates = Array.from(new Set([
+        ...opVacations.map(v => v.fecha),
+        ...opAbsentAvances.map(a => a.fecha)
+      ]));
+      const ausencias = uniqueAbsentDates.length;
 
       return {
         op,
         jornadas,
-        vacationJornadas,
-        activeDays: jornadas + vacationJornadas
+        ausencias,
+        activeDays: jornadas
       };
     });
 
     const totalGroupDays = intermediate.reduce((sum, item) => sum + item.activeDays, 0);
 
     return intermediate.map(item => {
-      const { op, jornadas, vacationJornadas, activeDays } = item;
+      const { op, jornadas, ausencias, activeDays } = item;
       const opClean = normalize(op.nombre);
-      const totalJornales = (jornadas + vacationJornadas) * op.coste;
+      const totalJornales = jornadas * op.coste;
       
       // Proportional profit sharing (Regla de tres)
       const sharedProfit = totalGroupDays > 0 
@@ -121,14 +127,14 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       return {
         ...op,
         jornadas,
-        vacationJornadas,
+        ausencias,
         totalJornales,
         sharedProfit,
         opAnticipos,
         opReembolsos,
         bruto: brutoTotal,
         cobrar: brutoTotal - opAnticipos,
-        mediaDiaria: (jornadas + vacationJornadas) > 0 ? (totalJornales + sharedProfit) / (jornadas + vacationJornadas) : 0,
+        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfit) / jornadas : 0,
         beneficioAportado: statsCurrent.brutoPorJornada - op.coste
       };
     });
@@ -139,7 +145,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
     const pool = statsCurrent.profit + (incentivoExtra || 0);
     const normalize = (s: any) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    // Pre-calculate active days for each operario
+    // Pre-calculate active days and absences for each operario
     const intermediate = operariosList.map(op => {
       const opClean = normalize(op.nombre);
       const opAvances = statsCurrent.listAv.filter(a => {
@@ -152,25 +158,31 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       const opVacations = (vacaciones || []).filter(v => {
         const nameMatch = normalize(v.operario) === opClean;
         const dateMatch = v.fecha >= CUTOFF_DATE && !isDataCertified(v.fecha);
-        const typeMatch = v.tipo === "Disfrutados y Pagados";
-        return nameMatch && dateMatch && typeMatch;
+        return nameMatch && dateMatch;
       });
-      const vacationJornadas = opVacations.length;
+      const opAbsentAvances = statsCurrent.listAv.filter(a => {
+        return (a.operariosVacaciones || []).some(o => normalize(o) === opClean);
+      });
+      const uniqueAbsentDates = Array.from(new Set([
+        ...opVacations.map(v => v.fecha),
+        ...opAbsentAvances.map(a => a.fecha)
+      ]));
+      const ausencias = uniqueAbsentDates.length;
 
       return {
         op,
         jornadas,
-        vacationJornadas,
-        activeDays: jornadas + vacationJornadas
+        ausencias,
+        activeDays: jornadas
       };
     });
 
     const totalGroupDays = intermediate.reduce((sum, item) => sum + item.activeDays, 0);
 
     return intermediate.map(item => {
-      const { op, jornadas, vacationJornadas, activeDays } = item;
+      const { op, jornadas, ausencias, activeDays } = item;
       const opClean = normalize(op.nombre);
-      const totalJornales = (jornadas + vacationJornadas) * op.coste;
+      const totalJornales = jornadas * op.coste;
       
       // Proportional profit sharing (Regla de tres)
       const sharedProfitAndBonus = totalGroupDays > 0 
@@ -184,14 +196,14 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
       return {
         ...op,
         jornadas,
-        vacationJornadas,
+        ausencias,
         totalJornales,
         sharedProfit: sharedProfitAndBonus,
         opAnticipos,
         opReembolsos,
         bruto: brutoTotal,
         cobrar: brutoTotal - opAnticipos,
-        mediaDiaria: (jornadas + vacationJornadas) > 0 ? (totalJornales + sharedProfitAndBonus) / (jornadas + vacationJornadas) : 0,
+        mediaDiaria: jornadas > 0 ? (totalJornales + sharedProfitAndBonus) / jornadas : 0,
         beneficioAportado: (statsCurrent.brutoPorJornada + (incentivoExtra / (operariosList.length || 1))) - op.coste
       };
     });
@@ -208,18 +220,19 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
   }, [currentSettlement, searchTerm]);
 
   const shareIndividualSettlement = (o: any) => {
-    const detailJornadasText = o.vacationJornadas > 0 
-      ? `(${o.jornadas}j trab. + ${o.vacationJornadas}j vac.)` 
-      : `(${o.jornadas}j)`;
+    const detailJornadasText = o.ausencias > 0 
+      ? `(${o.jornadas}j trab. | ${o.ausencias}j ausencias)` 
+      : `(${o.jornadas}j trab.)`;
     
     const text = `*CUENTAS - ${o.nombre}*\n` +
       `*Obra:* ${selectedObra?.nombre || 'Obra'}\n` +
       `*Estado:* ${activeTab === 'simulacion' ? 'SIMULACIÓN DE CIERRE (+BONUS)' : 'PRODUCCIÓN EN CURSO'}\n\n` +
-      `- Jornales y Vacaciones ${detailJornadasText}: ${formatAmount(o.totalJornales)}€\n` +
+      `- Jornales Trab. ${detailJornadasText}: ${formatAmount(o.totalJornales)}€\n` +
+      (o.ausencias > 0 ? `- Descuento Ausencias (${o.ausencias}j): -${formatAmount(o.ausencias * o.coste)}€ (no abonadas)\n` : '') +
       `- Reparto (+Bonus): +${formatAmount(o.sharedProfit)}€\n` +
       (o.opReembolsos > 0 ? `- Devolución Gastos: +${formatAmount(o.opReembolsos)}€\n` : '') +
       `*TOTAL BRUTO: ${formatAmount(o.bruto)}€*\n` +
-      (o.mediaDiaria > 0 ? `*Media Diaria (J+R): ${formatAmount(o.mediaDiaria)}€/día*\n` : '') +
+      (o.mediaDiaria > 0 ? `*Media Diaria (${o.jornadas}j trab.): ${formatAmount(o.mediaDiaria)}€/día*\n` : '') +
       (o.opAnticipos > 0 ? `- Anticipos: -${formatAmount(o.opAnticipos)}€\n` : '') +
       `*TOTAL NETO A COBRAR: ${formatAmount(o.cobrar)}€*`;
     
@@ -334,7 +347,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
         <Info className="text-blue-500 mt-0.5 shrink-0 animate-pulse" size={16} />
         <div>
           <p className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-400">Reparto Proporcional (Regla de 3)</p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">El beneficio a repartir se distribuye de manera proporcional según las jornadas totales de participación (días trabajados y vacaciones) acumuladas por cada operario para garantizar una remuneración equitativa.</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">El beneficio a repartir se distribuye de manera proporcional según los días trabajados acumulados por cada operario. Las ausencias descuentan la jornada base del bruto total.</p>
         </div>
       </div>
 
@@ -361,7 +374,7 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
                   <div>
                     <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase leading-none">{o.nombre}</h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
-                      {o.jornadas} trab. {o.vacationJornadas > 0 ? `+ ${o.vacationJornadas} vac.` : ""}
+                      {o.jornadas} trab. {o.ausencias > 0 ? `• ${o.ausencias} ausencias` : ""}
                     </p>
                   </div>
                 </div>
@@ -394,11 +407,15 @@ export const OperariosScreen: React.FC<{ onBack: () => void, onOperarioClick: (n
 
               <div className="space-y-1.5 px-1">
                 <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500">
-                   <span>
-                     Jornales {o.vacationJornadas > 0 ? `y Vac. (${o.jornadas}j + ${o.vacationJornadas}v)` : `(${o.jornadas}j)`}:
-                   </span>
+                   <span>Jornales ({o.jornadas}j trabajadas):</span>
                    <span className="text-slate-800 dark:text-slate-300">{formatAmount(o.totalJornales)}€</span>
                 </div>
+                {o.ausencias > 0 && (
+                  <div className="flex justify-between text-[10px] uppercase font-bold text-rose-500 dark:text-rose-400">
+                     <span>Ausencias ({o.ausencias}j sin jornal):</span>
+                     <span>-{formatAmount(o.ausencias * o.coste)}€</span>
+                  </div>
+                )}
                 <div className={`flex justify-between text-[10px] uppercase font-bold ${activeTab === 'simulacion' ? 'text-indigo-500' : 'text-emerald-500'}`}>
                    <span>Reparto Beneficio {activeTab === 'simulacion' ? '+ Bonus' : ''}:</span>
                    <span>+{formatAmount(o.sharedProfit)}€</span>
