@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus, Sun, Cloud, CloudRain, Check, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit2, Trash2, Calendar as CalIcon, DollarSign, Users, Plus, Sun, Cloud, CloudRain, Check, X, UserX } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance } from "../types";
 import { formatDate, formatAmount } from "../lib/utils";
 
 export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => void, onNew: (date: string) => void }> = ({ onEdit, onBack, onNew }) => {
-  const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, setAnticipos, itemsSate, certificaciones, operariosList } = useApp();
+  const { avances, calculateAvanceEconomics, setAvances, notify, selectedObraId, anticipos, setAnticipos, itemsSate, certificaciones, operariosList, vacaciones } = useApp();
   
   // Find the latest registered avance's date for this obra, or default to the baseline "2026-06-03" to ensure any saved records are in view.
   const initialDateStr = useMemo(() => {
@@ -149,6 +149,87 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
     if (!selectedDay) return [];
     return filteredAnticipos.filter(a => a.fecha === selectedDay);
   }, [selectedDay, filteredAnticipos]);
+
+  // Calculate operarios absent on the selected day
+  const absentOperariosSelectedDay = useMemo(() => {
+    if (!selectedDay) return [];
+    
+    const setAbsents = new Set<string>();
+    const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // 1. From avances on selectedDay for current obra
+    const avancesDay = filteredAvances.filter(a => a.fecha === selectedDay);
+    avancesDay.forEach(a => {
+      (a.operariosVacaciones || []).forEach(op => setAbsents.add(op));
+
+      // Also if present list is explicitly defined, anyone in operariosList not in present is absent
+      if (a.operariosPresentes && a.operariosPresentes.length > 0) {
+        const presentClean = a.operariosPresentes.map(normalize);
+        operariosList.forEach(op => {
+          if (!presentClean.includes(normalize(op.nombre))) {
+            setAbsents.add(op.nombre);
+          }
+        });
+      }
+    });
+
+    // 2. From vacaciones array for selectedDay
+    (vacaciones || []).forEach(v => {
+      if (v.fecha === selectedDay && v.operario) {
+        setAbsents.add(v.operario);
+      }
+    });
+
+    return Array.from(setAbsents);
+  }, [selectedDay, filteredAvances, vacaciones, operariosList]);
+
+  // Calculate all absences for the current month being viewed
+  const monthAbsencesMap = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+    const normalize = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const map = new Map<string, Set<string>>();
+
+    // From avances in this month & obra
+    filteredAvances.forEach(a => {
+      if (a.fecha.startsWith(monthStr)) {
+        (a.operariosVacaciones || []).forEach(op => {
+          if (!map.has(op)) map.set(op, new Set());
+          map.get(op)!.add(a.fecha);
+        });
+
+        if (a.operariosPresentes && a.operariosPresentes.length > 0) {
+          const presentClean = a.operariosPresentes.map(normalize);
+          operariosList.forEach(op => {
+            if (!presentClean.includes(normalize(op.nombre))) {
+              if (!map.has(op.nombre)) map.set(op.nombre, new Set());
+              map.get(op.nombre)!.add(a.fecha);
+            }
+          });
+        }
+      }
+    });
+
+    // From vacaciones in this month
+    (vacaciones || []).forEach(v => {
+      if (v.fecha.startsWith(monthStr) && v.operario) {
+        if (!map.has(v.operario)) map.set(v.operario, new Set());
+        map.get(v.operario)!.add(v.fecha);
+      }
+    });
+
+    const result: { operario: string; fechas: string[] }[] = [];
+    map.forEach((fechasSet, operario) => {
+      result.push({
+        operario,
+        fechas: Array.from(fechasSet).sort()
+      });
+    });
+
+    return result.sort((a, b) => b.fechas.length - a.fechas.length);
+  }, [currentMonth, filteredAvances, vacaciones, operariosList]);
 
   return (
     <div className="space-y-6 pb-24">
@@ -390,6 +471,87 @@ export const Calendario: React.FC<{ onEdit: (a: Avance) => void, onBack: () => v
               <span className="text-[10px] font-black text-slate-500 uppercase">Anticipos Entregados</span>
             </div>
           </div>
+        </div>
+
+        {/* Faltas de Asistencia por Operario */}
+        <div className="mt-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-rose-100 dark:border-rose-950/30 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-xl">
+                <UserX size={18} />
+              </div>
+              <div>
+                <h4 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">
+                  Faltas de Asistencia
+                </h4>
+                <p className="text-[10px] font-semibold text-slate-400">
+                  {selectedDay ? `Día ${formatDate(selectedDay)}` : monthLabel}
+                </p>
+              </div>
+            </div>
+            {selectedDay && (
+              <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${
+                absentOperariosSelectedDay.length > 0 
+                  ? "bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400" 
+                  : "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400"
+              }`}>
+                {absentOperariosSelectedDay.length} {absentOperariosSelectedDay.length === 1 ? 'Ausente' : 'Ausentes'}
+              </span>
+            )}
+          </div>
+
+          {/* Faltas en el día seleccionado */}
+          {selectedDay && (
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                Operarios Ausentes el {formatDate(selectedDay)}
+              </label>
+              {absentOperariosSelectedDay.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {absentOperariosSelectedDay.map((opName, i) => (
+                    <div 
+                      key={i} 
+                      className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 px-3.5 py-2 rounded-2xl"
+                    >
+                      <UserX size={14} className="text-rose-500" />
+                      <span className="text-xs font-black text-rose-700 dark:text-rose-300 uppercase">
+                        {opName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs font-bold text-slate-400 italic">
+                  No hay faltas de asistencia registradas para este día.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Resumen del mes actual */}
+          {monthAbsencesMap.length > 0 && (
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                Resumen de Ausencias en {monthLabel}
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                {monthAbsencesMap.map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 rounded-xl text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                      <span className="font-black text-slate-800 dark:text-white uppercase">{item.operario}</span>
+                    </div>
+                    <span className="font-bold text-rose-600 dark:text-rose-400 text-[11px]">
+                      {item.fechas.length} {item.fechas.length === 1 ? 'falta' : 'faltas'} ({item.fechas.map(f => parseInt(f.split('-')[2])).join(', ')})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
