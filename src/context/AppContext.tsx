@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
-import { Obra, Avance, Certificacion, Anticipo, Gasto, Vacacion } from "../types";
+import { Obra, Avance, Certificacion, Anticipo, Gasto, Vacacion, NotaCertificacion } from "../types";
 import { storage } from "../lib/storage";
 import { OPERARIOS, ITEMS_SATE } from "../constants";
 
@@ -39,6 +39,11 @@ interface AppContextType {
   ausenciasResets: Record<string, string>;
   resetAusencias: (operarioName?: string, targetDate?: string) => void;
   getOperarioAusencias: (operarioName: string) => number;
+  notasCertificacion: NotaCertificacion[];
+  addNotaCertificacion: (concepto: string, bloque?: string, obraId?: string) => void;
+  toggleNotaCertificacion: (id: string) => void;
+  deleteNotaCertificacion: (id: string) => void;
+  updateNotaCertificacion: (id: string, concepto: string, bloque?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -57,11 +62,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [manualAdjustments, _setManualAdjustments] = useState<Record<string, number>>({});
   const [ausenciasResets, _setAusenciasResets] = useState<Record<string, string>>({});
+  const [notasCertificacion, _setNotasCertificacion] = useState<NotaCertificacion[]>([]);
+
+  const setNotasCertificacion = useCallback((notas: NotaCertificacion[] | ((prev: NotaCertificacion[]) => NotaCertificacion[])) => {
+    _setNotasCertificacion(prev => {
+      const next = typeof notas === 'function' ? notas(prev) : notas;
+      storage.saveNotasCertificacion(next);
+      return next;
+    });
+  }, []);
 
   const notify = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   }, []);
+
+  const addNotaCertificacion = useCallback((concepto: string, bloque?: string, obraIdOverride?: string) => {
+    if (!concepto.trim()) return;
+    const newNota: NotaCertificacion = {
+      id: `nota-${Date.now()}`,
+      obraId: obraIdOverride || selectedObraId || "1",
+      fecha: new Date().toISOString().split('T')[0],
+      bloque: (bloque || "Varios").trim(),
+      concepto: concepto.trim(),
+      completado: false
+    };
+    setNotasCertificacion(prev => [newNota, ...prev]);
+    notify("Nota guardada para la certificación", "success");
+  }, [selectedObraId, setNotasCertificacion, notify]);
+
+  const toggleNotaCertificacion = useCallback((id: string) => {
+    setNotasCertificacion(prev => prev.map(n => {
+      if (n.id === id) {
+        const nextState = !n.completado;
+        notify(nextState ? "Marcado como incluido en certificación" : "Marcado como pendiente", "info");
+        return { ...n, completado: nextState };
+      }
+      return n;
+    }));
+  }, [setNotasCertificacion, notify]);
+
+  const deleteNotaCertificacion = useCallback((id: string) => {
+    setNotasCertificacion(prev => prev.filter(n => n.id !== id));
+    notify("Nota eliminada", "info");
+  }, [setNotasCertificacion, notify]);
+
+  const updateNotaCertificacion = useCallback((id: string, concepto: string, bloque?: string) => {
+    setNotasCertificacion(prev => prev.map(n => {
+      if (n.id === id) {
+        return { ...n, concepto, bloque: bloque || n.bloque };
+      }
+      return n;
+    }));
+    notify("Nota actualizada", "success");
+  }, [setNotasCertificacion, notify]);
 
   useEffect(() => {
     const loadedObras = storage.getObras();
@@ -75,6 +129,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const loadedResets = storage.getAusenciasResets();
     const loadedTheme = storage.getTheme();
     const activeObraId = storage.getActiveObraId();
+    const loadedNotas = storage.getNotasCertificacion();
+
+    const INITIAL_NOTAS: NotaCertificacion[] = [
+      {
+        id: "nota-1",
+        obraId: activeObraId || "1",
+        fecha: "2026-08-10",
+        bloque: "BL-11",
+        concepto: "Recordar revisar 14 Horas de Administración por arreglo de esquina",
+        completado: false
+      },
+      {
+        id: "nota-2",
+        obraId: activeObraId || "1",
+        fecha: "2026-08-11",
+        bloque: "Patios Interiores",
+        concepto: "Comprobar medición de patios de la fase trasera antes de cerrar certificación",
+        completado: false
+      }
+    ];
+
+    if (loadedNotas && loadedNotas.length > 0) {
+      _setNotasCertificacion(loadedNotas);
+    } else {
+      _setNotasCertificacion(INITIAL_NOTAS);
+      storage.saveNotasCertificacion(INITIAL_NOTAS);
+    }
 
     const cleanOperarios = (loadedOperarios && loadedOperarios.length > 0 ? loadedOperarios : OPERARIOS).map((op: any) => ({
       ...op,
@@ -607,7 +688,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       calculateAvanceEconomics,
       pendingProfit,
       manualAdjustments, setManualAdjustments,
-      ausenciasResets, resetAusencias, getOperarioAusencias
+      ausenciasResets, resetAusencias, getOperarioAusencias,
+      notasCertificacion, addNotaCertificacion, toggleNotaCertificacion, deleteNotaCertificacion, updateNotaCertificacion
     }}>
       {children}
     </AppContext.Provider>

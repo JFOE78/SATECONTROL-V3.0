@@ -1,7 +1,8 @@
 import React, { useMemo, useCallback, useState, useEffect } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck, Sun, Cloud, CloudRain, RotateCcw, UserX } from "lucide-react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck, Sun, Cloud, CloudRain, RotateCcw, UserX, ClipboardList, CheckCircle2, Circle, Plus } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
+import { NotasCertificacionModal } from "../components/NotasCertificacionModal";
 import { Avance, Vacacion } from "../types";
 import { formatAmount } from "../lib/utils";
 import { BLOQUE_DIMENSIONS } from "../constants";
@@ -23,7 +24,9 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     notify,
     getOperarioAusencias,
     resetAusencias,
-    ausenciasResets
+    ausenciasResets,
+    notasCertificacion,
+    toggleNotaCertificacion
   } = useApp();
 
   const [fecha, setFecha] = useState(() => {
@@ -33,6 +36,11 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
   const [showClimaModal, setShowClimaModal] = useState(false);
   const [selectedBloqueForAsistencia, setSelectedBloqueForAsistencia] = useState<string>("11");
   const [showResetAusenciasModal, setShowResetAusenciasModal] = useState(false);
+  const [showNotasModal, setShowNotasModal] = useState(false);
+
+  const obraNotasActivas = useMemo(() => {
+    return (notasCertificacion || []).filter(n => (n.obraId === selectedObraId || !n.obraId) && !n.completado);
+  }, [notasCertificacion, selectedObraId]);
 
   // Safe normalization helper for name matching
   const normalizeName = useCallback((s: any) =>
@@ -514,6 +522,88 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30"
         />
       </div>
+
+      {/* BLOQUE DE ANOTACIONES PARA CERTIFICAR */}
+      <div className="bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/30 rounded-[2.5rem] p-5 shadow-sm space-y-3">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
+              <ClipboardList size={18} />
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider flex items-center gap-2">
+                Remates y Notas de Certificación
+                {obraNotasActivas.length > 0 && (
+                  <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">
+                    {obraNotasActivas.length}
+                  </span>
+                )}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-medium">Cosas pendientes de incluir antes de cerrar el mes</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowNotasModal(true)}
+            className="bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-black text-[10px] uppercase px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+          >
+            <Plus size={12} /> Añadir / Ver
+          </button>
+        </div>
+
+        {obraNotasActivas.length === 0 ? (
+          <div className="text-center py-3 bg-amber-50/30 dark:bg-amber-950/10 rounded-2xl border border-dashed border-amber-200/50 dark:border-amber-900/20">
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              ¡Sin remates ni notas pendientes!
+            </p>
+            <p className="text-[9px] text-slate-400">
+              Pulsa en "Añadir / Ver" para anotar trabajos o detalles antes de certificar.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {obraNotasActivas.slice(0, 3).map(nota => (
+              <div 
+                key={nota.id}
+                className="p-2.5 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-2xl flex items-center justify-between gap-2"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleNotaCertificacion(nota.id)}
+                    className="text-slate-300 dark:text-slate-600 hover:text-emerald-500 transition-colors cursor-pointer shrink-0"
+                    title="Marcar como incluido"
+                  >
+                    <Circle size={18} />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                      {nota.concepto}
+                    </p>
+                    <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase">
+                      {nota.bloque || "Varios"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {obraNotasActivas.length > 3 && (
+              <button
+                onClick={() => setShowNotasModal(true)}
+                className="w-full text-center text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 py-1 hover:underline cursor-pointer"
+              >
+                + Ver {obraNotasActivas.length - 3} notas más...
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <NotasCertificacionModal 
+        isOpen={showNotasModal} 
+        onClose={() => setShowNotasModal(false)} 
+      />
 
       <AnimatePresence>
         {showClimaModal && (

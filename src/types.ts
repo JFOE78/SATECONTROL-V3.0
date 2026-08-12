@@ -55,6 +55,16 @@ export interface Gasto {
   pagadoPor?: string; // Nombre del operario si procede
 }
 
+export interface NotaCertificacion {
+  id: string;
+  obraId: string;
+  fecha: string; // YYYY-MM-DD
+  bloque?: string;
+  concepto: string;
+  completado?: boolean;
+  certificacionId?: string;
+}
+
 export interface Certificacion {
   id: string;
   obraId: string;

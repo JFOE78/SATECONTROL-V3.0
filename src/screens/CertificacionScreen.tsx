@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, ChevronUp, Plus, Wand2, Check, X, Calendar as CalIcon, Pencil, FileText } from "lucide-react";
+import { ChevronLeft, FileDown, MessageCircle, Trash2, Edit2, ChevronDown, ChevronUp, Plus, Wand2, Check, X, Calendar as CalIcon, Pencil, FileText, ClipboardList, CheckCircle2, Circle } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { NotasCertificacionModal } from "../components/NotasCertificacionModal";
 import { Certificacion, Anticipo } from "../types";
 import { shareService } from "../services/shareService";
 import { formatDate, formatAmount } from "../lib/utils";
@@ -23,7 +24,9 @@ export const CertificacionScreen: React.FC<{
     itemsSate,
     gastos,
     manualAdjustments, setManualAdjustments,
-    vacaciones
+    vacaciones,
+    notasCertificacion,
+    toggleNotaCertificacion
   } = useApp();
   
   const obra = obras.find(o => o.id === selectedObraId);
@@ -31,6 +34,11 @@ export const CertificacionScreen: React.FC<{
   const [periodoFin, setPeriodoFin] = useState("");
   const [expandedCert, setExpandedCert] = useState<string | null>(null);
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
+  const [showNotasModal, setShowNotasModal] = useState(false);
+
+  const obraNotasActivas = useMemo(() => {
+    return (notasCertificacion || []).filter(n => (n.obraId === selectedObraId || !n.obraId) && !n.completado);
+  }, [notasCertificacion, selectedObraId]);
 
   // Sync prop editing status
   useEffect(() => {
@@ -678,6 +686,68 @@ export const CertificacionScreen: React.FC<{
           <button onClick={() => setEditingCertId(null)} className="text-amber-700 bg-amber-200 p-1 rounded-lg"><X size={16} /></button>
         </div>
       )}
+
+      {/* TARJETA RECORDATORIOS DE REMATES PARA LA CERTIFICACIÓN */}
+      <section className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 p-5 rounded-[2.5rem] space-y-3">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+              <ClipboardList size={18} />
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider flex items-center gap-2">
+                Recordatorios y Remates de Obra
+                {obraNotasActivas.length > 0 && (
+                  <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">
+                    {obraNotasActivas.length} pendientes
+                  </span>
+                )}
+              </h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Revisa estos puntos antes de cerrar la certificación</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowNotasModal(true)}
+            className="bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-black text-[10px] uppercase px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+          >
+            <Plus size={12} /> Gestionar
+          </button>
+        </div>
+
+        {obraNotasActivas.length > 0 && (
+          <div className="space-y-1.5 pt-1">
+            {obraNotasActivas.map(nota => (
+              <div 
+                key={nota.id}
+                className="p-2.5 bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-900/30 rounded-xl flex items-center justify-between gap-2 shadow-xs"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleNotaCertificacion(nota.id)}
+                    className="text-slate-300 dark:text-slate-600 hover:text-emerald-500 transition-colors cursor-pointer shrink-0"
+                    title="Marcar como incluido en certificación"
+                  >
+                    <Circle size={18} />
+                  </button>
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                    {nota.concepto}
+                  </span>
+                </div>
+                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md uppercase shrink-0">
+                  {nota.bloque || "Varios"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <NotasCertificacionModal 
+        isOpen={showNotasModal} 
+        onClose={() => setShowNotasModal(false)} 
+      />
 
       {/* Filtro Periodo */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">

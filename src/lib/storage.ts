@@ -79,5 +79,8 @@ export const storage = {
   getAusenciasResets: (): Record<string, string> => JSON.parse(localStorage.getItem('sate_ausencias_resets') || '{}'),
 
   saveManualAdjustments: (adj: Record<string, number>) => localStorage.setItem(KEYS.ADJUSTMENTS, JSON.stringify(adj)),
-  getManualAdjustments: (): Record<string, number> => JSON.parse(localStorage.getItem(KEYS.ADJUSTMENTS) || '{}')
+  getManualAdjustments: (): Record<string, number> => JSON.parse(localStorage.getItem(KEYS.ADJUSTMENTS) || '{}'),
+
+  saveNotasCertificacion: (notas: any[]) => localStorage.setItem('sate_notas_certificacion', JSON.stringify(notas)),
+  getNotasCertificacion: (): any[] => JSON.parse(localStorage.getItem('sate_notas_certificacion') || '[]')
 };
