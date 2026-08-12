@@ -105,9 +105,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     // Force exact pricing and name requested by user
     if (syncedItems.fase1) {
-      syncedItems.fase1.precio = 20.20;
+      syncedItems.fase1.precio = 17;
       syncedItems.fase1.nombre = "SATE Combinado (Corcho + Fino)";
     }
+    storage.saveItems(syncedItems);
 
     const INITIAL_VACACIONES: Vacacion[] = [
       { id: "vac-1", operario: "Mosquito", fecha: "2026-05-19", tipo: "Disfrutados y Pagados" },
@@ -249,9 +250,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       mes: "2026-08",
       fechaInicio: "2026-07-07",
       fechaFin: "2026-08-04",
-      ejecutado: 22170.09,
+      ejecutado: 20167.09,
       anticipos: 7200.00,
-      certificado: 14970.09,
+      certificado: 12967.09,
       estado: "cobrado",
       partidas: [
         { itemId: "c5_1", nombre: "Corcho + Malla", precio: 17.00, m2: 236.64, bloque: "BL-7 (TORRE)" },
@@ -261,11 +262,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         { itemId: "c5_5", nombre: "Corcho + Malla", precio: 17.00, m2: 72.00, bloque: "BL-8 (PAÑO CIEGO)" },
         { itemId: "c5_6", nombre: "Techo Antifisuras", precio: 8.50, m2: 10.00, bloque: "BL-8 (PAÑO CIEGO)" },
         { itemId: "c5_7", nombre: "Antifisuras Trasero", precio: 8.50, m2: 198.75, bloque: "BL-11" },
-        { itemId: "c5_8", nombre: "Corcho + Malla (Patios Interiores)", precio: 17.00, m2: 293.10, bloque: "Patios Interiores" },
+        { itemId: "c5_8", nombre: "Corcho + Malla", precio: 17.00, m2: 293.10, bloque: "Patios Interiores" },
         { itemId: "c5_9", nombre: "14 Horas Administración (Arreglo Esquina)", precio: 20.00, m2: 14.00, bloque: "Varios / Pactos" },
-        { itemId: "c5_10", nombre: "Pacto complemento +1,00 €/m² (Corcho y Malla)", precio: 1.00, m2: 4006.00, bloque: "Varios / Pactos" },
-        { itemId: "c5_11", nombre: "Pacto complemento +0,50 €/m² (Antifisuras)", precio: 0.50, m2: 622.00, bloque: "Varios / Pactos" },
-        { itemId: "c5_12", nombre: "Pacto complemento +1,00 €/ml (Cajeados)", precio: 1.00, m2: 122.00, bloque: "Varios / Pactos" }
+        { itemId: "c5_10", nombre: "Pacto complemento +1,00 € / m² (Corcho y Malla acumulado - 50% abono)", precio: 1.00, m2: 2003.00, bloque: "Varios / Pactos" },
+        { itemId: "c5_11", nombre: "Pacto complemento +0,50 € / m² (Antifisuras acumulado)", precio: 0.50, m2: 622.00, bloque: "Varios / Pactos" },
+        { itemId: "c5_12", nombre: "Pacto complemento +1,00 € / ml (Cajeados acumulado)", precio: 1.00, m2: 122.00, bloque: "Varios / Pactos" }
       ]
     };
 
@@ -286,6 +287,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       _setCertificaciones(nextCerts);
     } else {
       const updatedCerts = loadedCertificaciones.map(c => {
+        if (c.id === "cert-historical-1" || c.numeroCertificacion === "PRIMERA CERTIFICACIÓN") {
+          return cert1;
+        }
+        if (c.id === "cert-historical-5" || c.numeroCertificacion === "QUINTA CERTIFICACIÓN") {
+          return cert5;
+        }
         if (c.id === "f29501fe-26fe-4706-b384-c0252aa53446" || (c.mes === "2026-08" && (c.fechaFin === "2026-08-03" || c.fechaFin === "2026-08-04"))) {
           const hasAvanceAug4 = (c.avanceIds || []).includes("avance-auto-2026-08-04-1785850348524");
           const nextAvanceIds = hasAvanceAug4 
