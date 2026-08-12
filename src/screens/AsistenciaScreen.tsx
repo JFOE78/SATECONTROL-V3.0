@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, Calendar, Check, X, Users, Calculator, AlertTriangle, ShieldCheck, Sun, Cloud, CloudRain } from "lucide-react";
+import { ChevronLeft, Calendar, Check, X, Users, Calculator, AlertTriangle, ShieldCheck, Sun, Cloud, CloudRain, UserX } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Avance, Vacacion } from "../types";
 import { BLOQUE_DIMENSIONS, RENDIMIENTOS_EQUIPO } from "../constants";
@@ -15,7 +15,8 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
     vacaciones,
     setVacaciones,
     calculateAvanceEconomics,
-    notify
+    notify,
+    getOperarioAusencias
   } = useApp();
 
   const CUTOFF_DATE = "2026-05-06";
@@ -214,7 +215,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
         <div className="space-y-1">
           <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">Producción Automatizada</h4>
           <p className="text-[10px] text-blue-700 dark:text-blue-400/80 leading-relaxed uppercase font-semibold">
-            Cada operario presente suma exactamente <strong className="text-blue-900 dark:text-white">11 m² de Corcho+Mortero</strong> al bloque activo seleccionado. Las ausencias restan días de su bolsa de vacaciones.
+            Cada operario presente suma exactamente <strong className="text-blue-900 dark:text-white">11 m² de Corcho+Mortero</strong> al bloque activo seleccionado. Las ausencias computan en el contador de faltas del operario.
           </p>
         </div>
       </div>
@@ -261,7 +262,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
         <div className="space-y-3">
           {operariosList.map(op => {
             const isPresent = asistencia[op.nombre] !== 'ausente';
-            const bolsa = getOperarioBolsa(op.nombre);
+            const numAusencias = getOperarioAusencias(op.nombre);
 
             return (
               <div
@@ -286,8 +287,9 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-semibold text-slate-400">Coste: {op.coste}€/día</span>
                       <span className="text-slate-300">•</span>
-                      <span className={`text-[10px] font-black uppercase ${bolsa.remaining <= 3 ? 'text-amber-500' : 'text-purple-500'}`}>
-                        Bolsa: {bolsa.remaining} días lib.
+                      <span className={`text-[10px] font-black uppercase flex items-center gap-1 ${numAusencias > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+                        <UserX size={10} />
+                        {numAusencias} {numAusencias === 1 ? 'falta' : 'faltas'}
                       </span>
                     </div>
                   </div>
@@ -305,7 +307,7 @@ export const AsistenciaScreen: React.FC<{ onBack: () => void, onNavigate: (scree
                       </>
                     ) : (
                       <>
-                        <X size={12} strokeWidth={3} /> VACACIONES (-1 bolsa)
+                        <X size={12} strokeWidth={3} /> AUSENTE (-1 jornada)
                       </>
                     )}
                   </div>

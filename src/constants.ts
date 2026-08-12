@@ -1,7 +1,7 @@
 export const TARIFAS = {};
 
 export const ITEMS_SATE: Record<string, { nombre: string, precio: number }> = {
-  fase1: { nombre: "SATE Combinado (Corcho + Fino)", precio: 20.20 },
+  fase1: { nombre: "SATE Combinado (Corcho + Fino)", precio: 17 },
   fase2: { nombre: "Esquineros + Malla + Fino", precio: 8 },
   anti: { nombre: "Anti-fisuras (ml)", precio: 8 },
   cajeado: { nombre: "Cajeados (m)", precio: 16 },

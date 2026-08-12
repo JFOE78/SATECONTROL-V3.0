@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState, useEffect } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck, Sun, Cloud, CloudRain } from "lucide-react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck, Sun, Cloud, CloudRain, RotateCcw, UserX } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
 import { Avance, Vacacion } from "../types";
@@ -19,7 +19,10 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     calculateAvanceEconomics, 
     certificaciones,
     operariosList,
-    notify
+    notify,
+    getOperarioAusencias,
+    resetAusencias,
+    ausenciasResets
   } = useApp();
 
   const [fecha, setFecha] = useState(() => {
@@ -27,6 +30,8 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
   });
   const [asistencia, setAsistencia] = useState<Record<string, 'presente' | 'ausente'>>({});
   const [showClimaModal, setShowClimaModal] = useState(false);
+  const [selectedBloqueForAsistencia, setSelectedBloqueForAsistencia] = useState<string>("11");
+  const [showResetAusenciasModal, setShowResetAusenciasModal] = useState(false);
 
   // Safe normalization helper for name matching
   const normalizeName = useCallback((s: any) =>
@@ -205,9 +210,11 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     return presentUsers.length * 11;
   }, [presentUsers]);
 
+  const fase1Precio = itemsSate?.fase1?.precio ?? 17;
+
   const totalEuro = useMemo(() => {
-    return computedM2 * 20.20;
-  }, [computedM2]);
+    return computedM2 * fase1Precio;
+  }, [computedM2, fase1Precio]);
 
   const handleToggle = (nombre: string) => {
     setAsistencia(prev => ({
@@ -230,25 +237,26 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     setShowClimaModal(true);
   };
 
-  const executeSaveAsistencia = (climaSeleccionado: string) => {
+  const executeSaveAsistencia = (climaSeleccionado: string, targetBloque?: string) => {
+    const finalBloque = (targetBloque || selectedBloqueForAsistencia || "11").trim() || "11";
     const m2 = presentUsers.length * 11;
 
     const newAvance: Avance = {
       id: `avance-auto-${fecha}-${Date.now()}`,
       fecha,
       obraId: selectedObraId!,
-      bloque: "11",
+      bloque: finalBloque,
       operariosPresentes: presentUsers,
       operariosVacaciones: absentUsers,
       produccion: m2 > 0 ? [
         {
           itemId: "fase1", // Under combined price
           m2,
-          bloque: "11"
+          bloque: finalBloque
         }
       ] : [],
       clima: climaSeleccionado,
-      resumen: { ingresos: m2 * 20.20, costeManoObra: 0, beneficio: 0, beneficioPorOperario: 0 },
+      resumen: { ingresos: m2 * fase1Precio, costeManoObra: 0, beneficio: 0, beneficioPorOperario: 0 },
       motivoSinProduccion: m2 === 0 ? "Sin asistencia de la cuadrilla" : undefined
     };
 
@@ -273,41 +281,13 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
 
     // Save Avance
     setAvances(prev => {
-      const filtered = prev.filter(a => !(a.obraId === selectedObraId && a.fecha === fecha && (a.bloque || "").trim() === "11"));
+      const filtered = prev.filter(a => !(a.obraId === selectedObraId && a.fecha === fecha && (a.bloque || "").trim().toLowerCase() === finalBloque.toLowerCase()));
       return [...filtered, newAvance];
     });
 
     setShowClimaModal(false);
-    notify(`Asistencia y clima (${climaSeleccionado}) guardados: +${m2} m² añadidos al Bloque 11 (${formatAmount(totalEuro)})`, "success");
+    notify(`Asistencia guardada: Bloque ${finalBloque} • Clima (${climaSeleccionado}): +${m2} m² (${formatAmount(totalEuro)})`, "success");
   };
-
-  // Progression calculation for Bloque 11 (historico starting offset at 205 m²)
-  const activeBlockProgress = useMemo(() => {
-    const blockNorm = "11";
-    
-    // Sum production for Bloque 11, but only for dates strictly after 2026-06-03,
-    // as any progress up to and including June 3, 2026 is already included in the 205 m² baseline.
-    const advancesM2 = (avances || [])
-      .filter(a => a.obraId === selectedObraId && a.fecha > "2026-06-03")
-      .reduce((sum, a) => {
-        const match = (a.bloque || "").trim().toUpperCase().replace("BLOQUE", "").trim() === blockNorm;
-        if (!match) return sum;
-        return sum + (a.produccion || [])
-          .filter(p => p.itemId === "fase1")
-          .reduce((s, p) => s + p.m2, 0);
-      }, 0);
-
-    const baseOffset = 205; // Fixed starting baseline for Bloque 11 including up to today (2026-06-03)
-    const totalM2 = baseOffset + advancesM2;
-    const dims = BLOQUE_DIMENSIONS[blockNorm] || BLOQUE_DIMENSIONS["DEFAULT"];
-    const targetM2 = dims["fase1"] || 634.77;
-
-    return {
-      totalM2,
-      targetM2,
-      percentage: Math.min((totalM2 / targetM2) * 100, 100)
-    };
-  }, [avances, selectedObraId]);
 
   return (
     <div 
@@ -393,19 +373,32 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
 
       {/* PASO DE LISTA DIARIO DIRECTO */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/30 dark:shadow-none space-y-4">
-        <div className="flex justify-between items-center px-1">
+        <div className="flex justify-between items-center px-1 gap-2">
           <div>
             <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-0.5">Control de Cuadrilla & SATE</span>
             <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Paso de Lista Diario</h3>
           </div>
-          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 py-1.5 px-3 rounded-xl">
-            <Calendar size={13} className="text-slate-400" />
-            <input 
-              type="date" 
-              value={fecha} 
-              onChange={e => setFecha(e.target.value)}
-              className="bg-transparent text-[11px] font-black text-slate-600 dark:text-slate-300 outline-none w-24 border-none p-0 focus:ring-0"
-            />
+          
+          <div className="flex items-center gap-2">
+            <button 
+              type="button" 
+              onClick={() => setShowResetAusenciasModal(true)}
+              className="flex items-center gap-1 text-[10px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer border border-rose-100 dark:border-rose-900/20 active:scale-95"
+              title="Reiniciar contador de ausencias"
+            >
+              <RotateCcw size={11} />
+              <span className="hidden sm:inline">Reiniciar</span>
+            </button>
+
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 py-1.5 px-3 rounded-xl">
+              <Calendar size={13} className="text-slate-400" />
+              <input 
+                type="date" 
+                value={fecha} 
+                onChange={e => setFecha(e.target.value)}
+                className="bg-transparent text-[11px] font-black text-slate-600 dark:text-slate-300 outline-none w-24 border-none p-0 focus:ring-0"
+              />
+            </div>
           </div>
         </div>
 
@@ -414,7 +407,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           {operariosList.map(op => {
             const nombre = op.nombre;
             const isPresent = asistencia[nombre] !== 'ausente';
-            const bolsa = getOperarioBolsa(nombre);
+            const numAusencias = getOperarioAusencias(nombre);
 
             return (
               <div 
@@ -442,13 +435,21 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-md ${
-                    bolsa.remaining <= 3 
-                      ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-500' 
-                      : 'bg-purple-50 dark:bg-purple-950/20 text-purple-500'
-                  }`}>
-                    {bolsa.remaining} lib.
+                <div className="flex items-center gap-2">
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowResetAusenciasModal(true);
+                    }}
+                    className={`text-[9px] font-black px-2 py-1 rounded-xl flex items-center gap-1 transition-transform hover:scale-105 active:scale-95 ${
+                      numAusencias > 0
+                        ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
+                    }`}
+                    title="Ver/reiniciar ausencias"
+                  >
+                    <UserX size={10} />
+                    {numAusencias} {numAusencias === 1 ? 'falta' : 'faltas'}
                   </span>
 
                   <div className={`text-[8px] font-black tracking-widest px-2.5 py-1.5 rounded-xl uppercase flex items-center gap-1 transition-all duration-200 ${
@@ -480,7 +481,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
               <h4 className="text-xl font-black text-emerald-400 leading-tight">{computedM2} m²</h4>
             </div>
             <div className="text-right">
-              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Valor Diario (20.20 €/m²)</p>
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Valor Diario ({formatAmount(fase1Precio)} €/m²)</p>
               <h4 className="text-xl font-black text-blue-400 leading-tight">{formatAmount(totalEuro)}</h4>
             </div>
           </div>
@@ -492,46 +493,6 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
           >
             <ShieldCheck size={14} /> Guardar Asistencia y Avance
           </button>
-        </div>
-      </section>
-
-      {/* VISTA ÚNICA DE PROGRESO REAL (BLOQUE 11) */}
-      <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex justify-between items-center px-1">
-          <div>
-            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-0.5">Avance del Bloque Activo (Fijo + Automático)</span>
-            <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter">Bloque 11</h3>
-          </div>
-          <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-xl">
-            SATE LISO
-          </span>
-        </div>
-
-        <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-3xl space-y-3">
-          <div className="flex justify-between items-end">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">PARTIDA: Corcho + Tacos (Combinado)</p>
-              <h4 className="text-lg font-black text-slate-700 dark:text-slate-200">
-                {activeBlockProgress.totalM2.toLocaleString()} m² <span className="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md ml-1">ejecutados</span>
-              </h4>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-black text-blue-600 dark:text-blue-400">{Math.round(activeBlockProgress.percentage)}%</span>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">de {activeBlockProgress.targetM2} m²</p>
-            </div>
-          </div>
-
-          <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner flex">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600 rounded-full transition-all duration-700 ease-out shadow-lg" 
-              style={{ width: `${activeBlockProgress.percentage}%` }}
-            />
-          </div>
-          
-          <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-wider px-1 leading-none">
-            <span></span>
-            <span>Completado {Math.round(activeBlockProgress.percentage)}%</span>
-          </div>
         </div>
       </section>
 
@@ -569,50 +530,205 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-6 shadow-2xl space-y-6"
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-6 shadow-2xl space-y-5"
             >
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-1">
                 <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">Paso de Lista Diario</span>
-                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">¿Qué clima ha hecho hoy?</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Selecciona el estado meteorológico para guardarlo en la agenda del calendario.</p>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter pt-1">Guardar Jornada</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Asigna el bloque de trabajo y el clima de hoy.</p>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => executeSaveAsistencia("despejado")}
-                  className="p-5 rounded-3xl border border-amber-100 dark:border-amber-950/50 bg-amber-50/20 hover:bg-amber-50/40 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group active:scale-95"
-                >
-                  <Sun size={32} className="text-amber-500 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wide">Despejado</span>
-                </button>
+              {/* SELECCIÓN OBLIGATORIA DE BLOQUE */}
+              <div className="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                  1. ¿A qué bloque pertenece esta jornada?
+                </label>
+                
+                {/* Botones rápidos de bloques habituales */}
+                <div className="flex flex-wrap gap-1.5 pb-1">
+                  {["11", "5", "6", "8", "12", "13", "Varios"].map(bl => (
+                    <button
+                      key={bl}
+                      type="button"
+                      onClick={() => setSelectedBloqueForAsistencia(bl)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        selectedBloqueForAsistencia.trim().toLowerCase() === bl.toLowerCase()
+                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20 scale-105"
+                          : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      {bl === "Varios" ? "Varios" : `Bloque ${bl}`}
+                    </button>
+                  ))}
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => executeSaveAsistencia("nublado")}
-                  className="p-5 rounded-3xl border border-slate-100 dark:border-slate-850 bg-slate-50/50 hover:bg-slate-50 dark:bg-slate-800/30 dark:hover:bg-slate-800/50 flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group active:scale-95"
-                >
-                  <Cloud size={32} className="text-slate-400 dark:text-slate-500 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wide">Nublado</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => executeSaveAsistencia("lluvia")}
-                  className="p-5 rounded-3xl border border-cyan-100 dark:border-cyan-950/50 bg-cyan-50/20 hover:bg-cyan-50/40 dark:bg-cyan-950/10 dark:hover:bg-cyan-950/20 flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group active:scale-95"
-                >
-                  <CloudRain size={32} className="text-cyan-500 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="text-xs font-black text-cyan-700 dark:text-cyan-400 uppercase tracking-wide">Lluvia</span>
-                </button>
+                {/* Input de texto editable para cualquier otro bloque */}
+                <div className="relative pt-1">
+                  <input
+                    type="text"
+                    value={selectedBloqueForAsistencia}
+                    onChange={(e) => setSelectedBloqueForAsistencia(e.target.value)}
+                    placeholder="Ej. 11"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-2.5 text-sm font-black text-slate-800 dark:text-white outline-none focus:border-blue-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">
+                    Bloque
+                  </span>
+                </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              {/* SELECCIÓN DE CLIMA */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block px-1">
+                  2. ¿Qué clima ha hecho hoy?
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => executeSaveAsistencia("despejado", selectedBloqueForAsistencia)}
+                    className="p-4 rounded-3xl border border-amber-100 dark:border-amber-950/50 bg-amber-50/20 hover:bg-amber-50/40 dark:bg-amber-950/10 dark:hover:bg-amber-950/20 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group active:scale-95"
+                  >
+                    <Sun size={28} className="text-amber-500 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wide">Despejado</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeSaveAsistencia("nublado", selectedBloqueForAsistencia)}
+                    className="p-4 rounded-3xl border border-slate-100 dark:border-slate-850 bg-slate-50/50 hover:bg-slate-50 dark:bg-slate-800/30 dark:hover:bg-slate-800/50 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group active:scale-95"
+                  >
+                    <Cloud size={28} className="text-slate-400 dark:text-slate-500 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wide">Nublado</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeSaveAsistencia("lluvia", selectedBloqueForAsistencia)}
+                    className="p-4 rounded-3xl border border-cyan-100 dark:border-cyan-950/50 bg-cyan-50/20 hover:bg-cyan-50/40 dark:bg-cyan-950/10 dark:hover:bg-cyan-950/20 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group active:scale-95"
+                  >
+                    <CloudRain size={28} className="text-cyan-500 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="text-xs font-black text-cyan-700 dark:text-cyan-400 uppercase tracking-wide">Lluvia</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowClimaModal(false)}
                   className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
                 >
                   Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL REINICIO DE AUSENCIAS */}
+      <AnimatePresence>
+        {showResetAusenciasModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-6 shadow-2xl space-y-5"
+            >
+              <div className="text-center space-y-1">
+                <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-900/20 px-3 py-1 rounded-full">Control de Cuadrilla</span>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter pt-1">Contador de Ausencias</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Reinicia el contador de faltas acumuladas entre certificaciones.</p>
+              </div>
+
+              {/* Acciones de Reinicio Global */}
+              <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-3">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                  Acción rápida para toda la cuadrilla
+                </label>
+                
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const today = new Date().toISOString().split('T')[0];
+                      resetAusencias(undefined, today);
+                      notify("Contador de ausencias reiniciado a 0 para todos los operarios", "success");
+                      setShowResetAusenciasModal(false);
+                    }}
+                    className="w-full bg-rose-600 hover:bg-rose-500 active:scale-98 text-white py-2.5 px-4 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-rose-500/20 cursor-pointer"
+                  >
+                    <RotateCcw size={14} /> Reiniciar Ausencias de Todos a 0 (Hoy)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetAusencias(undefined, "2026-08-04");
+                      notify("Contador de ausencias fijado desde cierre de certificación (04/08/2026)", "info");
+                      setShowResetAusenciasModal(false);
+                    }}
+                    className="w-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-2.5 px-4 rounded-2xl font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Calendar size={13} /> Reiniciar desde Última Certificación (04/08/2026)
+                  </button>
+                </div>
+              </div>
+
+              {/* Desglose Individual */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block px-1">
+                  Reinicio Individual por Operario
+                </label>
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  {operariosList.map(op => {
+                    const count = getOperarioAusencias(op.nombre);
+                    const norm = (s: string) => (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const opReset = ausenciasResets[norm(op.nombre)] || "2026-08-04";
+
+                    return (
+                      <div key={op.nombre} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div>
+                          <h5 className="text-xs font-black text-slate-800 dark:text-white uppercase">{op.nombre}</h5>
+                          <span className="text-[9px] font-medium text-slate-400 block">
+                            Conteo activo desde: {opReset}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-xl ${
+                            count > 0 ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300'
+                          }`}>
+                            {count} {count === 1 ? 'falta' : 'faltas'}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const today = new Date().toISOString().split('T')[0];
+                              resetAusencias(op.nombre, today);
+                              notify(`Ausencias de ${op.nombre} reiniciadas a 0`, "success");
+                            }}
+                            className="p-1.5 rounded-xl bg-white dark:bg-slate-900 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-300 transition-colors cursor-pointer"
+                            title={`Poner a 0 ausencias de ${op.nombre}`}
+                          >
+                            <RotateCcw size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowResetAusenciasModal(false)}
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Cerrar
                 </button>
               </div>
             </motion.div>

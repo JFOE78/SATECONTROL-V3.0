@@ -75,6 +75,9 @@ export const storage = {
   saveOperarios: (ops: any[]) => localStorage.setItem('sate_operarios_list', JSON.stringify(ops)),
   getOperarios: (): any[] => JSON.parse(localStorage.getItem('sate_operarios_list') || '[]'),
 
+  saveAusenciasResets: (resets: Record<string, string>) => localStorage.setItem('sate_ausencias_resets', JSON.stringify(resets)),
+  getAusenciasResets: (): Record<string, string> => JSON.parse(localStorage.getItem('sate_ausencias_resets') || '{}'),
+
   saveManualAdjustments: (adj: Record<string, number>) => localStorage.setItem(KEYS.ADJUSTMENTS, JSON.stringify(adj)),
   getManualAdjustments: (): Record<string, number> => JSON.parse(localStorage.getItem(KEYS.ADJUSTMENTS) || '{}')
 };
