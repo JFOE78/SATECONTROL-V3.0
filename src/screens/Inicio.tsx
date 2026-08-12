@@ -19,6 +19,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     calculateAvanceEconomics, 
     certificaciones,
     operariosList,
+    itemsSate,
     notify,
     getOperarioAusencias,
     resetAusencias,

@@ -20,12 +20,12 @@ export const DocumentoOficialModal: React.FC<Props> = ({ certificacion, obra, on
   const identificador = c.identificador || `2026-${c.id.slice(-2)}`;
 
   // Group items by bloque
-  const itemsByBloque = (c.partidas || []).reduce((acc, item) => {
+  const itemsByBloque: Record<string, NonNullable<Certificacion["partidas"]>[number][]> = {};
+  (c.partidas || []).forEach(item => {
     const b = item.bloque || "GENERAL";
-    if (!acc[b]) acc[b] = [];
-    acc[b].push(item);
-    return acc;
-  }, {} as Record<string, typeof c.partidas>);
+    if (!itemsByBloque[b]) itemsByBloque[b] = [];
+    itemsByBloque[b].push(item);
+  });
 
   const handlePrint = () => {
     window.print();
