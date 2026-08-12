@@ -35,6 +35,7 @@ export const CertificacionScreen: React.FC<{
   const [expandedCert, setExpandedCert] = useState<string | null>(null);
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [showNotasModal, setShowNotasModal] = useState(false);
+  const [editingNotaId, setEditingNotaId] = useState<string | null>(null);
 
   const obraNotasActivas = useMemo(() => {
     return (notasCertificacion || []).filter(n => (n.obraId === selectedObraId || !n.obraId) && !n.completado);
@@ -735,9 +736,24 @@ export const CertificacionScreen: React.FC<{
                     {nota.concepto}
                   </span>
                 </div>
-                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md uppercase shrink-0">
-                  {nota.bloque || "Varios"}
-                </span>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md uppercase">
+                    {nota.bloque || "Varios"}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingNotaId(nota.id);
+                      setShowNotasModal(true);
+                    }}
+                    className="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
+                    title="Editar nota"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -746,7 +762,11 @@ export const CertificacionScreen: React.FC<{
 
       <NotasCertificacionModal 
         isOpen={showNotasModal} 
-        onClose={() => setShowNotasModal(false)} 
+        onClose={() => {
+          setShowNotasModal(false);
+          setEditingNotaId(null);
+        }} 
+        initialEditId={editingNotaId}
       />
 
       {/* Filtro Periodo */}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, CheckCircle2, Circle, Plus, Trash2, ClipboardList, AlertCircle, Calendar, Tag } from "lucide-react";
+import { X, CheckCircle2, Circle, Plus, Trash2, ClipboardList, AlertCircle, Calendar, Tag, Edit2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useApp } from "../context/AppContext";
 
@@ -7,20 +7,27 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   defaultBloque?: string;
+  initialEditId?: string | null;
 }
 
-export const NotasCertificacionModal: React.FC<Props> = ({ isOpen, onClose, defaultBloque }) => {
+export const NotasCertificacionModal: React.FC<Props> = ({ isOpen, onClose, defaultBloque, initialEditId }) => {
   const { 
     notasCertificacion, 
     addNotaCertificacion, 
     toggleNotaCertificacion, 
     deleteNotaCertificacion,
+    updateNotaCertificacion,
     selectedObraId 
   } = useApp();
 
   const [concepto, setConcepto] = useState("");
   const [bloque, setBloque] = useState(defaultBloque || "Varios");
   const [filtro, setFiltro] = useState<"pendientes" | "completadas" | "todas">("pendientes");
+
+  // Estado para edición inline
+  const [editingId, setEditingId] = useState<string | null>(initialEditId || null);
+  const [editConcepto, setEditConcepto] = useState("");
+  const [editBloque, setEditBloque] = useState("Varios");
 
   if (!isOpen) return null;
 
@@ -41,6 +48,22 @@ export const NotasCertificacionModal: React.FC<Props> = ({ isOpen, onClose, defa
     if (!concepto.trim()) return;
     addNotaCertificacion(concepto, bloque);
     setConcepto("");
+  };
+
+  const handleStartEdit = (nota: typeof obraNotas[0]) => {
+    setEditingId(nota.id);
+    setEditConcepto(nota.concepto);
+    setEditBloque(nota.bloque || "Varios");
+  };
+
+  const handleSaveEdit = (id: string) => {
+    if (!editConcepto.trim()) return;
+    updateNotaCertificacion(id, editConcepto.trim(), editBloque);
+    setEditingId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
   };
 
   const BLOQUES_RAPIDOS = ["BL-11", "BL-7", "BL-8", "BL-5", "BL-13", "Patios Interiores", "Varios"];
@@ -193,58 +216,130 @@ export const NotasCertificacionModal: React.FC<Props> = ({ isOpen, onClose, defa
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className={`p-3 rounded-2xl border transition-all flex items-start gap-3 ${
-                  nota.completado 
+                className={`p-3 rounded-2xl border transition-all ${
+                  editingId === nota.id 
+                    ? "bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 shadow-md"
+                    : nota.completado 
                     ? "bg-slate-50/70 dark:bg-slate-800/20 border-slate-200/60 dark:border-slate-800/50 text-slate-400" 
                     : "bg-white dark:bg-slate-800 border-amber-200/80 dark:border-amber-900/40 text-slate-800 dark:text-slate-100 shadow-sm"
                 }`}
               >
-                {/* Checkbox */}
-                <button
-                  type="button"
-                  onClick={() => toggleNotaCertificacion(nota.id)}
-                  className="mt-0.5 transition-transform active:scale-90 cursor-pointer"
-                  title={nota.completado ? "Marcar como pendiente" : "Marcar como incluido en certificación"}
-                >
-                  {nota.completado ? (
-                    <CheckCircle2 className="text-emerald-500 dark:text-emerald-400" size={20} />
-                  ) : (
-                    <Circle className="text-slate-300 dark:text-slate-600 hover:text-amber-500" size={20} />
-                  )}
-                </button>
-
-                {/* Contenido */}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-semibold leading-snug break-words ${
-                    nota.completado ? "line-through text-slate-400 dark:text-slate-500" : ""
-                  }`}>
-                    {nota.concepto}
-                  </p>
-                  
-                  <div className="flex items-center gap-2 mt-1.5 text-[9px] font-bold">
-                    <span className="bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md flex items-center gap-1 uppercase">
-                      <Tag size={9} /> {nota.bloque || "Varios"}
-                    </span>
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Calendar size={9} /> {nota.fecha}
-                    </span>
-                    {nota.completado && (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
-                        Incluido en certificación
+                {editingId === nota.id ? (
+                  /* Formulario de edición inline */
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider flex items-center gap-1">
+                        <Edit2 size={12} /> Editando Anotación
                       </span>
-                    )}
-                  </div>
-                </div>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
 
-                {/* Borrar */}
-                <button
-                  type="button"
-                  onClick={() => deleteNotaCertificacion(nota.id)}
-                  className="text-slate-300 hover:text-red-500 p-1 rounded-lg transition-colors cursor-pointer"
-                  title="Eliminar nota"
-                >
-                  <Trash2 size={15} />
-                </button>
+                    <input
+                      type="text"
+                      value={editConcepto}
+                      onChange={(e) => setEditConcepto(e.target.value)}
+                      placeholder="Concepto o trabajo pendiente..."
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      {/* Seleccionar bloque rápida */}
+                      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 max-w-[200px] sm:max-w-[250px]">
+                        {BLOQUES_RAPIDOS.map(bl => (
+                          <button
+                            type="button"
+                            key={bl}
+                            onClick={() => setEditBloque(bl)}
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded-lg uppercase whitespace-nowrap transition-all ${
+                              editBloque === bl 
+                                ? "bg-amber-500 text-white" 
+                                : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                            }`}
+                          >
+                            {bl}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveEdit(nota.id)}
+                          className="bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black uppercase px-3 py-1 rounded-xl flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <Check size={12} /> Guardar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Vista normal con botón editar */
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox */}
+                    <button
+                      type="button"
+                      onClick={() => toggleNotaCertificacion(nota.id)}
+                      className="mt-0.5 transition-transform active:scale-90 cursor-pointer"
+                      title={nota.completado ? "Marcar como pendiente" : "Marcar como incluido en certificación"}
+                    >
+                      {nota.completado ? (
+                        <CheckCircle2 className="text-emerald-500 dark:text-emerald-400" size={20} />
+                      ) : (
+                        <Circle className="text-slate-300 dark:text-slate-600 hover:text-amber-500" size={20} />
+                      )}
+                    </button>
+
+                    {/* Contenido */}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-semibold leading-snug break-words ${
+                        nota.completado ? "line-through text-slate-400 dark:text-slate-500" : ""
+                      }`}>
+                        {nota.concepto}
+                      </p>
+                      
+                      <div className="flex items-center gap-2 mt-1.5 text-[9px] font-bold">
+                        <span className="bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md flex items-center gap-1 uppercase">
+                          <Tag size={9} /> {nota.bloque || "Varios"}
+                        </span>
+                        <span className="text-slate-400 flex items-center gap-1">
+                          <Calendar size={9} /> {nota.fecha}
+                        </span>
+                        {nota.completado && (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
+                            Incluido en certificación
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Botones Acción: Editar y Borrar */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(nota)}
+                        className="text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 p-1 rounded-lg transition-colors cursor-pointer"
+                        title="Editar esta nota"
+                      >
+                        <Edit2 size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => deleteNotaCertificacion(nota.id)}
+                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 p-1 rounded-lg transition-colors cursor-pointer"
+                        title="Eliminar nota"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))
           )}

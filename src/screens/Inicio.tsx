@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState, useEffect } from "react";
-import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck, Sun, Cloud, CloudRain, RotateCcw, UserX, ClipboardList, CheckCircle2, Circle, Plus } from "lucide-react";
+import { PlusCircle, Calendar, FileText, ChevronRight, Settings, Users, Check, X, ShieldCheck, Sun, Cloud, CloudRain, RotateCcw, UserX, ClipboardList, CheckCircle2, Circle, Plus, Edit2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { ActionButton } from "../components/ActionButton";
 import { NotasCertificacionModal } from "../components/NotasCertificacionModal";
@@ -37,6 +37,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
   const [selectedBloqueForAsistencia, setSelectedBloqueForAsistencia] = useState<string>("11");
   const [showResetAusenciasModal, setShowResetAusenciasModal] = useState(false);
   const [showNotasModal, setShowNotasModal] = useState(false);
+  const [editingNotaId, setEditingNotaId] = useState<string | null>(null);
 
   const obraNotasActivas = useMemo(() => {
     return (notasCertificacion || []).filter(n => (n.obraId === selectedObraId || !n.obraId) && !n.completado);
@@ -585,12 +586,27 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                     </span>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingNotaId(nota.id);
+                    setShowNotasModal(true);
+                  }}
+                  className="text-slate-400 hover:text-amber-500 p-1.5 rounded-lg hover:bg-amber-100/50 dark:hover:bg-amber-900/40 transition-colors cursor-pointer shrink-0"
+                  title="Editar nota"
+                >
+                  <Edit2 size={14} />
+                </button>
               </div>
             ))}
 
             {obraNotasActivas.length > 3 && (
               <button
-                onClick={() => setShowNotasModal(true)}
+                onClick={() => {
+                  setEditingNotaId(null);
+                  setShowNotasModal(true);
+                }}
                 className="w-full text-center text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 py-1 hover:underline cursor-pointer"
               >
                 + Ver {obraNotasActivas.length - 3} notas más...
@@ -602,7 +618,11 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
 
       <NotasCertificacionModal 
         isOpen={showNotasModal} 
-        onClose={() => setShowNotasModal(false)} 
+        onClose={() => {
+          setShowNotasModal(false);
+          setEditingNotaId(null);
+        }} 
+        initialEditId={editingNotaId}
       />
 
       <AnimatePresence>
