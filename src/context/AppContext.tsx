@@ -146,8 +146,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fechaInicio: "2026-03-01",
       fechaFin: "2026-04-07",
       ejecutado: 12175.20,
-      anticipos: 0.00,
-      certificado: 12175.20,
+      anticipos: 8000.00,
+      certificado: 4175.20,
       estado: "cobrado",
       partidas: [
         { itemId: "c1_1", nombre: "Fase Grupo 1 (Eps + Espigas)", precio: 20.00, m2: 216.65, bloque: "BLOQUE 13" },
