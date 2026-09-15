@@ -48,6 +48,67 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+export const computeAvanceEconomics = (
+  a: Avance,
+  items: Record<string, any>,
+  operarios: any[]
+) => {
+  const normalize = (s: any) => 
+    (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
+  const uniqueOpsNormalized = Array.from(new Set(uniqueOpsRaw.map(n => normalize(n as string))));
+  
+  const uniqueVacOpsRaw = Array.from(new Set(a.operariosVacaciones || []));
+  const uniqueVacOpsNormalized = Array.from(new Set(uniqueVacOpsRaw.map(n => normalize(n as string))));
+
+  // 1. Ingresos generados por la producción del parte
+  const ingresos = (a.produccion || []).reduce((acc, p) => {
+    const item = items[p.itemId];
+    return acc + (p.m2 * (item?.precio || 0));
+  }, 0);
+
+  // 2. Coste real de mano de obra: SOLO computa los operarios que SI asistieron (operariosPresentes)
+  // Quienes no asisten (ausentes/vacaciones) SE DESCUENTAN del coste de mano de obra
+  let presentOps = uniqueOpsNormalized;
+  if (presentOps.length === 0) {
+    if (uniqueVacOpsNormalized.length > 0) {
+      // Si no hay lista explícita de presentes pero sí de ausentes, descontamos los ausentes de la cuadrilla
+      presentOps = operarios
+        .map(op => normalize(op.nombre))
+        .filter(name => !uniqueVacOpsNormalized.includes(name));
+    } else if (a.produccion && a.produccion.length > 0) {
+      // Caso legado sin desglose individual: cuadrilla completa
+      presentOps = operarios.map(op => normalize(op.nombre));
+    }
+  }
+
+  const costeManoObra = (a.produccion.length === 0 && a.motivoSinProduccion) 
+    ? 0 
+    : operarios.reduce((acc, op) => {
+        const opName = normalize(op.nombre);
+        if (presentOps.includes(opName)) {
+          return acc + (op.coste || 0);
+        }
+        return acc;
+      }, 0);
+
+  const beneficio = ingresos - costeManoObra;
+  
+  // El reparto del beneficio diario entre los operarios que efectivamente asistieron
+  const beneficioPorOperario = presentOps.length > 0 
+    ? beneficio / presentOps.length 
+    : (operarios.length > 0 ? beneficio / operarios.length : 0);
+  
+  return { 
+    ingresos, 
+    costeManoObra, 
+    beneficio, 
+    beneficioPorOperario, 
+    cantOps: presentOps.length 
+  };
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, _setTheme] = useState<"light" | "dark">("light");
   const [obras, _setObras] = useState<Obra[]>([]);
@@ -166,16 +227,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       index === self.findIndex((t: any) => t.nombre.toLowerCase() === op.nombre.toLowerCase())
     );
 
-    const cleanAvances = loadedAvances.map((a: Avance) => ({
-      ...a,
-      operariosPresentes: Array.from(new Set((a.operariosPresentes || []).map(o => (o || "").toString().trim()))).filter(Boolean)
-    }));
-
-    const cleanAnticipos = loadedAnticipos.map((an: Anticipo) => ({
-      ...an,
-      operario: (an.operario || "").toString().trim()
-    }));
-
     const syncedItems = { ...(loadedItems && Object.keys(loadedItems).length > 0 ? loadedItems : ITEMS_SATE) };
     Object.keys(ITEMS_SATE).forEach(key => {
       if (!syncedItems[key]) {
@@ -190,6 +241,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       syncedItems.fase1.nombre = "SATE Combinado (Corcho + Fino)";
     }
     storage.saveItems(syncedItems);
+
+    const cleanAvances = loadedAvances.map((a: Avance) => {
+      const cleanPresentes = Array.from(new Set((a.operariosPresentes || []).map(o => (o || "").toString().trim()))).filter(Boolean);
+      const updatedAvance: Avance = {
+        ...a,
+        operariosPresentes: cleanPresentes
+      };
+      const econ = computeAvanceEconomics(updatedAvance, syncedItems, configOpsUnique);
+      return {
+        ...updatedAvance,
+        resumen: {
+          ingresos: econ.ingresos,
+          costeManoObra: econ.costeManoObra,
+          beneficio: econ.beneficio,
+          beneficioPorOperario: econ.beneficioPorOperario
+        }
+      };
+    });
+
+    const cleanAnticipos = loadedAnticipos.map((an: Anticipo) => ({
+      ...an,
+      operario: (an.operario || "").toString().trim()
+    }));
 
     const INITIAL_VACACIONES: Vacacion[] = [
       { id: "vac-1", operario: "Mosquito", fecha: "2026-05-19", tipo: "Disfrutados y Pagados" },
@@ -567,45 +641,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const calculateAvanceEconomics = useCallback((a: Avance) => {
-    const normalize = (s: any) => 
-      (s || "").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    const uniqueOpsRaw = Array.from(new Set(a.operariosPresentes || []));
-    const uniqueOpsNormalized = Array.from(new Set(uniqueOpsRaw.map(n => normalize(n as string))));
-    
-    const uniqueVacOpsRaw = Array.from(new Set(a.operariosVacaciones || []));
-    const uniqueVacOpsNormalized = Array.from(new Set(uniqueVacOpsRaw.map(n => normalize(n as string))));
-
-    // 1. Ingresos generados por la producción del parte
-    const ingresos = (a.produccion || []).reduce((acc, p) => {
-      const item = itemsSate[p.itemId];
-      return acc + (p.m2 * (item?.precio || 0));
-    }, 0);
-
-    // 2. Coste real de los operarios que SI asistieron + los de vacaciones pagadas
-    // Solo sumamos el coste de los que están en a.operariosPresentes o a.operariosVacaciones
-    const costeManoObra = (a.produccion.length === 0 && a.motivoSinProduccion) 
-      ? 0 
-      : operariosList.reduce((acc, op) => {
-          const opName = normalize(op.nombre);
-          if (uniqueOpsNormalized.includes(opName) || uniqueVacOpsNormalized.includes(opName)) {
-            return acc + (op.coste || 0);
-          }
-          return acc;
-        }, 0);
-
-    const beneficio = ingresos - costeManoObra;
-    
-    // El reparto de beneficios diarios derivados de la producción se divide igualmente entre todos los operarios registrados (asistan o no)
-    const beneficioPorOperario = operariosList.length > 0 ? beneficio / operariosList.length : 0;
-    
-    return { 
-      ingresos, 
-      costeManoObra, 
-      beneficio, 
-      beneficioPorOperario, 
-      cantOps: uniqueOpsNormalized.length 
-    };
+    return computeAvanceEconomics(a, itemsSate, operariosList);
   }, [itemsSate, operariosList]);
 
   const resetAusencias = useCallback((operarioName?: string, targetDate?: string) => {

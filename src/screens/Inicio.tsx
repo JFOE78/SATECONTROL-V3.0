@@ -226,6 +226,30 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     return computedM2 * fase1Precio;
   }, [computedM2, fase1Precio]);
 
+  const costeManoObraEnVivo = useMemo(() => {
+    const presentSet = new Set(presentUsers.map(normalizeName));
+    return operariosList.reduce((sum, op) => {
+      if (presentSet.has(normalizeName(op.nombre))) {
+        return sum + (op.coste || 0);
+      }
+      return sum;
+    }, 0);
+  }, [presentUsers, operariosList, normalizeName]);
+
+  const ahorroAusencias = useMemo(() => {
+    const absentSet = new Set(absentUsers.map(normalizeName));
+    return operariosList.reduce((sum, op) => {
+      if (absentSet.has(normalizeName(op.nombre))) {
+        return sum + (op.coste || 0);
+      }
+      return sum;
+    }, 0);
+  }, [absentUsers, operariosList, normalizeName]);
+
+  const beneficioEnVivo = useMemo(() => {
+    return totalEuro - costeManoObraEnVivo;
+  }, [totalEuro, costeManoObraEnVivo]);
+
   const handleToggle = (nombre: string) => {
     setAsistencia(prev => ({
       ...prev,
@@ -251,8 +275,15 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     const finalBloque = (targetBloque || selectedBloqueForAsistencia || "11").trim() || "11";
     const m2 = presentUsers.length * 11;
 
+    // Buscar si ya existe avance previo para hoy y esta obra/bloque para mantener su ID
+    const existingAvance = (avances || []).find(a => 
+      a.obraId === selectedObraId && 
+      a.fecha === fecha && 
+      (a.bloque || "").trim().toLowerCase() === finalBloque.toLowerCase()
+    );
+
     const newAvance: Avance = {
-      id: `avance-auto-${fecha}-${Date.now()}`,
+      id: existingAvance?.id || `avance-auto-${fecha}-${Date.now()}`,
       fecha,
       obraId: selectedObraId!,
       bloque: finalBloque,
@@ -296,7 +327,10 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
     });
 
     setShowClimaModal(false);
-    notify(`Asistencia guardada: Bloque ${finalBloque} • Clima (${climaSeleccionado}): +${m2} m² (${formatAmount(totalEuro)})`, "success");
+    notify(
+      `Asistencia guardada: Bloque ${finalBloque} • Producción: +${m2} m² (${formatAmount(totalEuro)}) • Coste M.O.: ${formatAmount(econ.costeManoObra)} • Beneficio: ${econ.beneficio >= 0 ? "+" : ""}${formatAmount(econ.beneficio)}`,
+      "success"
+    );
   };
 
   return (
@@ -473,7 +507,7 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
                       </>
                     ) : (
                       <>
-                        <X size={8} strokeWidth={4} /> AUSENTE (-1 día)
+                        <X size={8} strokeWidth={4} /> AUSENTE (-{op.coste}€ M.O.)
                       </>
                     )}
                   </div>
@@ -484,15 +518,36 @@ export const Inicio: React.FC<{ onNavigate: (s: any) => void, onInstall: () => v
         </div>
 
         {/* Live Summary Bar */}
-        <div className="bg-slate-900 dark:bg-black p-4 rounded-3xl text-white space-y-3">
-          <div className="flex justify-between items-center text-xs">
+        <div className="bg-slate-900 dark:bg-black p-4 rounded-3xl text-white space-y-3 shadow-lg">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-b border-slate-800 pb-3">
             <div>
-              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Metros Avanzados (11 m²/op)</p>
-              <h4 className="text-xl font-black text-emerald-400 leading-tight">{computedM2} m²</h4>
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Metros Avanzados</p>
+              <h4 className="text-lg font-black text-emerald-400 leading-tight">{computedM2} m²</h4>
+              <span className="text-[8px] text-slate-400 font-bold">{presentUsers.length} de {operariosList.length} presentes</span>
             </div>
-            <div className="text-right">
-              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Valor Diario ({formatAmount(fase1Precio)} €/m²)</p>
-              <h4 className="text-xl font-black text-blue-400 leading-tight">{formatAmount(totalEuro)}</h4>
+
+            <div>
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Ingresos ({formatAmount(fase1Precio)} €/m²)</p>
+              <h4 className="text-lg font-black text-blue-400 leading-tight">{formatAmount(totalEuro)}</h4>
+              <span className="text-[8px] text-slate-400 font-bold">Producción jornada</span>
+            </div>
+
+            <div>
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Coste Mano Obra</p>
+              <h4 className="text-lg font-black text-rose-400 leading-tight">{formatAmount(costeManoObraEnVivo)}</h4>
+              <span className="text-[8px] text-slate-400 font-bold">
+                {absentUsers.length > 0 ? `Descontados ${absentUsers.length} (-${formatAmount(ahorroAusencias)})` : "Cuadrilla completa"}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Beneficio Diario</p>
+              <h4 className={`text-lg font-black leading-tight ${beneficioEnVivo >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {beneficioEnVivo > 0 ? "+" : ""}{formatAmount(beneficioEnVivo)}
+              </h4>
+              <span className="text-[8px] text-slate-400 font-bold">
+                {presentUsers.length > 0 ? `${formatAmount(beneficioEnVivo / presentUsers.length)}/op activo` : "Sin actividad"}
+              </span>
             </div>
           </div>
 
