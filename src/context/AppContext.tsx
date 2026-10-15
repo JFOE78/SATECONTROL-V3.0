@@ -470,6 +470,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             certificado: 7108.67
           };
         }
+        if (
+          c.id === "a335f0c3-c25f-41d1-9093-1b5460981467" ||
+          c.numeroCertificacion === "SÉPTIMA CERTIFICACIÓN" ||
+          (c.mes === "2026-10" && (c.fechaFin === "2026-10-01" || c.fechaFin === "2026-10-05"))
+        ) {
+          return {
+            ...c,
+            numeroCertificacion: "SÉPTIMA CERTIFICACIÓN",
+            identificador: c.identificador || "2026-10",
+            fechaEmision: "2026-10-05",
+            fechaInicio: "2026-09-05",
+            fechaFin: "2026-10-05",
+            estado: "cobrado" as const
+          };
+        }
+        if (
+          c.id === "18cb91a5-8dd6-4f6f-af1b-a04aee49ee8e" ||
+          c.numeroCertificacion === "SEXTA CERTIFICACIÓN" ||
+          (c.mes === "2026-09" && c.fechaFin === "2026-09-04")
+        ) {
+          return {
+            ...c,
+            numeroCertificacion: "SEXTA CERTIFICACIÓN",
+            identificador: c.identificador || "2026-08"
+          };
+        }
         return c;
       });
 

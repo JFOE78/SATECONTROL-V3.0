@@ -80,30 +80,30 @@ export const CertificacionScreen: React.FC<{
   // Sync dates with filtered advances if empty
   useEffect(() => {
     if (!periodoInicio || !periodoFin) {
-      // Nueva fecha de corte solicitada por el usuario
-      const CUTOFF_DATE = "2026-05-06";
+      const sortedCerts = [...certificaciones]
+        .filter(c => c.id !== editingCertId && c.obraId === selectedObraId && c.fechaFin)
+        .sort((a,b) => (b.fechaFin || '').localeCompare(a.fechaFin || ''));
       
-      const lastCert = [...certificaciones].filter(c => c.id !== editingCertId && c.obraId === selectedObraId).sort((a,b) => (b.fechaFin || '').localeCompare(a.fechaFin || ''))[0];
+      const lastCert = sortedCerts[0];
       
       if (lastCert && lastCert.fechaFin) {
-        const lastDate = new Date(lastCert.fechaFin);
-        lastDate.setDate(lastDate.getDate() + 1);
-        let nextStart = lastDate.toISOString().split('T')[0];
-        
-        // Si la última certificación es anterior al corte, forzamos el inicio al corte
-        if (nextStart < CUTOFF_DATE) nextStart = CUTOFF_DATE;
+        // Cálculo UTC seguro para evitar desfases horarios
+        const [y, m, d] = lastCert.fechaFin.split('-').map(Number);
+        const nextDate = new Date(Date.UTC(y, m - 1, d + 1));
+        const nextStart = nextDate.toISOString().split('T')[0];
         
         setPeriodoInicio(nextStart);
         
         // Find last available avance date for the end
         const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId).sort((a,b) => a.fecha.localeCompare(b.fecha));
         if (obraAvances.length > 0) {
-          setPeriodoFin(obraAvances[obraAvances.length - 1].fecha);
+          const lastAvanceDate = obraAvances[obraAvances.length - 1].fecha;
+          setPeriodoFin(lastAvanceDate >= nextStart ? lastAvanceDate : nextStart);
         } else {
           setPeriodoFin(nextStart);
         }
       } else {
-        // Por defecto, empezamos en la fecha de corte para el nuevo ciclo
+        const CUTOFF_DATE = "2026-10-06";
         setPeriodoInicio(CUTOFF_DATE);
         const obraAvances = (avances || []).filter(a => a.obraId === selectedObraId && a.fecha >= CUTOFF_DATE);
         if (obraAvances.length > 0) {
@@ -385,9 +385,15 @@ export const CertificacionScreen: React.FC<{
       fecha: an.fecha
     }));
 
+    const certCount = certificaciones.filter(c => c.obraId === selectedObraId).length + 1;
+    const defaultTitulo = certCount === 8 ? "OCTAVA CERTIFICACIÓN" : `${certCount}ª CERTIFICACIÓN`;
+
     const newCert: Certificacion = {
       id: editingCertId || crypto.randomUUID(),
       obraId: selectedObraId,
+      numeroCertificacion: existingCert?.numeroCertificacion || defaultTitulo,
+      identificador: existingCert?.identificador || `${periodoFin.substring(0, 4)}-${String(certCount).padStart(2, '0')}`,
+      fechaEmision: existingCert?.fechaEmision || periodoFin,
       mes: periodoFin.substring(0, 7),
       fechaInicio: periodoInicio,
       fechaFin: periodoFin,
@@ -771,6 +777,20 @@ export const CertificacionScreen: React.FC<{
 
       {/* Filtro Periodo */}
       <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full tracking-wider">
+              {editingCertId ? "Modo Edición Certificación" : "Nuevo Ciclo • 8ª Certificación"}
+            </span>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+              {editingCertId ? "Ajustando periodo seleccionado" : "Abierto desde el 06/10/2026 (7ª Cert cerrada el 05/10)"}
+            </p>
+          </div>
+          <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+            {rawDataInPeriod.length} partes
+          </span>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2">Inicio Periodo</label>

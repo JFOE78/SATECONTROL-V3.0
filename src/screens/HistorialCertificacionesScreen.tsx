@@ -128,10 +128,10 @@ export const HistorialCertificacionesScreen: React.FC<{ onBack: () => void, onEd
                         )}
                       </div>
                       <p className="text-xs font-bold text-slate-800 dark:text-white uppercase mt-1">
-                        {c.fechaEmision ? formatDate(c.fechaEmision) : (c.fechaFin ? formatDate(c.fechaFin) : "")}
+                        {c.fechaInicio && c.fechaFin ? `${formatDate(c.fechaInicio)} al ${formatDate(c.fechaFin)}` : (c.fechaEmision ? formatDate(c.fechaEmision) : "")}
                       </p>
                       <p className="text-[9px] text-slate-400 font-medium">
-                        ID: {c.identificador || c.id.slice(-6)}
+                        Cierre: {c.fechaFin ? formatDate(c.fechaFin) : (c.fechaEmision ? formatDate(c.fechaEmision) : "")} • ID: {c.identificador || c.id.slice(-6)}
                       </p>
                     </div>
                   </div>

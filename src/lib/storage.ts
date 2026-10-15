@@ -1,5 +1,7 @@
 import { Obra, Avance, Anticipo, Gasto, Certificacion } from '../types';
 
+import defaultBackup from '../data/defaultBackup.json';
+
 const KEYS = {
   OBRAS: 'sate_obras',
   AVANCES: 'sate_avances',
@@ -12,27 +14,74 @@ const KEYS = {
   ADJUSTMENTS: 'sate_manual_adjustments'
 };
 
+const normalizeCertificaciones = (certs: Certificacion[]): Certificacion[] => {
+  return certs.map(c => {
+    if (
+      c.id === "a335f0c3-c25f-41d1-9093-1b5460981467" ||
+      c.numeroCertificacion === "SÉPTIMA CERTIFICACIÓN" ||
+      (c.mes === "2026-10" && (c.fechaFin === "2026-10-01" || c.fechaFin === "2026-10-05"))
+    ) {
+      return {
+        ...c,
+        numeroCertificacion: "SÉPTIMA CERTIFICACIÓN",
+        identificador: c.identificador || "2026-10",
+        fechaEmision: "2026-10-05",
+        fechaInicio: "2026-09-05",
+        fechaFin: "2026-10-05",
+        estado: "cobrado" as const
+      };
+    }
+    if (c.id === "18cb91a5-8dd6-4f6f-af1b-a04aee49ee8e") {
+      return {
+        ...c,
+        numeroCertificacion: "SEXTA CERTIFICACIÓN",
+        identificador: c.identificador || "2026-08"
+      };
+    }
+    return c;
+  });
+};
+
 export const storage = {
   saveObras: (obras: Obra[]) => localStorage.setItem(KEYS.OBRAS, JSON.stringify(obras)),
-  getObras: (): Obra[] => JSON.parse(localStorage.getItem(KEYS.OBRAS) || '[]'),
+  getObras: (): Obra[] => {
+    const raw = localStorage.getItem(KEYS.OBRAS);
+    return raw ? JSON.parse(raw) : (defaultBackup.obras as Obra[]);
+  },
   
   saveAvances: (avances: Avance[]) => localStorage.setItem(KEYS.AVANCES, JSON.stringify(avances)),
-  getAvances: (): Avance[] => JSON.parse(localStorage.getItem(KEYS.AVANCES) || '[]'),
+  getAvances: (): Avance[] => {
+    const raw = localStorage.getItem(KEYS.AVANCES);
+    return raw ? JSON.parse(raw) : (defaultBackup.avances as Avance[]);
+  },
   
   saveAnticipos: (anticipos: Anticipo[]) => localStorage.setItem(KEYS.ANTICIPOS, JSON.stringify(anticipos)),
-  getAnticipos: (): Anticipo[] => JSON.parse(localStorage.getItem(KEYS.ANTICIPOS) || '[]'),
+  getAnticipos: (): Anticipo[] => {
+    const raw = localStorage.getItem(KEYS.ANTICIPOS);
+    return raw ? JSON.parse(raw) : (defaultBackup.anticipos as Anticipo[]);
+  },
   
   saveGastos: (gastos: Gasto[]) => localStorage.setItem(KEYS.GASTOS, JSON.stringify(gastos)),
-  getGastos: (): Gasto[] => JSON.parse(localStorage.getItem(KEYS.GASTOS) || '[]'),
+  getGastos: (): Gasto[] => {
+    const raw = localStorage.getItem(KEYS.GASTOS);
+    return raw ? JSON.parse(raw) : (defaultBackup.gastos as Gasto[]);
+  },
   
-  saveCertificaciones: (certs: Certificacion[]) => localStorage.setItem(KEYS.CERTIFICACIONES, JSON.stringify(certs)),
-  getCertificaciones: (): Certificacion[] => JSON.parse(localStorage.getItem(KEYS.CERTIFICACIONES) || '[]'),
+  saveCertificaciones: (certs: Certificacion[]) => {
+    const normalized = normalizeCertificaciones(certs);
+    localStorage.setItem(KEYS.CERTIFICACIONES, JSON.stringify(normalized));
+  },
+  getCertificaciones: (): Certificacion[] => {
+    const raw = localStorage.getItem(KEYS.CERTIFICACIONES);
+    const list: Certificacion[] = raw ? JSON.parse(raw) : (defaultBackup.certificaciones as Certificacion[]);
+    return normalizeCertificaciones(list);
+  },
   
   saveSelectedObra: (id: string) => localStorage.setItem(KEYS.SELECTED_OBRA, id),
-  getSelectedObra: (): string | null => localStorage.getItem(KEYS.SELECTED_OBRA),
+  getSelectedObra: (): string | null => localStorage.getItem(KEYS.SELECTED_OBRA) || defaultBackup.selectedObra,
   
   saveActiveObraId: (id: string) => localStorage.setItem(KEYS.SELECTED_OBRA, id),
-  getActiveObraId: (): string | null => localStorage.getItem(KEYS.SELECTED_OBRA),
+  getActiveObraId: (): string | null => localStorage.getItem(KEYS.SELECTED_OBRA) || defaultBackup.selectedObra,
 
   exportData: () => {
     const data = {
@@ -51,6 +100,9 @@ export const storage = {
   importData: (json: string) => {
     try {
       const data = JSON.parse(json);
+      if (data.certificaciones) {
+        data.certificaciones = normalizeCertificaciones(data.certificaciones);
+      }
       if (data.obras) storage.saveObras(data.obras);
       if (data.avances) storage.saveAvances(data.avances);
       if (data.anticipos) storage.saveAnticipos(data.anticipos);

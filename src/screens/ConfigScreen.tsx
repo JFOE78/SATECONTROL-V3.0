@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChevronLeft, Moon, Sun, Download, Upload, Trash2, Plus, Edit2, Database, AlertTriangle, FileText, History } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { storage } from "../lib/storage";
+import defaultBackup from "../data/defaultBackup.json";
 import { Avance, Certificacion } from "../types";
 import { BLOQUE_DIMENSIONS } from "../constants";
 
@@ -62,6 +63,15 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleRestoreUpdatedBackup = () => {
+    if (storage.importData(JSON.stringify(defaultBackup))) {
+      notify("Copia sincronizada: 7ª Cert cerrada el 05/10/2026 y ciclo 06/10/2026 activo. Reiniciando...", "success");
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      notify("Error al restaurar copia", "error");
+    }
   };
 
   const handleUnifyObras = () => {
@@ -337,6 +347,29 @@ export const ConfigScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <button onClick={handleExportCSV} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-all">
                   <FileText className="text-emerald-500" />
                   <span className="text-[10px] font-black uppercase text-slate-400">Excel</span>
+                </button>
+              </div>
+
+              <div className="pt-1">
+                <button 
+                  onClick={() => startConfirm('restore_backup', handleRestoreUpdatedBackup)}
+                  className={`w-full p-3.5 rounded-2xl flex items-center justify-between text-left transition-all ${
+                    confirmActionId === 'restore_backup'
+                      ? "bg-amber-600 text-white animate-pulse shadow-lg"
+                      : "bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-amber-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Database className={confirmActionId === 'restore_backup' ? "text-white" : "text-amber-600 dark:text-amber-400"} size={18} />
+                    <div>
+                      <p className="text-[11px] font-black uppercase">
+                        {confirmActionId === 'restore_backup' ? "¿Confirmar sincronización?" : "Sincronizar Copia 7ª Cert (05/10/2026)"}
+                      </p>
+                      <p className="text-[9px] opacity-75 font-medium">
+                        Cierre 7ª Cert al 05/10/2026 • Nuevo ciclo abierto el 06/10/2026
+                      </p>
+                    </div>
+                  </div>
                 </button>
               </div>
             </div>

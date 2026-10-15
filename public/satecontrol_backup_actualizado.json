@@ -1,0 +1,6307 @@
+{
+  "obras": [
+    {
+      "id": "alcosa-final",
+      "nombre": "Parque Alcosa",
+      "numBloques": 20
+    }
+  ],
+  "avances": [
+    {
+      "id": "v1",
+      "fecha": "2026-03-09",
+      "obraId": "alcosa-final",
+      "bloque": "13-5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "f1",
+          "m2": 11724.54,
+          "bloque": "13-5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0.0,
+        "costeManoObra": 510,
+        "beneficio": -510.0,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v2",
+      "fecha": "2026-03-10",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v3",
+      "fecha": "2026-03-11",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v4",
+      "fecha": "2026-03-12",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v5",
+      "fecha": "2026-03-13",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v6",
+      "fecha": "2026-03-16",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v7",
+      "fecha": "2026-03-17",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v8",
+      "fecha": "2026-03-18",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v9",
+      "fecha": "2026-03-19",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v10",
+      "fecha": "2026-03-20",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v11",
+      "fecha": "2026-03-23",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v12",
+      "fecha": "2026-03-24",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v13",
+      "fecha": "2026-03-25",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v14",
+      "fecha": "2026-03-26",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v15",
+      "fecha": "2026-03-27",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v16",
+      "fecha": "2026-03-30",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "v17",
+      "fecha": "2026-03-31",
+      "obraId": "alcosa-final",
+      "bloque": "13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 510,
+        "beneficio": -510,
+        "beneficioPorOperario": -102.0
+      }
+    },
+    {
+      "id": "c48963d9-3a2e-44a5-a3e7-7e09c7e2b0ec",
+      "fecha": "2026-04-08",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 95,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1615,
+        "costeManoObra": 510,
+        "beneficio": 1105,
+        "beneficioPorOperario": 221.0
+      }
+    },
+    {
+      "id": "0943a8ca-03d2-44a1-af59-b9e1d9efd93a",
+      "fecha": "2026-04-09",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 722.5,
+        "costeManoObra": 510,
+        "beneficio": 212.5,
+        "beneficioPorOperario": 42.5
+      }
+    },
+    {
+      "id": "f1bd76af-82d7-481a-968e-5d283182c313",
+      "fecha": "2026-04-10",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 722.5,
+        "costeManoObra": 510,
+        "beneficio": 212.5,
+        "beneficioPorOperario": 42.5
+      }
+    },
+    {
+      "id": "bdc91bc0-0616-459a-80ea-665d87aa89ea",
+      "fecha": "2026-04-13",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 13",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 46,
+          "bloque": "Bloque 13"
+        },
+        {
+          "itemId": "malla",
+          "m2": 101,
+          "bloque": "Bloque 13"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 694.0,
+        "costeManoObra": 510,
+        "beneficio": 184.0,
+        "beneficioPorOperario": 36.8
+      }
+    },
+    {
+      "id": "46b5f97c-5fce-40e0-aa2b-6b5ec0f77964",
+      "fecha": "2026-04-14",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 722.5,
+        "costeManoObra": 510,
+        "beneficio": 212.5,
+        "beneficioPorOperario": 42.5
+      }
+    },
+    {
+      "id": "fa8e8559-a9ff-4597-a519-102f846f0c97",
+      "fecha": "2026-04-15",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 722.5,
+        "costeManoObra": 510,
+        "beneficio": 212.5,
+        "beneficioPorOperario": 42.5
+      }
+    },
+    {
+      "id": "5a2dcd65-6b0f-4cd2-9ed5-da3664a98742",
+      "fecha": "2026-04-16",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "cajeado40",
+          "m2": 16.26,
+          "bloque": "Bloque 5"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 90,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1668.21,
+        "costeManoObra": 510,
+        "beneficio": 1158.21,
+        "beneficioPorOperario": 231.64
+      }
+    },
+    {
+      "id": "b10c4201-2235-4f5e-9e8f-fdb5950040cf",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 70,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1190,
+        "costeManoObra": 390,
+        "beneficio": 800,
+        "beneficioPorOperario": 200.0
+      }
+    },
+    {
+      "id": "f167e2da-9cbb-4b54-a555-f06808a185e4",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 13",
+      "operariosPresentes": [
+        "Juan"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 20,
+          "bloque": "Bloque 13"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 170.0,
+        "costeManoObra": 120,
+        "beneficio": 50.0,
+        "beneficioPorOperario": 50.0
+      }
+    },
+    {
+      "id": "27e16671-79be-4883-a7ae-c035a215b491",
+      "fecha": "2026-04-20",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "David",
+        "Antonio"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 35,
+          "bloque": "Bloque 13"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 595,
+        "costeManoObra": 190,
+        "beneficio": 405,
+        "beneficioPorOperario": 202.5
+      }
+    },
+    {
+      "id": "0a6ca35f-3e3a-48a2-b9bd-c5d10fd7cada",
+      "fecha": "2026-04-20",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque  6",
+      "operariosPresentes": [
+        "Mosquito"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 25,
+          "bloque": "Bloque  9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 425,
+        "costeManoObra": 120,
+        "beneficio": 305,
+        "beneficioPorOperario": 305.0
+      }
+    },
+    {
+      "id": "10c7fd3f-e61c-4028-9633-be3c67b9597f",
+      "fecha": "2026-04-20",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 13",
+      "operariosPresentes": [
+        "Juan",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 40,
+          "bloque": "Bloque 13"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 340.0,
+        "costeManoObra": 200,
+        "beneficio": 140.0,
+        "beneficioPorOperario": 70.0
+      }
+    },
+    {
+      "id": "b0337d95-8424-4b8a-aec6-9a376d9e1b86",
+      "fecha": "2026-04-21",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque  6",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 70,
+          "bloque": "Bloque  9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1190,
+        "costeManoObra": 190,
+        "beneficio": 1000,
+        "beneficioPorOperario": 500.0
+      }
+    },
+    {
+      "id": "629b875d-86a9-4239-a086-bb30dd6a7bfc",
+      "fecha": "2026-04-21",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Jesules",
+        "Juan",
+        "Antonio"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 121,
+          "bloque": "Bloque 5"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 97,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1187.5,
+        "costeManoObra": 320,
+        "beneficio": 867.5,
+        "beneficioPorOperario": 289.17
+      }
+    },
+    {
+      "id": "f69e8b5c-2c10-4294-b97d-a23a9841bbdf",
+      "fecha": "2026-04-22",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 6",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 75,
+          "bloque": "Bloque 9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1275,
+        "costeManoObra": 190,
+        "beneficio": 1085,
+        "beneficioPorOperario": 542.5
+      }
+    },
+    {
+      "id": "f57dbff7-f102-4dd4-957c-a14bfcc8326a",
+      "fecha": "2026-04-22",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 13 ",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 13 "
+        },
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "Bloque 13 "
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 767.5,
+        "costeManoObra": 320,
+        "beneficio": 447.5,
+        "beneficioPorOperario": 149.17
+      }
+    },
+    {
+      "id": "dea4156e-cfa9-4164-9004-1b4569f4d1e3",
+      "fecha": "2026-04-23",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5 ",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 54,
+          "bloque": "Bloque 5 "
+        },
+        {
+          "itemId": "fase2",
+          "m2": 93,
+          "bloque": "Bloque 5 "
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 952.5,
+        "costeManoObra": 320,
+        "beneficio": 632.5,
+        "beneficioPorOperario": 210.83
+      }
+    },
+    {
+      "id": "093c7387-dddf-469d-a5b4-75ad36bd4542",
+      "fecha": "2026-04-23",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 6",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 75,
+          "bloque": "Bloque 6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1275,
+        "costeManoObra": 190,
+        "beneficio": 1085,
+        "beneficioPorOperario": 542.5
+      }
+    },
+    {
+      "id": "e5a692a6-0aaf-4c0a-a07b-2f47d6bb32a5",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque  6",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 50,
+          "bloque": "Bloque  6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 850,
+        "costeManoObra": 190,
+        "beneficio": 660,
+        "beneficioPorOperario": 330.0
+      }
+    },
+    {
+      "id": "a494c2ba-8d70-4c67-a664-b8383e23dcd4",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 10,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 85.0,
+        "costeManoObra": 320,
+        "beneficio": -235.0,
+        "beneficioPorOperario": -78.33
+      }
+    },
+    {
+      "id": "e2a0f9a0-4e66-4aa7-b3fc-6ca51b389c68",
+      "fecha": "2026-04-27",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 6 ",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 70,
+          "bloque": "Bloque 6 "
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1190,
+        "costeManoObra": 190,
+        "beneficio": 1000,
+        "beneficioPorOperario": 500.0
+      }
+    },
+    {
+      "id": "44cf0072-6fb9-4dbb-b6b5-1a5aaa81c54f",
+      "fecha": "2026-04-27",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 60,
+          "bloque": "Bloque 5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 510.0,
+        "costeManoObra": 320,
+        "beneficio": 190.0,
+        "beneficioPorOperario": 63.33
+      }
+    },
+    {
+      "id": "51e20436-58a6-4940-bfec-be06c54f739e",
+      "fecha": "2026-04-28",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 6 ",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 84,
+          "bloque": "Bloque 6 "
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1428,
+        "costeManoObra": 190,
+        "beneficio": 1238,
+        "beneficioPorOperario": 619.0
+      }
+    },
+    {
+      "id": "c7e30e92-70ad-4216-a16b-44f684b242ed",
+      "fecha": "2026-04-28",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 5 ",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 50,
+          "bloque": "Bloque 5 "
+        },
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "Bloque 5 "
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 470.0,
+        "costeManoObra": 320,
+        "beneficio": 150.0,
+        "beneficioPorOperario": 50.0
+      }
+    },
+    {
+      "id": "c3391876-ed88-4d6b-941f-aad957668fc3",
+      "fecha": "2026-04-29",
+      "obraId": "alcosa-final",
+      "bloque": "Sin actividad",
+      "operariosPresentes": [],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": "lluvia",
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 0,
+        "beneficio": 0,
+        "beneficioPorOperario": 0
+      }
+    },
+    {
+      "id": "d4014dc3-25bc-45af-ad51-a6bafb0d1b6d",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 12",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 75,
+          "bloque": "Bloque 12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1275,
+        "costeManoObra": 190,
+        "beneficio": 1085,
+        "beneficioPorOperario": 542.5
+      }
+    },
+    {
+      "id": "1eb5fe54-4bec-454f-9ca3-4fae7107ba21",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 6",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 722.5,
+        "costeManoObra": 320,
+        "beneficio": 402.5,
+        "beneficioPorOperario": 134.17
+      }
+    },
+    {
+      "id": "d3083893-a1ff-473e-a415-5557fad918e8",
+      "fecha": "2026-05-01",
+      "obraId": "alcosa-final",
+      "bloque": "Sin actividad",
+      "operariosPresentes": [],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": "festivo",
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 0,
+        "beneficio": 0,
+        "beneficioPorOperario": 0
+      }
+    },
+    {
+      "id": "031cd456-be93-4f39-be6b-b76aabcbfdb5",
+      "fecha": "2026-05-04",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 6 ",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "Bloque 6 "
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 722.5,
+        "costeManoObra": 320,
+        "beneficio": 402.5,
+        "beneficioPorOperario": 134.17
+      }
+    },
+    {
+      "id": "d2718eaa-93a0-4a0c-9754-20aa9fd9b365",
+      "fecha": "2026-05-04",
+      "obraId": "alcosa-final",
+      "bloque": "Bloque 12",
+      "operariosPresentes": [
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 75,
+          "bloque": "General"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1275,
+        "costeManoObra": 190,
+        "beneficio": 1085,
+        "beneficioPorOperario": 542.5
+      }
+    },
+    {
+      "id": "e76605a8-ddcd-4110-b972-cc6ceac07257",
+      "fecha": "2026-05-06",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 68,
+          "bloque": "6"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 79.35,
+          "bloque": "12"
+        },
+        {
+          "itemId": "anti",
+          "m2": 36.25,
+          "bloque": "5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1861.07,
+        "costeManoObra": 510,
+        "beneficio": 1351.07,
+        "beneficioPorOperario": 270.21
+      }
+    },
+    {
+      "id": "0abe2e23-15b8-4335-90dc-ede4e173c566",
+      "fecha": "2026-05-07",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 79.35,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 79.35,
+          "bloque": "6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 2023.42,
+        "costeManoObra": 510,
+        "beneficio": 1513.42,
+        "beneficioPorOperario": 302.68
+      }
+    },
+    {
+      "id": "19c69a87-1aab-48f8-9d33-31e7b3097895",
+      "fecha": "2026-05-08",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 63.48,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 95.22,
+          "bloque": "6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1888.53,
+        "costeManoObra": 510,
+        "beneficio": 1378.53,
+        "beneficioPorOperario": 275.71
+      }
+    },
+    {
+      "id": "069aaa94-8971-4699-8c1c-ebdb3031bdde",
+      "fecha": "2026-05-11",
+      "obraId": "alcosa-final",
+      "bloque": "Sin actividad",
+      "operariosPresentes": [],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": "lluvia",
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 0,
+        "beneficio": 0,
+        "beneficioPorOperario": 0
+      }
+    },
+    {
+      "id": "40168dc9-f74a-4317-88dc-8e704898d227",
+      "fecha": "2026-05-12",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "6"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 70,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1912.5,
+        "costeManoObra": 510,
+        "beneficio": 1402.5,
+        "beneficioPorOperario": 280.5
+      }
+    },
+    {
+      "id": "9bcc09f5-2af9-405e-8908-7d8c552acc93",
+      "fecha": "2026-05-13",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 90,
+          "bloque": "6"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 85,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 2210.0,
+        "costeManoObra": 510,
+        "beneficio": 1700.0,
+        "beneficioPorOperario": 340.0
+      }
+    },
+    {
+      "id": "ef4476c0-1080-4817-8b27-a337a4f58b36",
+      "fecha": "2026-05-14",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 80,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 50,
+          "bloque": "6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1785.0,
+        "costeManoObra": 510,
+        "beneficio": 1275.0,
+        "beneficioPorOperario": 255.0
+      }
+    },
+    {
+      "id": "19defa4a-97b5-4ed4-a915-eead05d7d6ba",
+      "fecha": "2026-05-15",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 50,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 48,
+          "bloque": "6"
+        },
+        {
+          "itemId": "malla",
+          "m2": 45,
+          "bloque": "6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1393.0,
+        "costeManoObra": 510,
+        "beneficio": 883.0,
+        "beneficioPorOperario": 176.6
+      }
+    },
+    {
+      "id": "49387278-9b57-4763-815f-c85a32dd79d1",
+      "fecha": "2026-05-18",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 58,
+          "bloque": "Varios"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 75,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1768.0,
+        "costeManoObra": 510,
+        "beneficio": 1258.0,
+        "beneficioPorOperario": 251.6
+      }
+    },
+    {
+      "id": "0ddc5610-cd42-42bf-ab2a-ba1891a60268",
+      "fecha": "2026-05-19",
+      "obraId": "alcosa-final",
+      "bloque": "6",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 77,
+          "bloque": "6"
+        },
+        {
+          "itemId": "malla",
+          "m2": 44,
+          "bloque": "6"
+        },
+        {
+          "itemId": "cajeado80",
+          "m2": 32.52,
+          "bloque": "6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1339.34,
+        "costeManoObra": 390,
+        "beneficio": 949.34,
+        "beneficioPorOperario": 237.34
+      }
+    },
+    {
+      "id": "5de31a70-5a87-4bdb-b8c8-504029969f39",
+      "fecha": "2026-05-20",
+      "obraId": "alcosa-final",
+      "bloque": "12",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "12"
+        },
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 767.5,
+        "costeManoObra": 390,
+        "beneficio": 377.5,
+        "beneficioPorOperario": 94.38
+      }
+    },
+    {
+      "id": "a3b3554f-3332-49e5-ab4d-4ef05672a87b",
+      "fecha": "2026-05-21",
+      "obraId": "alcosa-final",
+      "bloque": "12",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "12"
+        },
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 767.5,
+        "costeManoObra": 390,
+        "beneficio": 377.5,
+        "beneficioPorOperario": 94.38
+      }
+    },
+    {
+      "id": "64642a44-116a-42ab-8066-9a73c5826ff1",
+      "fecha": "2026-05-22",
+      "obraId": "alcosa-final",
+      "bloque": "12",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 12,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 758.5,
+        "costeManoObra": 390,
+        "beneficio": 368.5,
+        "beneficioPorOperario": 92.12
+      }
+    },
+    {
+      "id": "9653461f-6911-4608-8416-6b7f4ac43264",
+      "fecha": "2026-05-25",
+      "obraId": "alcosa-final",
+      "bloque": "12",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 12,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 45,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 418.5,
+        "costeManoObra": 310,
+        "beneficio": 108.5,
+        "beneficioPorOperario": 36.17
+      }
+    },
+    {
+      "id": "618ec7c4-cf2f-4ebf-844b-e1569dfed446",
+      "fecha": "2026-05-26",
+      "obraId": "alcosa-final",
+      "bloque": "12",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 50,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1617.5,
+        "costeManoObra": 510,
+        "beneficio": 1107.5,
+        "beneficioPorOperario": 221.5
+      }
+    },
+    {
+      "id": "ac9e2fc3-78d4-4996-af38-9ef56e0c0236",
+      "fecha": "2026-05-27",
+      "obraId": "alcosa-final",
+      "bloque": "12",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 12,
+          "bloque": "12"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "12"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 758.5,
+        "costeManoObra": 510,
+        "beneficio": 248.5,
+        "beneficioPorOperario": 49.7
+      }
+    },
+    {
+      "id": "19a5ac8f-8244-4e62-9e29-caba5303b215",
+      "fecha": "2026-05-27",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Mosquito"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 90,
+          "bloque": "General"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1530,
+        "costeManoObra": 120,
+        "beneficio": 1410,
+        "beneficioPorOperario": 1410.0
+      }
+    },
+    {
+      "id": "746c1fee-f6eb-45ab-820f-d81369079e8d",
+      "fecha": "2026-05-28",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "Varios"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 48,
+          "bloque": "12"
+        },
+        {
+          "itemId": "anti",
+          "m2": 48,
+          "bloque": "Varios"
+        },
+        {
+          "itemId": "fase1",
+          "m2": 80,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 2221.0,
+        "costeManoObra": 510,
+        "beneficio": 1711.0,
+        "beneficioPorOperario": 342.2
+      }
+    },
+    {
+      "id": "95cfb171-914a-4966-8757-4fd17eab4865",
+      "fecha": "2026-05-29",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 90,
+          "bloque": "11"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 85,
+          "bloque": "11"
+        },
+        {
+          "itemId": "malla",
+          "m2": 15,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 2297.5,
+        "costeManoObra": 510,
+        "beneficio": 1787.5,
+        "beneficioPorOperario": 357.5
+      }
+    },
+    {
+      "id": "2987b9b6-b29a-43ca-846f-19293683d75a",
+      "fecha": "2026-06-01",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 45,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 765,
+        "costeManoObra": 510,
+        "beneficio": 255,
+        "beneficioPorOperario": 51.0
+      }
+    },
+    {
+      "id": "fc1ad0f4-bdce-40a1-945b-3656105d26a8",
+      "fecha": "2026-06-02",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 90,
+          "bloque": "11"
+        },
+        {
+          "itemId": "fase2",
+          "m2": 79.35,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 2204.47,
+        "costeManoObra": 510,
+        "beneficio": 1694.47,
+        "beneficioPorOperario": 338.89
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-03-1780922473910",
+      "fecha": "2026-06-03",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "f9f084a3-d02a-414e-849b-0b16882cd377",
+      "fecha": "2026-06-04",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 31.74,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 539.58,
+        "costeManoObra": 510,
+        "beneficio": 29.58,
+        "beneficioPorOperario": 5.92
+      }
+    },
+    {
+      "id": "69443b48-889b-4a80-8da9-7d152f11cf35",
+      "fecha": "2026-06-05",
+      "obraId": "alcosa-final",
+      "bloque": "Sin actividad",
+      "operariosPresentes": [],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": "festivo",
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 0,
+        "beneficio": 0,
+        "beneficioPorOperario": 0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-08-1780922516147",
+      "fecha": "2026-06-08",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-09-1781037248140",
+      "fecha": "2026-06-09",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-10-1781038101360",
+      "fecha": "2026-06-10",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-11-1781196924053",
+      "fecha": "2026-06-11",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-12-1781264048222",
+      "fecha": "2026-06-12",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-15-1781542977162",
+      "fecha": "2026-06-15",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-16-1781626599022",
+      "fecha": "2026-06-16",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-17-1781732136930",
+      "fecha": "2026-06-17",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "9d171d29-c396-4c1b-8266-e949f3a6a424",
+      "fecha": "2026-06-18",
+      "obraId": "alcosa-final",
+      "bloque": "Varios repasos",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 6.35,
+          "bloque": "Varios repasos"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 107.95,
+        "costeManoObra": 510,
+        "beneficio": -402.05,
+        "beneficioPorOperario": -80.41
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-19-1781874483885",
+      "fecha": "2026-06-19",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-22-1782129428209",
+      "fecha": "2026-06-22",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-23-1782217601092",
+      "fecha": "2026-06-23",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-24-1782308177857",
+      "fecha": "2026-06-24",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-25-1782393254547",
+      "fecha": "2026-06-25",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-26-1782472243065",
+      "fecha": "2026-06-26",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-29-1782773142135",
+      "fecha": "2026-06-29",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-06-30-1782827783140",
+      "fecha": "2026-06-30",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "8e39a626-1e7d-4497-bee5-83198cdcc74f",
+      "fecha": "2026-07-01",
+      "obraId": "alcosa-final",
+      "bloque": "B-8",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 79.35,
+          "bloque": "B-8"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1348.95,
+        "costeManoObra": 510,
+        "beneficio": 838.95,
+        "beneficioPorOperario": 167.79
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-02-1782998877227",
+      "fecha": "2026-07-02",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-03-1783049768838",
+      "fecha": "2026-07-03",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-06-1783356911461",
+      "fecha": "2026-07-06",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-07-1783434127514",
+      "fecha": "2026-07-07",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-08-1783512612347",
+      "fecha": "2026-07-08",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-09-1783601084068",
+      "fecha": "2026-07-09",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-10-1783692304424",
+      "fecha": "2026-07-10",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-13-1783960637697",
+      "fecha": "2026-07-13",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-14-1784036152594",
+      "fecha": "2026-07-14",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-15-1784145150287",
+      "fecha": "2026-07-15",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-16-1784208554022",
+      "fecha": "2026-07-16",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-17-1784297604184",
+      "fecha": "2026-07-17",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Antonio",
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 310,
+        "beneficio": 251,
+        "beneficioPorOperario": 83.67
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-20-1784552343366",
+      "fecha": "2026-07-20",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Mosquito",
+        "Antonio",
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 22,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 374,
+        "costeManoObra": 190,
+        "beneficio": 184,
+        "beneficioPorOperario": 92.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-21-1784664307111",
+      "fecha": "2026-07-21",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-22-1784727071256",
+      "fecha": "2026-07-22",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-23-1784826203666",
+      "fecha": "2026-07-23",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-24-1784892476031",
+      "fecha": "2026-07-24",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-27-1785159047327",
+      "fecha": "2026-07-27",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Mosquito",
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 310,
+        "beneficio": 251,
+        "beneficioPorOperario": 83.67
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-28-1785275983169",
+      "fecha": "2026-07-28",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Mosquito",
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 310,
+        "beneficio": 251,
+        "beneficioPorOperario": 83.67
+      }
+    },
+    {
+      "id": "0733b178-c021-456d-aaf5-57c4a4746920",
+      "fecha": "2026-07-29",
+      "obraId": "alcosa-final",
+      "bloque": "8",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 6.35,
+          "bloque": "8"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 107.95,
+        "costeManoObra": 430,
+        "beneficio": -322.05,
+        "beneficioPorOperario": -80.51
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-30-1785418838185",
+      "fecha": "2026-07-30",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-07-31-1785494878947",
+      "fecha": "2026-07-31",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-03-1785765472954",
+      "fecha": "2026-08-03",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-04-1785850348524",
+      "fecha": "2026-08-04",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "07310cc1-3483-460d-9443-6c75c72be35f",
+      "fecha": "2026-08-05",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 106.25,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 903.12,
+        "costeManoObra": 360,
+        "beneficio": 543.12,
+        "beneficioPorOperario": 181.04
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-06-1786037033519",
+      "fecha": "2026-08-06",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-07-1786103249502",
+      "fecha": "2026-08-07",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-10-1786335586649",
+      "fecha": "2026-08-10",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-11-1786450246564",
+      "fecha": "2026-08-11",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-12-1786552356908",
+      "fecha": "2026-08-12",
+      "obraId": "alcosa-final",
+      "bloque": "6",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-13-1786638206178",
+      "fecha": "2026-08-13",
+      "obraId": "alcosa-final",
+      "bloque": "6",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 20.3,
+          "bloque": "5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 345.1,
+        "costeManoObra": 360,
+        "beneficio": -14.9,
+        "beneficioPorOperario": -4.97
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-14-1786706012878",
+      "fecha": "2026-08-14",
+      "obraId": "alcosa-final",
+      "bloque": "5",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "5"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 360,
+        "beneficio": 201,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-17-1786969710418",
+      "fecha": "2026-08-17",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44.43,
+          "bloque": "Varios"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 755.31,
+        "costeManoObra": 430,
+        "beneficio": 325.31,
+        "beneficioPorOperario": 81.33
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-18-1787089990579",
+      "fecha": "2026-08-18",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase2",
+          "m2": 63.48,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 539.58,
+        "costeManoObra": 310,
+        "beneficio": 229.58,
+        "beneficioPorOperario": 76.53
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-19-1787147389687",
+      "fecha": "2026-08-19",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 310,
+        "beneficio": 251,
+        "beneficioPorOperario": 83.67
+      }
+    },
+    {
+      "id": "avance-auto-2026-08-20-1787255274064",
+      "fecha": "2026-08-20",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 310,
+        "beneficio": 251,
+        "beneficioPorOperario": 83.67
+      }
+    },
+    {
+      "id": "108e7892-9f37-4dc0-afac-64c308d952a7",
+      "fecha": "2026-08-21",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 19.04,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 323.68,
+        "costeManoObra": 190,
+        "beneficio": 133.68,
+        "beneficioPorOperario": 66.84
+      }
+    },
+    {
+      "id": "e8ab7677-0824-4d3b-bfde-a53ee6087048",
+      "fecha": "2026-08-24",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 19.04,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 323.68,
+        "costeManoObra": 190,
+        "beneficio": 133.68,
+        "beneficioPorOperario": 66.84
+      }
+    },
+    {
+      "id": "88f050bf-9abc-4e6e-801f-7283bbb1a995",
+      "fecha": "2026-08-25",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 19.04,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 323.68,
+        "costeManoObra": 190,
+        "beneficio": 133.68,
+        "beneficioPorOperario": 66.84
+      }
+    },
+    {
+      "id": "5175e2a8-d889-4d39-a460-e69863a71387",
+      "fecha": "2026-08-26",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 19.04,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 323.68,
+        "costeManoObra": 190,
+        "beneficio": 133.68,
+        "beneficioPorOperario": 66.84
+      }
+    },
+    {
+      "id": "1e429e24-25c3-4de4-9b8a-c4d9eaadcd95",
+      "fecha": "2026-08-27",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 31.74,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 539.58,
+        "costeManoObra": 190,
+        "beneficio": 349.58,
+        "beneficioPorOperario": 174.79
+      }
+    },
+    {
+      "id": "1795c0bd-1c3f-4288-981d-531602959888",
+      "fecha": "2026-08-28",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 31.74,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 539.58,
+        "costeManoObra": 190,
+        "beneficio": 349.58,
+        "beneficioPorOperario": 174.79
+      }
+    },
+    {
+      "id": "70676370-760f-4b3d-b298-b2e76d7e4c86",
+      "fecha": "2026-08-31",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 35.23,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 598.91,
+        "costeManoObra": 310,
+        "beneficio": 288.91,
+        "beneficioPorOperario": 96.3
+      }
+    },
+    {
+      "id": "f5b5d4b6-565f-4200-89a6-0f264fbaf3e9",
+      "fecha": "2026-09-01",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 41.26,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 701.42,
+        "costeManoObra": 430,
+        "beneficio": 271.42,
+        "beneficioPorOperario": 67.85
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-02-1788356733789",
+      "fecha": "2026-09-02",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "e489b5d3-c129-422e-9e8d-c199b97a6270",
+      "fecha": "2026-09-03",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 63.48,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1079.16,
+        "costeManoObra": 430,
+        "beneficio": 649.16,
+        "beneficioPorOperario": 162.29
+      }
+    },
+    {
+      "id": "dbd07351-8bb2-429a-9da9-1d6e010db6f1",
+      "fecha": "2026-09-04",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "David",
+        "Antonio",
+        "Mosquito",
+        "Juan"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 28.56,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 485.52,
+        "costeManoObra": 430,
+        "beneficio": 55.52,
+        "beneficioPorOperario": 13.88
+      }
+    },
+    {
+      "id": "b15374ea-bfc1-4a17-9376-abbb2c0e3415",
+      "fecha": "2026-09-07",
+      "obraId": "alcosa-final",
+      "bloque": "Patio 6",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 50.78,
+          "bloque": "Patio 6"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 863.26,
+        "costeManoObra": 430,
+        "beneficio": 433.26,
+        "beneficioPorOperario": 108.31
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-08-1788841927840",
+      "fecha": "2026-09-08",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Mosquito",
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 310,
+        "beneficio": 251,
+        "beneficioPorOperario": 83.67
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-09-1788955092517",
+      "fecha": "2026-09-09",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [
+        "Jesules"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 44,
+          "bloque": "Varios"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 748,
+        "costeManoObra": 430,
+        "beneficio": 318,
+        "beneficioPorOperario": 79.5
+      }
+    },
+    {
+      "id": "da7cb291-beec-4b01-93de-b874d538c79e",
+      "fecha": "2026-09-10",
+      "obraId": "alcosa-final",
+      "bloque": "General",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 31.74,
+          "bloque": "General"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 539.58,
+        "costeManoObra": 430,
+        "beneficio": 109.58,
+        "beneficioPorOperario": 27.39
+      }
+    },
+    {
+      "id": "639c03d4-e02f-4551-9e9b-d3e15b85bc44",
+      "fecha": "2026-09-11",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 38.09,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 647.53,
+        "costeManoObra": 430,
+        "beneficio": 217.53,
+        "beneficioPorOperario": 54.38
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-14-1789394873476",
+      "fecha": "2026-09-14",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Juan",
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 22,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 374,
+        "costeManoObra": 240,
+        "beneficio": 134,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-15-1789454311405",
+      "fecha": "2026-09-15",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Antonio"
+      ],
+      "operariosVacaciones": [
+        "Juan",
+        "Mosquito",
+        "Jesules",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 11,
+          "bloque": "Varios"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 187,
+        "costeManoObra": 120,
+        "beneficio": 67,
+        "beneficioPorOperario": 67.0
+      }
+    },
+    {
+      "id": "8db3ddc1-a5a8-4d5f-acd0-4b351b44f31c",
+      "fecha": "2026-09-16",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Mosquito",
+        "Antonio"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 19.04,
+          "bloque": "Varios"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 323.68,
+        "costeManoObra": 240,
+        "beneficio": 83.68,
+        "beneficioPorOperario": 41.84
+      }
+    },
+    {
+      "id": "924aabb5-db69-452b-9e94-ec4059912c57",
+      "fecha": "2026-09-17",
+      "obraId": "alcosa-final",
+      "bloque": "General",
+      "operariosPresentes": [
+        "Mosquito",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 31.74,
+          "bloque": "General"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 539.58,
+        "costeManoObra": 320,
+        "beneficio": 219.58,
+        "beneficioPorOperario": 73.19
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-18-1789754561680",
+      "fecha": "2026-09-18",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Mosquito",
+        "Antonio",
+        "Jesules"
+      ],
+      "operariosVacaciones": [
+        "Juan",
+        "David"
+      ],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 33,
+          "bloque": "Varios"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 561,
+        "costeManoObra": 320,
+        "beneficio": 241,
+        "beneficioPorOperario": 80.33
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-21-1790026939756",
+      "fecha": "2026-09-21",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "32181bc4-c8b0-411a-9469-2342cafae622",
+      "fecha": "2026-09-22",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 63.48,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1079.16,
+        "costeManoObra": 510,
+        "beneficio": 569.16,
+        "beneficioPorOperario": 113.83
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-23-1790138217183",
+      "fecha": "2026-09-23",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "b736744f-33ec-4d89-bc69-2e9545adef22",
+      "fecha": "2026-09-24",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 63.48,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 1079.16,
+        "costeManoObra": 510,
+        "beneficio": 569.16,
+        "beneficioPorOperario": 113.83
+      }
+    },
+    {
+      "id": "4765a8e2-987e-4aac-bef8-e8cbdd161413",
+      "fecha": "2026-09-25",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 57.13,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 971.21,
+        "costeManoObra": 510,
+        "beneficio": 461.21,
+        "beneficioPorOperario": 92.24
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-28-1790598829337",
+      "fecha": "2026-09-28",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "11"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-09-29-1790658077419",
+      "fecha": "2026-09-29",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-10-01-1790830919885",
+      "fecha": "2026-10-01",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "32220271-cf70-4f51-aa04-fd29a1008e45",
+      "fecha": "2026-10-02",
+      "obraId": "alcosa-final",
+      "bloque": "11",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 57.13,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 971.21,
+        "costeManoObra": 510,
+        "beneficio": 461.21,
+        "beneficioPorOperario": 92.24
+      }
+    },
+    {
+      "id": "avance-auto-2026-10-05-1791231592217",
+      "fecha": "2026-10-05",
+      "obraId": "alcosa-final",
+      "bloque": "10",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "10"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "avance-auto-2026-10-06-1791313419781",
+      "fecha": "2026-10-06",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 55,
+          "bloque": "Varios"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 935,
+        "costeManoObra": 510,
+        "beneficio": 425,
+        "beneficioPorOperario": 85.0
+      }
+    },
+    {
+      "id": "30e5d1d2-4bbb-423b-8381-9d9b0c3775ad",
+      "fecha": "2026-10-07",
+      "obraId": "alcosa-final",
+      "bloque": "AZOTEAS Y PATIO 9",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 38.09,
+          "bloque": "AZOTEAS Y PATIO 9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 647.53,
+        "costeManoObra": 510,
+        "beneficio": 137.53,
+        "beneficioPorOperario": 27.51
+      }
+    },
+    {
+      "id": "ec717b39-e907-434e-b53c-53d3a8e953f6",
+      "fecha": "2026-10-08",
+      "obraId": "alcosa-final",
+      "bloque": "AZOTEAS Y PATIO 9",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "fase1",
+          "m2": 38.09,
+          "bloque": "AZOTEAS Y PATIO 9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 647.53,
+        "costeManoObra": 510,
+        "beneficio": 137.53,
+        "beneficioPorOperario": 27.51
+      }
+    },
+    {
+      "id": "488d575a-09a4-4903-b266-5abea0712f2d",
+      "fecha": "2026-10-09",
+      "obraId": "alcosa-final",
+      "bloque": "AZOTEAS Y PATIO 9",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 48.33,
+          "bloque": "AZOTEAS Y PATIO 9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 410.81,
+        "costeManoObra": 510,
+        "beneficio": -99.19,
+        "beneficioPorOperario": -19.84
+      }
+    },
+    {
+      "id": "025a24d8-5559-40f3-ab97-3a2621560a8d",
+      "fecha": "2026-10-12",
+      "obraId": "alcosa-final",
+      "bloque": "Sin actividad",
+      "operariosPresentes": [],
+      "operariosVacaciones": [],
+      "produccion": [],
+      "motivoSinProduccion": "festivo",
+      "resumen": {
+        "ingresos": 0,
+        "costeManoObra": 0,
+        "beneficio": 0,
+        "beneficioPorOperario": 0
+      }
+    },
+    {
+      "id": "0a46a377-2f02-40cd-987a-ade6ff6f1ccb",
+      "fecha": "2026-10-13",
+      "obraId": "alcosa-final",
+      "bloque": "AZOTEAS Y PATIO 9",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "anti",
+          "m2": 72.5,
+          "bloque": "AZOTEAS Y PATIO 9"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 616.25,
+        "costeManoObra": 510,
+        "beneficio": 106.25,
+        "beneficioPorOperario": 21.25
+      }
+    },
+    {
+      "id": "0d097405-35bf-4df5-bb59-f653fbf5d1bc",
+      "fecha": "2026-10-14",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "0e14e40d-4891-4cd1-9e74-2c5c9187307c",
+          "m2": 1,
+          "bloque": "Bl. 11 Castillete"
+        },
+        {
+          "itemId": "5ea86088-954d-4d53-b79a-58d212af7dcb",
+          "m2": 1,
+          "bloque": "Bl. 9 Cuchillos"
+        },
+        {
+          "itemId": "0e14e40d-4891-4cd1-9e74-2c5c9187307c",
+          "m2": 1,
+          "bloque": "Bl. 9 Cuchillos"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 400,
+        "costeManoObra": 510,
+        "beneficio": -110,
+        "beneficioPorOperario": -22.0
+      }
+    },
+    {
+      "id": "e084ea48-e1c8-45be-910b-913b007b28f1",
+      "fecha": "2026-10-15",
+      "obraId": "alcosa-final",
+      "bloque": "Bl. 4 Rumano",
+      "operariosPresentes": [
+        "Juan",
+        "Antonio",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "0e14e40d-4891-4cd1-9e74-2c5c9187307c",
+          "m2": 2,
+          "bloque": "Bl. 4 Rumano"
+        },
+        {
+          "itemId": "5ea86088-954d-4d53-b79a-58d212af7dcb",
+          "m2": 1,
+          "bloque": "Bl. 4 Rumano"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 400,
+        "costeManoObra": 310,
+        "beneficio": 90,
+        "beneficioPorOperario": 30.0
+      }
+    },
+    {
+      "id": "af44f6c2-3ec2-4417-b509-d40c4fae8030",
+      "fecha": "2026-10-16",
+      "obraId": "alcosa-final",
+      "bloque": "Varios",
+      "operariosPresentes": [
+        "Juan",
+        "Mosquito",
+        "Antonio",
+        "Jesules",
+        "David"
+      ],
+      "operariosVacaciones": [],
+      "produccion": [
+        {
+          "itemId": "0e14e40d-4891-4cd1-9e74-2c5c9187307c",
+          "m2": 2,
+          "bloque": "10 RUMANO"
+        },
+        {
+          "itemId": "5ea86088-954d-4d53-b79a-58d212af7dcb",
+          "m2": 1,
+          "bloque": "10 RUMANO"
+        },
+        {
+          "itemId": "5ea86088-954d-4d53-b79a-58d212af7dcb",
+          "m2": 1,
+          "bloque": "MONTEQUINTO"
+        },
+        {
+          "itemId": "0e14e40d-4891-4cd1-9e74-2c5c9187307c",
+          "m2": 1,
+          "bloque": "MONTEQUINTO"
+        }
+      ],
+      "motivoSinProduccion": null,
+      "resumen": {
+        "ingresos": 650,
+        "costeManoObra": 510,
+        "beneficio": 140,
+        "beneficioPorOperario": 28.0
+      }
+    }
+  ],
+  "anticipos": [
+    {
+      "id": "ant-2026-03-13-juan",
+      "fecha": "2026-03-13",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-13-mosquito",
+      "fecha": "2026-03-13",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-13-antonio",
+      "fecha": "2026-03-13",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-13-jesules",
+      "fecha": "2026-03-13",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-13-david",
+      "fecha": "2026-03-13",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-20-juan",
+      "fecha": "2026-03-20",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-20-mosquito",
+      "fecha": "2026-03-20",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-20-antonio",
+      "fecha": "2026-03-20",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-20-jesules",
+      "fecha": "2026-03-20",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-20-david",
+      "fecha": "2026-03-20",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-27-juan",
+      "fecha": "2026-03-27",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-27-mosquito",
+      "fecha": "2026-03-27",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-27-antonio",
+      "fecha": "2026-03-27",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-27-jesules",
+      "fecha": "2026-03-27",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-03-27-david",
+      "fecha": "2026-03-27",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-03-juan",
+      "fecha": "2026-04-03",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-03-mosquito",
+      "fecha": "2026-04-03",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-03-antonio",
+      "fecha": "2026-04-03",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-03-jesules",
+      "fecha": "2026-04-03",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-03-david",
+      "fecha": "2026-04-03",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-10-juan",
+      "fecha": "2026-04-10",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-10-mosquito",
+      "fecha": "2026-04-10",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-10-antonio",
+      "fecha": "2026-04-10",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-10-jesules",
+      "fecha": "2026-04-10",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-10-david",
+      "fecha": "2026-04-10",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-17-juan",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-17-mosquito",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-17-antonio",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-17-jesules",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-17-david",
+      "fecha": "2026-04-17",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-24-juan",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-24-mosquito",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-24-antonio",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-24-jesules",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-24-david",
+      "fecha": "2026-04-24",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-30-juan",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-30-mosquito",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-30-antonio",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-30-jesules",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-04-30-david",
+      "fecha": "2026-04-30",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-08-juan",
+      "fecha": "2026-05-08",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-08-mosquito",
+      "fecha": "2026-05-08",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-08-antonio",
+      "fecha": "2026-05-08",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-08-jesules",
+      "fecha": "2026-05-08",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-08-david",
+      "fecha": "2026-05-08",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-15-juan",
+      "fecha": "2026-05-15",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-15-mosquito",
+      "fecha": "2026-05-15",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-15-antonio",
+      "fecha": "2026-05-15",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-15-jesules",
+      "fecha": "2026-05-15",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-15-david",
+      "fecha": "2026-05-15",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-22-juan",
+      "fecha": "2026-05-22",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-22-mosquito",
+      "fecha": "2026-05-22",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-22-antonio",
+      "fecha": "2026-05-22",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-22-jesules",
+      "fecha": "2026-05-22",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-22-david",
+      "fecha": "2026-05-22",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-29-juan",
+      "fecha": "2026-05-29",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-29-mosquito",
+      "fecha": "2026-05-29",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-29-antonio",
+      "fecha": "2026-05-29",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-29-jesules",
+      "fecha": "2026-05-29",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-05-29-david",
+      "fecha": "2026-05-29",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-05-juan",
+      "fecha": "2026-06-05",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-05-mosquito",
+      "fecha": "2026-06-05",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-05-antonio",
+      "fecha": "2026-06-05",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-05-jesules",
+      "fecha": "2026-06-05",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-05-david",
+      "fecha": "2026-06-05",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-12-juan",
+      "fecha": "2026-06-12",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-12-mosquito",
+      "fecha": "2026-06-12",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-12-antonio",
+      "fecha": "2026-06-12",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-12-jesules",
+      "fecha": "2026-06-12",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-12-david",
+      "fecha": "2026-06-12",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-19-juan",
+      "fecha": "2026-06-19",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-19-mosquito",
+      "fecha": "2026-06-19",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-19-antonio",
+      "fecha": "2026-06-19",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-19-jesules",
+      "fecha": "2026-06-19",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-19-david",
+      "fecha": "2026-06-19",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-26-juan",
+      "fecha": "2026-06-26",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-26-mosquito",
+      "fecha": "2026-06-26",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-26-antonio",
+      "fecha": "2026-06-26",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-26-jesules",
+      "fecha": "2026-06-26",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-06-26-david",
+      "fecha": "2026-06-26",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-03-juan",
+      "fecha": "2026-07-03",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-03-mosquito",
+      "fecha": "2026-07-03",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-03-antonio",
+      "fecha": "2026-07-03",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-03-jesules",
+      "fecha": "2026-07-03",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-03-david",
+      "fecha": "2026-07-03",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-10-juan",
+      "fecha": "2026-07-10",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-10-mosquito",
+      "fecha": "2026-07-10",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-10-antonio",
+      "fecha": "2026-07-10",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-10-jesules",
+      "fecha": "2026-07-10",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-10-david",
+      "fecha": "2026-07-10",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-17-juan",
+      "fecha": "2026-07-17",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-17-mosquito",
+      "fecha": "2026-07-17",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-17-antonio",
+      "fecha": "2026-07-17",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-17-jesules",
+      "fecha": "2026-07-17",
+      "obraId": "alcosa-final",
+      "operario": "Jesules",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-17-david",
+      "fecha": "2026-07-17",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-24-juan",
+      "fecha": "2026-07-24",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-24-mosquito",
+      "fecha": "2026-07-24",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-24-antonio",
+      "fecha": "2026-07-24",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-24-david",
+      "fecha": "2026-07-24",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-31-juan",
+      "fecha": "2026-07-31",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-31-mosquito",
+      "fecha": "2026-07-31",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-31-antonio",
+      "fecha": "2026-07-31",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-07-31-david",
+      "fecha": "2026-07-31",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-07-juan",
+      "fecha": "2026-08-07",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-07-mosquito",
+      "fecha": "2026-08-07",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-07-david",
+      "fecha": "2026-08-07",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-07-antonio",
+      "fecha": "2026-08-07",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-14-juan",
+      "fecha": "2026-08-14",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-14-mosquito",
+      "fecha": "2026-08-14",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-14-antonio",
+      "fecha": "2026-08-14",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-21-juan",
+      "fecha": "2026-08-21",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-21-mosquito",
+      "fecha": "2026-08-21",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-21-david",
+      "fecha": "2026-08-21",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-21-antonio",
+      "fecha": "2026-08-21",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-28-juan",
+      "fecha": "2026-08-28",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-08-28-david",
+      "fecha": "2026-08-28",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-04-juan",
+      "fecha": "2026-09-04",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-04-mosquito",
+      "fecha": "2026-09-04",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-04-antonio",
+      "fecha": "2026-09-04",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-04-david",
+      "fecha": "2026-09-04",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-11-juan",
+      "fecha": "2026-09-11",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-11-mosquito",
+      "fecha": "2026-09-11",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-11-antonio",
+      "fecha": "2026-09-11",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-11-david",
+      "fecha": "2026-09-11",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-18-mosquito",
+      "fecha": "2026-09-18",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-18-antonio",
+      "fecha": "2026-09-18",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-25-juan",
+      "fecha": "2026-09-25",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-25-mosquito",
+      "fecha": "2026-09-25",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-25-antonio",
+      "fecha": "2026-09-25",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-09-25-david",
+      "fecha": "2026-09-25",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-10-02-juan",
+      "fecha": "2026-10-02",
+      "obraId": "alcosa-final",
+      "operario": "Juan",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-10-02-antonio",
+      "fecha": "2026-10-02",
+      "obraId": "alcosa-final",
+      "operario": "Antonio",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-10-02-david",
+      "fecha": "2026-10-02",
+      "obraId": "alcosa-final",
+      "operario": "David",
+      "cantidad": 400
+    },
+    {
+      "id": "ant-2026-10-02-mosquito",
+      "fecha": "2026-10-02",
+      "obraId": "alcosa-final",
+      "operario": "Mosquito",
+      "cantidad": 400
+    }
+  ],
+  "gastos": [
+    {
+      "id": "882bcbb1-370b-4401-9699-b2e88c5b9303",
+      "fecha": "2026-03-12",
+      "obraId": "e41a4d8c-623c-4f89-bfe9-f9565c2d318b",
+      "concepto": "Llana dientes grandes Leroy Merlín",
+      "monto": 14.79,
+      "pagadoPor": "Antonio"
+    },
+    {
+      "id": "d850bb5b-6a22-4b40-b553-6f80d55de48b",
+      "fecha": "2026-03-20",
+      "obraId": "e41a4d8c-623c-4f89-bfe9-f9565c2d318b",
+      "concepto": "Plana dientes y fletal esponja",
+      "monto": 27,
+      "pagadoPor": "Mosquito"
+    },
+    {
+      "id": "3416e8bb-3b76-45ef-a5cd-90ed898e6225",
+      "fecha": "2026-04-19",
+      "obraId": "alcosa-final",
+      "concepto": "Removedor batidora",
+      "monto": 23.5,
+      "pagadoPor": "Juan"
+    },
+    {
+      "id": "caf27574-8ba9-4464-82cc-ab6762f5ae38",
+      "fecha": "2026-04-29",
+      "obraId": "alcosa-final",
+      "concepto": "Polea y pistola espuma ",
+      "monto": 27,
+      "pagadoPor": "David"
+    },
+    {
+      "id": "3351672e-cb84-44ae-9962-aac28916ae69",
+      "fecha": "2026-06-03",
+      "obraId": "alcosa-final",
+      "concepto": "Taladro percutor Stanly",
+      "monto": 100
+    },
+    {
+      "id": "d62e8006-b945-4283-b789-0e545097fc32",
+      "fecha": "2026-06-11",
+      "obraId": "alcosa-final",
+      "concepto": "Camisetas fluorescentes",
+      "monto": 75
+    },
+    {
+      "id": "b550c58e-bf33-42dc-a7ca-91d2bfb3a552",
+      "fecha": "2026-06-15",
+      "obraId": "alcosa-final",
+      "concepto": "Arreglo maquinaria",
+      "monto": 50
+    }
+  ],
+  "certificaciones": [
+    {
+      "id": "cert-historical-1",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "PRIMERA CERTIFICACIÓN",
+      "identificador": "2026-01",
+      "fechaEmision": "2026-04-07",
+      "mes": "2026-04",
+      "fechaInicio": "2026-03-01",
+      "fechaFin": "2026-04-07",
+      "ejecutado": 12175.2,
+      "anticipos": 8000,
+      "certificado": 4175.2,
+      "estado": "cobrado",
+      "partidas": [
+        {
+          "itemId": "c1_1",
+          "nombre": "Fase Grupo 1 (Eps + Espigas)",
+          "precio": 20,
+          "m2": 216.65,
+          "bloque": "BLOQUE 13"
+        },
+        {
+          "itemId": "c1_2",
+          "nombre": "Fase Grupo 2 (Esquineros + Malla/Planimetría)",
+          "precio": 20,
+          "m2": 216.65,
+          "bloque": "BLOQUE 13"
+        },
+        {
+          "itemId": "c1_3",
+          "nombre": "Fase Grupo 1 (Eps + Espigas)",
+          "precio": 20,
+          "m2": 146.22,
+          "bloque": "BLOQUE 5"
+        },
+        {
+          "itemId": "c1_4",
+          "nombre": "Fase Grupo 2 (Esquineros)",
+          "precio": 20,
+          "m2": 29.24,
+          "bloque": "BLOQUE 5"
+        }
+      ]
+    },
+    {
+      "id": "cert-historical-2",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "SEGUNDA CERTIFICACIÓN",
+      "identificador": "2026-02",
+      "fechaEmision": "2026-05-05",
+      "mes": "2026-05",
+      "fechaInicio": "2026-04-08",
+      "fechaFin": "2026-05-05",
+      "ejecutado": 16147.84,
+      "anticipos": 8000,
+      "certificado": 8147.84,
+      "estado": "cobrado",
+      "partidas": [
+        {
+          "itemId": "c2_1",
+          "nombre": "Antifisuras cornisas",
+          "precio": 8,
+          "m2": 109,
+          "bloque": "BL-13"
+        },
+        {
+          "itemId": "c2_2",
+          "nombre": "Doble Malla",
+          "precio": 8,
+          "m2": 50.72,
+          "bloque": "BL-13"
+        },
+        {
+          "itemId": "c2_3",
+          "nombre": "Malla + Fino",
+          "precio": 8,
+          "m2": 324.84,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c2_4",
+          "nombre": "Cornisas antifisura",
+          "precio": 8,
+          "m2": 113.96,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c2_5",
+          "nombre": "Corcho + Malla",
+          "precio": 16,
+          "m2": 285.48,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c2_6",
+          "nombre": "Cajeado Malla",
+          "precio": 8,
+          "m2": 16.26,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c2_7",
+          "nombre": "Cajeado Corcho + Malla",
+          "precio": 16,
+          "m2": 16.26,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c2_8",
+          "nombre": "Doble Malla",
+          "precio": 8,
+          "m2": 118.92,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c2_9",
+          "nombre": "Corcho + Malla",
+          "precio": 16,
+          "m2": 161.84,
+          "bloque": "BL-6"
+        },
+        {
+          "itemId": "c2_10",
+          "nombre": "Corcho",
+          "precio": 8,
+          "m2": 357.62,
+          "bloque": "BL-6"
+        }
+      ]
+    },
+    {
+      "id": "cert-historical-3",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "TERCERA CERTIFICACIÓN",
+      "identificador": "2026-05",
+      "fechaEmision": "2026-06-02",
+      "mes": "2026-06",
+      "fechaInicio": "2026-05-06",
+      "fechaFin": "2026-06-02",
+      "ejecutado": 17964.6,
+      "anticipos": 8000,
+      "certificado": 9964.6,
+      "estado": "cobrado",
+      "partidas": [
+        {
+          "itemId": "c3_1",
+          "nombre": "Antifisuras Balcones",
+          "precio": 8,
+          "m2": 6,
+          "bloque": "BL-13"
+        },
+        {
+          "itemId": "c3_2",
+          "nombre": "Antifisuras Balcones",
+          "precio": 8,
+          "m2": 12,
+          "bloque": "BL-5"
+        },
+        {
+          "itemId": "c3_3",
+          "nombre": "Corcho + Mortero (8,15x3,20 + 6,32x11,56)",
+          "precio": 16,
+          "m2": 99.14,
+          "bloque": "BL-6"
+        },
+        {
+          "itemId": "c3_4",
+          "nombre": "Antifisuras Balcones (60 + 12 + 54)",
+          "precio": 8,
+          "m2": 126,
+          "bloque": "BL-6"
+        },
+        {
+          "itemId": "c3_5",
+          "nombre": "Mortero solo (14,66x11,56 + 8,13x3,02 + 14,20x11,56)",
+          "precio": 8,
+          "m2": 358.18,
+          "bloque": "BL-6"
+        },
+        {
+          "itemId": "c3_6",
+          "nombre": "Cajeado 2 cm",
+          "precio": 16,
+          "m2": 32.54,
+          "bloque": "BL-6"
+        },
+        {
+          "itemId": "c3_7",
+          "nombre": "Corcho + Mortero (12,45x12,60 + 7,88x3,04 + 14,16x11,60 + 13,88x11,60)",
+          "precio": 16,
+          "m2": 506.09,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c3_8",
+          "nombre": "Antifisuras Techos",
+          "precio": 8,
+          "m2": 48,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c3_9",
+          "nombre": "Corcho + Mortero (19,07 x 11,70)",
+          "precio": 16,
+          "m2": 223.12,
+          "bloque": "BL-11"
+        },
+        {
+          "itemId": "c3_10",
+          "nombre": "Doble Malla (Bloques BL-6, 11 y 12)",
+          "precio": 3,
+          "m2": 263,
+          "bloque": "Comunes"
+        }
+      ]
+    },
+    {
+      "id": "cert-historical-4",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "CUARTA CERTIFICACIÓN",
+      "identificador": "2026-06",
+      "fechaEmision": "2026-07-06",
+      "mes": "2026-07",
+      "fechaInicio": "2026-06-03",
+      "fechaFin": "2026-07-06",
+      "ejecutado": 21521.06,
+      "anticipos": 10000,
+      "certificado": 11521.06,
+      "estado": "cobrado",
+      "partidas": [
+        {
+          "itemId": "c4_1",
+          "nombre": "Corcho + Malla",
+          "precio": 16,
+          "m2": 633.12,
+          "bloque": "BL-8 (TORRE)"
+        },
+        {
+          "itemId": "c4_2",
+          "nombre": "Antifisura Techo",
+          "precio": 8,
+          "m2": 23,
+          "bloque": "BL-8 (TORRE)"
+        },
+        {
+          "itemId": "c4_3",
+          "nombre": "Doble Malla",
+          "precio": 3,
+          "m2": 27.2,
+          "bloque": "BL-8 (TORRE)"
+        },
+        {
+          "itemId": "c4_4",
+          "nombre": "Antifisura balcones",
+          "precio": 8,
+          "m2": 72,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c4_5",
+          "nombre": "Cajeados 2 cm",
+          "precio": 16,
+          "m2": 33.8,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c4_6",
+          "nombre": "Antifisuras techos",
+          "precio": 8,
+          "m2": 6.5,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c4_7",
+          "nombre": "Doble Malla",
+          "precio": 3,
+          "m2": 29,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c4_8",
+          "nombre": "Corcho + Malla",
+          "precio": 16,
+          "m2": 99.4,
+          "bloque": "BL-12"
+        },
+        {
+          "itemId": "c4_9",
+          "nombre": "Corcho + Malla",
+          "precio": 16,
+          "m2": 408.21,
+          "bloque": "BL-11"
+        },
+        {
+          "itemId": "c4_10",
+          "nombre": "Antifisuras techos",
+          "precio": 8,
+          "m2": 50.31,
+          "bloque": "BL-11"
+        },
+        {
+          "itemId": "c4_11",
+          "nombre": "Cajeados 2 cm",
+          "precio": 16,
+          "m2": 36.5,
+          "bloque": "BL-11"
+        },
+        {
+          "itemId": "c4_12",
+          "nombre": "Doble Malla",
+          "precio": 3,
+          "m2": 104.5,
+          "bloque": "BL-11"
+        },
+        {
+          "itemId": "c4_13",
+          "nombre": "Techos planta baja bloques 5-6-12-13",
+          "precio": 8,
+          "m2": 56,
+          "bloque": "Comunes"
+        }
+      ]
+    },
+    {
+      "id": "cert-historical-5",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "QUINTA CERTIFICACIÓN",
+      "identificador": "2026-07",
+      "fechaEmision": "2026-08-04",
+      "mes": "2026-08",
+      "fechaInicio": "2026-07-07",
+      "fechaFin": "2026-08-04",
+      "ejecutado": 20167.09,
+      "anticipos": 7200,
+      "certificado": 12967.09,
+      "estado": "cobrado",
+      "partidas": [
+        {
+          "itemId": "c5_1",
+          "nombre": "Corcho + Malla",
+          "precio": 17,
+          "m2": 236.64,
+          "bloque": "BL-7 (TORRE)"
+        },
+        {
+          "itemId": "c5_2",
+          "nombre": "Cajeados",
+          "precio": 17,
+          "m2": 63.6,
+          "bloque": "BL-7 (TORRE)"
+        },
+        {
+          "itemId": "c5_3",
+          "nombre": "Corcho + Malla Bajo",
+          "precio": 17,
+          "m2": 34.8,
+          "bloque": "BL-7 (TORRE)"
+        },
+        {
+          "itemId": "c5_4",
+          "nombre": "Antifisuras",
+          "precio": 8.5,
+          "m2": 444.04,
+          "bloque": "BL-7 (TORRE)"
+        },
+        {
+          "itemId": "c5_5",
+          "nombre": "Corcho + Malla",
+          "precio": 17,
+          "m2": 72,
+          "bloque": "BL-8 (PAÑO CIEGO)"
+        },
+        {
+          "itemId": "c5_6",
+          "nombre": "Techo Antifisuras",
+          "precio": 8.5,
+          "m2": 10,
+          "bloque": "BL-8 (PAÑO CIEGO)"
+        },
+        {
+          "itemId": "c5_7",
+          "nombre": "Antifisuras Trasero",
+          "precio": 8.5,
+          "m2": 198.75,
+          "bloque": "BL-11"
+        },
+        {
+          "itemId": "c5_8",
+          "nombre": "Corcho + Malla",
+          "precio": 17,
+          "m2": 293.1,
+          "bloque": "Patios Interiores"
+        },
+        {
+          "itemId": "c5_9",
+          "nombre": "14 Horas Administración (Arreglo Esquina)",
+          "precio": 20,
+          "m2": 14,
+          "bloque": "Varios / Pactos"
+        },
+        {
+          "itemId": "c5_10",
+          "nombre": "Pacto complemento +1,00 € / m² (Corcho y Malla acumulado - 50% abono)",
+          "precio": 1,
+          "m2": 2003,
+          "bloque": "Varios / Pactos"
+        },
+        {
+          "itemId": "c5_11",
+          "nombre": "Pacto complemento +0,50 € / m² (Antifisuras acumulado)",
+          "precio": 0.5,
+          "m2": 622,
+          "bloque": "Varios / Pactos"
+        },
+        {
+          "itemId": "c5_12",
+          "nombre": "Pacto complemento +1,00 € / ml (Cajeados acumulado)",
+          "precio": 1,
+          "m2": 122,
+          "bloque": "Varios / Pactos"
+        }
+      ]
+    },
+    {
+      "id": "3fe9a948-10bd-40e7-a8ac-1d1d61a9327f",
+      "obraId": "alcosa-final",
+      "mes": "2026-07",
+      "fechaInicio": "2026-06-03",
+      "fechaFin": "2026-07-06",
+      "ejecutado": 20956.288,
+      "anticipos": 10000,
+      "incentivoExtra": 0,
+      "certificado": 10956.288,
+      "estado": "cobrado",
+      "avanceIds": [
+        "f9f084a3-d02a-414e-849b-0b16882cd377",
+        "69443b48-889b-4a80-8da9-7d152f11cf35",
+        "avance-auto-2026-06-03-1780922473910",
+        "avance-auto-2026-06-08-1780922516147",
+        "avance-auto-2026-06-09-1781037248140",
+        "avance-auto-2026-06-10-1781038101360",
+        "avance-auto-2026-06-11-1781196924053",
+        "avance-auto-2026-06-12-1781264048222",
+        "avance-auto-2026-06-15-1781542977162",
+        "avance-auto-2026-06-16-1781626599022",
+        "avance-auto-2026-06-17-1781732136930",
+        "9d171d29-c396-4c1b-8266-e949f3a6a424",
+        "avance-auto-2026-06-19-1781874483885",
+        "avance-auto-2026-06-22-1782129428209",
+        "avance-auto-2026-06-23-1782217601092",
+        "avance-auto-2026-06-24-1782308177857",
+        "avance-auto-2026-06-25-1782393254547",
+        "avance-auto-2026-06-26-1782472243065",
+        "avance-auto-2026-06-29-1782773142135",
+        "avance-auto-2026-06-30-1782827783140",
+        "8e39a626-1e7d-4497-bee5-83198cdcc74f",
+        "avance-auto-2026-07-02-1782998877227",
+        "avance-auto-2026-07-03-1783049768838",
+        "avance-auto-2026-07-06-1783356911461"
+      ],
+      "partidas": [
+        {
+          "itemId": "fase1",
+          "nombre": "SATE Combinado (Corcho + Fino)",
+          "precio": 20.2,
+          "m2": 1037.44
+        }
+      ]
+    },
+    {
+      "id": "18cb91a5-8dd6-4f6f-af1b-a04aee49ee8e",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "SEXTA CERTIFICACIÓN",
+      "identificador": "2026-08",
+      "fechaEmision": "2026-09-04",
+      "mes": "2026-09",
+      "fechaInicio": "2026-08-05",
+      "fechaFin": "2026-09-04",
+      "ejecutado": 13530.555,
+      "anticipos": 6800,
+      "incentivoExtra": 0,
+      "certificado": 6730.555,
+      "estado": "cobrado",
+      "avanceIds": [
+        "07310cc1-3483-460d-9443-6c75c72be35f",
+        "avance-auto-2026-08-06-1786037033519",
+        "avance-auto-2026-08-07-1786103249502",
+        "avance-auto-2026-08-10-1786335586649",
+        "avance-auto-2026-08-11-1786450246564",
+        "avance-auto-2026-08-12-1786552356908",
+        "avance-auto-2026-08-13-1786638206178",
+        "avance-auto-2026-08-14-1786706012878",
+        "avance-auto-2026-08-17-1786969710418",
+        "avance-auto-2026-08-18-1787089990579",
+        "avance-auto-2026-08-19-1787147389687",
+        "avance-auto-2026-08-20-1787255274064",
+        "108e7892-9f37-4dc0-afac-64c308d952a7",
+        "88f050bf-9abc-4e6e-801f-7283bbb1a995",
+        "e8ab7677-0824-4d3b-bfde-a53ee6087048",
+        "5175e2a8-d889-4d39-a460-e69863a71387",
+        "1e429e24-25c3-4de4-9b8a-c4d9eaadcd95",
+        "1795c0bd-1c3f-4288-981d-531602959888",
+        "70676370-760f-4b3d-b298-b2e76d7e4c86",
+        "f5b5d4b6-565f-4200-89a6-0f264fbaf3e9",
+        "avance-auto-2026-09-02-1788356733789",
+        "e489b5d3-c129-422e-9e8d-c199b97a6270",
+        "dbd07351-8bb2-429a-9da9-1d6e010db6f1"
+      ],
+      "partidas": [
+        {
+          "itemId": "anti",
+          "nombre": "Antifisuras",
+          "precio": 8.5,
+          "m2": 106.25
+        },
+        {
+          "itemId": "fase1",
+          "nombre": "SATE Combinado (Corcho + Fino)",
+          "precio": 17,
+          "m2": 711.05
+        },
+        {
+          "itemId": "fase2",
+          "nombre": "Esquineros + Malla + Mortero",
+          "precio": 8.5,
+          "m2": 63.48
+        }
+      ]
+    },
+    {
+      "id": "a335f0c3-c25f-41d1-9093-1b5460981467",
+      "obraId": "alcosa-final",
+      "numeroCertificacion": "SÉPTIMA CERTIFICACIÓN",
+      "identificador": "2026-10",
+      "fechaEmision": "2026-10-05",
+      "mes": "2026-10",
+      "fechaInicio": "2026-09-05",
+      "fechaFin": "2026-10-05",
+      "ejecutado": 13149.16,
+      "anticipos": 5600,
+      "incentivoExtra": 0,
+      "certificado": 7549.16,
+      "estado": "cobrado",
+      "avanceIds": [
+        "b15374ea-bfc1-4a17-9376-abbb2c0e3415",
+        "avance-auto-2026-09-08-1788841927840",
+        "avance-auto-2026-09-09-1788955092517",
+        "da7cb291-beec-4b01-93de-b874d538c79e",
+        "639c03d4-e02f-4551-9e9b-d3e15b85bc44",
+        "avance-auto-2026-09-14-1789394873476",
+        "avance-auto-2026-09-15-1789454311405",
+        "8db3ddc1-a5a8-4d5f-acd0-4b351b44f31c",
+        "924aabb5-db69-452b-9e94-ec4059912c57",
+        "avance-auto-2026-09-18-1789754561680",
+        "avance-auto-2026-09-21-1790026939756",
+        "32181bc4-c8b0-411a-9469-2342cafae622",
+        "avance-auto-2026-09-23-1790138217183",
+        "b736744f-33ec-4d89-bc69-2e9545adef22",
+        "4765a8e2-987e-4aac-bef8-e8cbdd161413",
+        "avance-auto-2026-09-28-1790598829337",
+        "avance-auto-2026-09-29-1790658077419",
+        "avance-auto-2026-10-01-1790830919885",
+        "32220271-cf70-4f51-aa04-fd29a1008e45",
+        "avance-auto-2026-10-05-1791231592217"
+      ],
+      "partidas": [
+        {
+          "itemId": "fase1",
+          "nombre": "SATE Combinado (Corcho + Fino)",
+          "precio": 17,
+          "m2": 773.48
+        }
+      ],
+      "anticiposDetalle": [
+        {
+          "operario": "Juan",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-11"
+        },
+        {
+          "operario": "Mosquito",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-11"
+        },
+        {
+          "operario": "Antonio",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-11"
+        },
+        {
+          "operario": "David",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-11"
+        },
+        {
+          "operario": "Mosquito",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-18"
+        },
+        {
+          "operario": "Antonio",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-18"
+        },
+        {
+          "operario": "Juan",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-25"
+        },
+        {
+          "operario": "Mosquito",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-25"
+        },
+        {
+          "operario": "Antonio",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-25"
+        },
+        {
+          "operario": "David",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-09-25"
+        },
+        {
+          "operario": "Juan",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-10-02"
+        },
+        {
+          "operario": "Antonio",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-10-02"
+        },
+        {
+          "operario": "David",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-10-02"
+        },
+        {
+          "operario": "Mosquito",
+          "amount": 400,
+          "cantidad": 400,
+          "fecha": "2026-10-05"
+        }
+      ]
+    }
+  ],
+  "items": {
+    "fase1": {
+      "nombre": "SATE Combinado (Corcho + Fino)",
+      "descripcion": "Colocación del panel de corcho y fijación con tacos mecánicos.",
+      "precio": 17
+    },
+    "fase2": {
+      "nombre": "Esquineros + Malla + Mortero",
+      "precio": 8.5
+    },
+    "fase3": {
+      "nombre": "Pintura + Acrílico",
+      "precio": 3
+    },
+    "malla": {
+      "nombre": "Doble malla",
+      "precio": 3
+    },
+    "anti": {
+      "nombre": "Antifisuras",
+      "precio": 8.5
+    },
+    "cajeado40": {
+      "nombre": "Cajeado 40%",
+      "precio": 8.5
+    },
+    "cajeado80": {
+      "nombre": "Cajeado 80%",
+      "precio": 17
+    },
+    "cajeado100": {
+      "nombre": "Cajeado 100%",
+      "descripcion": "Ejecución completa del cajeado (100%).",
+      "precio": 20
+    },
+    "cajeado": {
+      "nombre": "Cajeados (m)",
+      "precio": 17
+    },
+    "9edee38a-b35e-40a5-817d-78483ed49d5d": {
+      "nombre": "Corcho",
+      "precio": 7
+    },
+    "460cff3a-2191-4efd-986a-71fa7481581d": {
+      "nombre": "Espigas",
+      "precio": 1.5
+    },
+    "0e14e40d-4891-4cd1-9e74-2c5c9187307c": {
+      "nombre": "Jornada Administración Oficial",
+      "precio": 150
+    },
+    "5ea86088-954d-4d53-b79a-58d212af7dcb": {
+      "nombre": "Jornada Administración peón",
+      "precio": 100
+    }
+  },
+  "operarios": [
+    {
+      "nombre": "Juan",
+      "coste": 120
+    },
+    {
+      "nombre": "Mosquito",
+      "coste": 120
+    },
+    {
+      "nombre": "Antonio",
+      "coste": 120
+    },
+    {
+      "nombre": "Jesules",
+      "coste": 80
+    },
+    {
+      "nombre": "David",
+      "coste": 70
+    }
+  ],
+  "selectedObra": "alcosa-final"
+}
